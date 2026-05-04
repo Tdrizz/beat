@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { motion } from "framer-motion";
-import { allLooks, eyeLooks, lipLooks } from "../lib/looks";
+import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks } from "../lib/looks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Camera, Clock, Star, Sparkles } from "lucide-react";
@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function LookDetail() {
   const { lookId } = useParams();
-  const ALL_LOOKS = [...allLooks, ...eyeLooks, ...lipLooks];
+  const ALL_LOOKS = [...allLooks, ...eyeLooks, ...lipLooks, ...trendLooks, ...moreEyeLooks, ...moreLipLooks];
   const look = ALL_LOOKS.find((l) => l.id === lookId);
 
   if (!look) {
