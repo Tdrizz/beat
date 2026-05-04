@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Glamr - Makeup AR Studio"
+version = "1.0.0"
+id = "artifacts/glamr"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18738
+
+[services.development]
+run = "pnpm --filter @workspace/glamr run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/glamr", "run", "build" ]
+publicDir = "artifacts/glamr/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18738"
+BASE_PATH = "/"
