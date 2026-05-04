@@ -25,7 +25,7 @@ export function useFaceAR(
         const faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
           baseOptions: {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-            delegate: "GPU"
+            delegate: "CPU"
           },
           runningMode: "VIDEO",
           numFaces: 1,
