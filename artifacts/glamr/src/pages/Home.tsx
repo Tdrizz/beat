@@ -64,7 +64,7 @@ export default function Home() {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <h1 className="text-5xl md:text-7xl font-serif font-bold text-primary tracking-tight mb-4 flex items-center justify-center gap-3">
-            Glamr <Sparkles className="w-8 h-8 text-accent" />
+            Beat <Sparkles className="w-8 h-8 text-accent" />
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground font-light tracking-wide">
             Iconic artistry. Live on your face.
