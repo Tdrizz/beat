@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { allLooks } from "../lib/looks";
+import { allLooks, eyeLooks, lipLooks } from "../lib/looks";
 import { useFaceAR } from "../hooks/useFaceAR";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -9,9 +9,11 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Download, Eye, EyeOff, Loader2, Camera as CameraIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
+const ALL_LOOKS = [...allLooks, ...eyeLooks, ...lipLooks];
+
 export default function TryOn() {
   const { lookId } = useParams();
-  const look = allLooks.find((l) => l.id === lookId);
+  const look = ALL_LOOKS.find((l) => l.id === lookId);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
