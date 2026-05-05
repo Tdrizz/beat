@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import LookDetail from "@/pages/LookDetail";
 import TryOn from "@/pages/TryOn";
+import LookMatch from "@/pages/LookMatch";
 
 const queryClient = new QueryClient();
 
@@ -13,6 +14,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/match" component={LookMatch} />
       <Route path="/looks/:lookId" component={LookDetail} />
       <Route path="/try-on/:lookId" component={TryOn} />
       <Route component={NotFound} />

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Camera, Eye, Smile, Layers, Search, X, Heart, TrendingUp } from "lucide-react";
+import { Sparkles, Camera, Eye, Smile, Layers, Search, X, Heart, TrendingUp, ScanFace } from "lucide-react";
 
 type Difficulty = "All" | "Beginner" | "Intermediate" | "Advanced";
 
@@ -152,7 +152,18 @@ export default function Home() {
           <h1 className="text-5xl md:text-7xl font-serif font-bold text-primary tracking-tight mb-3 flex items-center justify-center gap-3">
             Beat <Sparkles className="w-8 h-8 text-accent" />
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground font-light tracking-wide">Iconic artistry. Live on your face.</p>
+          <p className="text-base md:text-lg text-muted-foreground font-light tracking-wide mb-6">Iconic artistry. Live on your face.</p>
+          <Link href="/match">
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="inline-flex items-center gap-2.5 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-semibold shadow-lg shadow-primary/20 cursor-pointer hover:bg-primary/90 transition-colors"
+            >
+              <ScanFace className="w-4 h-4" />
+              Find My Perfect Look
+              <span className="text-xs bg-primary-foreground/20 rounded-full px-2 py-0.5 font-normal">AI</span>
+            </motion.div>
+          </Link>
         </motion.div>
       </header>
 
