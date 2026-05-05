@@ -6,13 +6,15 @@ import { drawMakeup } from "../lib/makeupRenderer";
 export function useFaceAR(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
-  activeSteps: Record<string, number>, // stepId -> opacity (0 to 1)
+  activeSteps: Record<string, number>,
   currentLook: Look | null
 ) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const landmarkerRef = useRef<FaceLandmarker | null>(null);
   const requestRef = useRef<number>(0);
+  // Exposed so TryOn can sample skin for shade-matching
+  const latestLandmarksRef = useRef<NormalizedLandmark[] | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -89,20 +91,21 @@ export function useFaceAR(
 
     function renderLoop() {
       if (video.readyState === 4) {
-        let startTimeMs = performance.now();
+        const startTimeMs = performance.now();
         if (lastVideoTime !== video.currentTime) {
           lastVideoTime = video.currentTime;
-          
           try {
             const results = landmarkerRef.current!.detectForVideo(video, startTimeMs);
-            
             ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
             if (results.faceLandmarks && results.faceLandmarks.length > 0 && currentLook) {
               const landmarks = results.faceLandmarks[0];
+              latestLandmarksRef.current = landmarks;
               drawMakeup(ctx!, landmarks, canvas.width, canvas.height, activeSteps, currentLook);
+            } else {
+              latestLandmarksRef.current = null;
             }
-          } catch(e) {
+          } catch (e) {
             console.error(e);
           }
         }
@@ -111,9 +114,8 @@ export function useFaceAR(
     }
 
     requestRef.current = requestAnimationFrame(renderLoop);
-
     return () => cancelAnimationFrame(requestRef.current);
   }, [isReady, currentLook, activeSteps]);
 
-  return { isReady, error };
+  return { isReady, error, latestLandmarksRef };
 }

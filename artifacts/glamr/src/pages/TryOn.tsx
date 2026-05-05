@@ -3,12 +3,14 @@ import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks } from "../lib/looks";
 import { useFaceAR } from "../hooks/useFaceAR";
+import { sampleSkinProfile, matchShadesToSkin, DEPTH_LABELS, UNDERTONE_LABELS, type SkinProfile } from "../lib/shadeMatch";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft, Download, Loader2, Camera as CameraIcon,
-  Columns2, Maximize2, ChevronLeft, ChevronRight, Zap
+  Columns2, Maximize2, ChevronLeft, ChevronRight, Zap,
+  Pipette, CheckCircle2, RefreshCw
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -17,7 +19,7 @@ const ALL_LOOKS = [
   ...trendLooks, ...moreEyeLooks, ...moreLipLooks
 ];
 
-// ── Split-view divider ────────────────────────────────────────────────────────
+// ── Split-view divider ─────────────────────────────────────────────────────────
 
 function SplitDivider({
   pct,
@@ -73,11 +75,39 @@ function SplitDivider({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Skin Profile Badge ─────────────────────────────────────────────────────────
+
+function SkinBadge({ profile, onReset }: { profile: SkinProfile; onReset: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/20 rounded-full px-3 py-1.5"
+    >
+      <div
+        className="w-3.5 h-3.5 rounded-full border border-white/40 shrink-0"
+        style={{ backgroundColor: profile.hex }}
+      />
+      <span className="text-xs text-white font-medium">
+        {DEPTH_LABELS[profile.depth]} · {UNDERTONE_LABELS[profile.undertone]}
+      </span>
+      <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0" />
+      <button
+        onClick={onReset}
+        className="text-white/50 hover:text-white transition-colors"
+        title="Reset to original shades"
+      >
+        <RefreshCw className="w-3 h-3" />
+      </button>
+    </motion.div>
+  );
+}
+
+// ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function TryOn() {
   const { lookId } = useParams();
-  const look = ALL_LOOKS.find((l) => l.id === lookId);
+  const baseLook = ALL_LOOKS.find((l) => l.id === lookId);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -86,7 +116,6 @@ export default function TryOn() {
   const [viewMode, setViewMode] = useState<"after" | "split">("after");
   const [dividerPct, setDividerPct] = useState(50);
 
-  // Master intensity: scales ALL step opacities at once
   const [masterIntensity, setMasterIntensity] = useState(1.0);
 
   const [activeSteps, setActiveSteps] = useState<Record<string, number>>({
@@ -96,7 +125,14 @@ export default function TryOn() {
     base: true, eyes: true, brows: true, lips: true, cheeks: true,
   });
 
-  // Scale all active steps by master intensity before passing to the AR hook
+  // Shade matching state
+  const [skinProfile, setSkinProfile] = useState<SkinProfile | null>(null);
+  const [matchedLook, setMatchedLook] = useState<typeof baseLook | null>(null);
+  const [isMatching, setIsMatching] = useState(false);
+
+  // The look currently passed to the AR renderer
+  const activeLook = matchedLook ?? baseLook ?? null;
+
   const scaledSteps = useMemo(
     () => Object.fromEntries(
       Object.entries(activeSteps).map(([k, v]) => [k, v * masterIntensity])
@@ -104,7 +140,7 @@ export default function TryOn() {
     [activeSteps, masterIntensity]
   );
 
-  const { isReady, error } = useFaceAR(videoRef, canvasRef, scaledSteps, look || null);
+  const { isReady, error, latestLandmarksRef } = useFaceAR(videoRef, canvasRef, scaledSteps, activeLook);
 
   const handleStepToggle = (stepId: string, checked: boolean) => {
     setStepStates(prev => ({ ...prev, [stepId]: checked }));
@@ -131,13 +167,35 @@ export default function TryOn() {
     const url = merged.toDataURL("image/jpeg", 0.92);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `beat-${look?.id || "look"}-${Date.now()}.jpg`;
+    a.download = `beat-${activeLook?.id || "look"}-${Date.now()}.jpg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
 
-  if (!look) {
+  // AI Shade Match — samples current frame + landmarks → adjusts look colors
+  const handleShadeMatch = async () => {
+    if (!videoRef.current || !latestLandmarksRef.current || !baseLook) return;
+    setIsMatching(true);
+    try {
+      await new Promise(r => setTimeout(r, 80)); // let UI update
+      const profile = sampleSkinProfile(videoRef.current, latestLandmarksRef.current);
+      const adapted  = matchShadesToSkin(baseLook, profile);
+      setSkinProfile(profile);
+      setMatchedLook(adapted);
+    } catch (e) {
+      console.error("Shade match failed", e);
+    } finally {
+      setIsMatching(false);
+    }
+  };
+
+  const handleResetShades = () => {
+    setSkinProfile(null);
+    setMatchedLook(null);
+  };
+
+  if (!baseLook) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="text-center">
@@ -148,20 +206,16 @@ export default function TryOn() {
     );
   }
 
-  const stepsList = Object.values(look.steps);
+  const stepsList = Object.values(activeLook?.steps ?? baseLook.steps);
   const activeCount = Object.values(stepStates).filter(Boolean).length;
   const progressPercent = (activeCount / stepsList.length) * 100;
-
-  // clip-path: inset(0 dividerPct% 0 0) → shows left (100-dividerPct)% of element
-  // after scaleX(-1) this becomes the right (100-dividerPct)% of the screen ✓
   const canvasClip = viewMode === "split" ? `inset(0 ${dividerPct}% 0 0)` : "none";
-
   const masterPct = Math.round(masterIntensity * 100);
 
   return (
     <div className="h-[100dvh] w-full bg-black relative overflow-hidden flex flex-col md:flex-row">
 
-      {/* ── Camera Area ───────────────────────────────────────────────────── */}
+      {/* ── Camera Area ─────────────────────────────────────────────────────── */}
       <div ref={cameraAreaRef} className="relative flex-grow h-full bg-zinc-900 overflow-hidden z-0">
         <video
           ref={videoRef}
@@ -213,19 +267,24 @@ export default function TryOn() {
             <CameraIcon className="w-16 h-16 text-destructive mb-4" />
             <h3 className="font-serif text-2xl font-bold text-white mb-2">Camera Access Required</h3>
             <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
-            <Link href={`/looks/${look.id}`}><Button variant="outline">Go Back</Button></Link>
+            <Link href={`/looks/${baseLook.id}`}><Button variant="outline">Go Back</Button></Link>
           </div>
         )}
 
         {/* Top bar */}
         <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/60 to-transparent">
-          <Link href={`/looks/${look.id}`}>
+          <Link href={`/looks/${baseLook.id}`}>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-full">
               <ArrowLeft className="w-6 h-6" />
             </Button>
           </Link>
-          <div className="text-center drop-shadow-md">
-            <h2 className="font-serif text-xl font-bold text-white tracking-wide">{look.name}</h2>
+          <div className="flex flex-col items-center gap-1.5">
+            <h2 className="font-serif text-xl font-bold text-white tracking-wide drop-shadow-md">{baseLook.name}</h2>
+            <AnimatePresence>
+              {skinProfile && (
+                <SkinBadge profile={skinProfile} onReset={handleResetShades} />
+              )}
+            </AnimatePresence>
           </div>
           <div className="flex gap-2">
             <Button
@@ -247,7 +306,7 @@ export default function TryOn() {
         </div>
       </div>
 
-      {/* ── Controls Panel ─────────────────────────────────────────────────── */}
+      {/* ── Controls Panel ───────────────────────────────────────────────────── */}
       <div className="w-full md:w-96 bg-card/95 backdrop-blur-xl border-t md:border-t-0 md:border-l border-border flex flex-col z-20 h-[45vh] md:h-full shrink-0">
 
         {/* Progress bar */}
@@ -257,6 +316,66 @@ export default function TryOn() {
             <span className="text-sm font-medium">{Math.round(progressPercent)}%</span>
           </div>
           <Progress value={progressPercent} className="h-1.5" />
+        </div>
+
+        {/* AI Shade Match */}
+        <div className="px-4 py-3 border-b border-border shrink-0 bg-gradient-to-r from-primary/5 to-accent/5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <Pipette className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-sm font-semibold text-foreground">AI Shade Match</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-snug">
+                {skinProfile
+                  ? `Matched to ${DEPTH_LABELS[skinProfile.depth]}, ${UNDERTONE_LABELS[skinProfile.undertone]} skin`
+                  : "Scan your skin tone for personalised shades"}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={skinProfile ? "outline" : "default"}
+              className="shrink-0 gap-1.5 rounded-full text-xs px-3"
+              onClick={skinProfile ? handleResetShades : handleShadeMatch}
+              disabled={isMatching || !isReady}
+            >
+              {isMatching ? (
+                <><Loader2 className="w-3 h-3 animate-spin" />Scanning…</>
+              ) : skinProfile ? (
+                <><RefreshCw className="w-3 h-3" />Reset</>
+              ) : (
+                <><Pipette className="w-3 h-3" />Match</>
+              )}
+            </Button>
+          </div>
+
+          {/* Shade swatches when matched */}
+          <AnimatePresence>
+            {skinProfile && matchedLook && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-3 overflow-hidden"
+              >
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs text-muted-foreground">Your shades:</span>
+                  {Object.values(matchedLook.steps)
+                    .filter(s => s.color && s.color !== "transparent")
+                    .map(s => (
+                      <div
+                        key={s.id}
+                        className="w-5 h-5 rounded-full border-2 border-background shadow-sm"
+                        style={{ backgroundColor: s.color }}
+                        title={s.name}
+                      />
+                    ))
+                  }
+                  <CheckCircle2 className="w-4 h-4 text-green-500 ml-1" />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Master intensity */}
@@ -282,10 +401,15 @@ export default function TryOn() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-4 h-4 rounded-full border border-border/50 shrink-0"
+                    className="w-4 h-4 rounded-full border border-border/50 shrink-0 transition-all duration-500"
                     style={{ backgroundColor: step.color === "transparent" ? "#333" : step.color }}
                   />
                   <h4 className="font-serif font-bold text-base">{step.name}</h4>
+                  {skinProfile && step.colorName === "Skin-Matched" && (
+                    <span className="text-xs bg-green-500/15 text-green-600 rounded-full px-1.5 py-0.5 font-medium leading-none">
+                      Matched
+                    </span>
+                  )}
                 </div>
                 <Switch
                   checked={stepStates[step.id]}
