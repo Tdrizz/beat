@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
-  Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, Brush,
+  Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, Brush, Apple, Link2,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
@@ -32,27 +32,32 @@ type NavItem = {
 };
 const SECONDARY: NavItem[] = [
   { href: "/tools",     label: "Brushes & tools", icon: Brush },
+  { href: "/nutrition", label: "Skin nutrition",  icon: Apple },
   { href: "/match",     label: "Look match",   icon: ScanFace },
   { href: "/skincare",  label: "Skincare",     icon: Heart },
   { href: "/diary",     label: "Skin diary",   icon: BookOpen },
   { href: "/special-products", label: "Specials", icon: Calendar },
   { href: "/affiliate", label: "Creator stats", icon: BarChart3, authed: true },
+  { href: "/settings/social", label: "Linked accounts", icon: Link2, authed: true },
 ];
 
 // Routes that should render fully-chromeless — no global header.
 const HIDE_ON = ["/sign-in", "/sign-up", "/onboarding"];
 
 export function TopNav() {
+  // All hooks must run unconditionally on every render — early-returning
+  // before useState caused "Rendered fewer hooks than expected" when
+  // navigating between hidden (/sign-in) and visible routes.
   const [loc] = useLocation();
   const { isSignedIn } = useAuth();
-  if (HIDE_ON.some((p) => loc.startsWith(p))) return null;
   const [open, setOpen] = useState(false);
+  if (HIDE_ON.some((p) => loc.startsWith(p))) return null;
 
   const isActive = (href: string) => (href === "/" ? loc === "/" : loc.startsWith(href));
 
   return (
     <>
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-background/85 border-b border-border/50">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-gradient-to-b from-background/95 via-background/85 to-background/75 border-b border-border/40 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_4px_20px_-12px_rgba(190,80,140,0.25)]">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
           {/* Mobile: hamburger trigger left of the wordmark so it falls
               naturally under the left thumb. Desktop hides it. */}

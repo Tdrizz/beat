@@ -4,6 +4,7 @@ import { api, type Profile, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { ARCHETYPES, pickFg, type ArchetypeId } from "@/lib/archetypes";
+import { SocialLinkChips } from "@/components/SocialLinkChips";
 
 export default function UserProfile() {
   const [, params] = useRoute<{ handle: string }>("/u/:handle");
@@ -12,6 +13,11 @@ export default function UserProfile() {
     queryKey: ["profile", handle],
     queryFn: () => api.get<Profile>(`/profiles/${handle}`),
   });
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => api.get<Profile>("/profiles/me").catch(() => null),
+  });
+  const isMe = !!profile && !!me && me.handle === profile.handle;
   const { data: posts } = useQuery({
     queryKey: ["profile-posts", handle],
     queryFn: () => api.get<Post[]>(`/profiles/${handle}/posts`),
@@ -39,10 +45,21 @@ export default function UserProfile() {
                 <p className="text-sm text-muted-foreground">@{profile.handle}</p>
                 {profile.bio && <p className="text-sm mt-1">{profile.bio}</p>}
               </div>
-              <Link href={`/messages/${profile.handle}`}>
-                <Button size="sm" className="rounded-full gap-1.5"><MessageCircle className="w-4 h-4" /> Message</Button>
-              </Link>
+              {isMe ? (
+                <Link href="/settings/social">
+                  <Button size="sm" variant="outline" className="rounded-full">Edit links</Button>
+                </Link>
+              ) : (
+                <Link href={`/messages/${profile.handle}`}>
+                  <Button size="sm" className="rounded-full gap-1.5"><MessageCircle className="w-4 h-4" /> Message</Button>
+                </Link>
+              )}
             </div>
+            {profile.socialLinks && Object.keys(profile.socialLinks).length > 0 && (
+              <div className="mb-6">
+                <SocialLinkChips links={profile.socialLinks} size="lg" />
+              </div>
+            )}
             {profile.archetype && ARCHETYPES[profile.archetype as ArchetypeId] && (() => {
               const a = ARCHETYPES[profile.archetype as ArchetypeId];
               const isLight = pickFg(a.palette[1] ?? a.palette[0]) === "light";

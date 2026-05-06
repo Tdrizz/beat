@@ -43,6 +43,10 @@ export interface Profile {
   avatarUrl: string | null;
   isCreator: boolean;
   archetype: string | null;
+  socialLinks: Partial<Record<
+    "instagram" | "tiktok" | "youtube" | "twitter" | "pinterest" | "threads" | "snapchat" | "website",
+    string
+  >> | null;
   createdAt: string;
 }
 

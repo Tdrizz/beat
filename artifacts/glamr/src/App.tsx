@@ -25,6 +25,8 @@ import UserProfile from "@/pages/UserProfile";
 import AffiliateStats from "@/pages/AffiliateStats";
 import Archetype from "@/pages/Archetype";
 import Tools from "@/pages/Tools";
+import Nutrition from "@/pages/Nutrition";
+import SocialLinksSettings from "@/pages/SocialLinksSettings";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +52,9 @@ function Router() {
       <Route path="/special-products" component={SpecialProducts} />
       <Route path="/archetype" component={Archetype} />
       <Route path="/tools" component={Tools} />
+      <Route path="/nutrition" component={Nutrition} />
 
+      <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
       <Route path="/upload"><AuthedRoute><Upload /></AuthedRoute></Route>
       <Route path="/messages"><AuthedRoute><Messages /></AuthedRoute></Route>

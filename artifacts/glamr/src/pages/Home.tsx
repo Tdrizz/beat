@@ -24,7 +24,7 @@ import {
   Sparkles, Camera, Eye, Smile, Layers, Search, X,
   Heart, TrendingUp, ScanFace, Clock, ChevronRight, CalendarDays,
   Crown, Palette as PaletteIcon, ExternalLink, Globe, Leaf,
-  BookOpen, FlaskConical
+  BookOpen, FlaskConical, Apple, Brush
 } from "lucide-react";
 
 type Difficulty = "All" | "Beginner" | "Intermediate" | "Advanced";
@@ -392,10 +392,26 @@ function SectionShortcuts() {
       gradient: "from-amber-500/20 to-yellow-500/10",
       border: "border-amber-500/20",
     },
+    {
+      href: "/nutrition",
+      icon: <Apple className="w-5 h-5" />,
+      label: "Skin Nutrition",
+      desc: "Foods, vitamins & supplements for glow",
+      gradient: "from-fuchsia-500/20 to-pink-500/10",
+      border: "border-fuchsia-500/20",
+    },
+    {
+      href: "/tools",
+      icon: <Brush className="w-5 h-5" />,
+      label: "Brushes & Tools",
+      desc: "38 picks across 24 trusted brands",
+      gradient: "from-violet-500/20 to-purple-500/10",
+      border: "border-violet-500/20",
+    },
   ];
   return (
     <div className="max-w-6xl mx-auto px-6 mb-8">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {shortcuts.map((s, i) => (
           <Link href={s.href} key={s.href}>
             <motion.div

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, profilesTable, insertProfileSchema } from "@workspace/db";
+import { db, profilesTable, insertProfileSchema, socialLinksSchema } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
@@ -78,6 +78,31 @@ router.put("/profiles/me/archetype", requireAuth, async (req, res) => {
     // source of truth until they create a profile, at which point
     // ProfileSetup picks up the existing archetype and posts it.
     res.status(204).end();
+    return;
+  }
+  res.json(updated[0]);
+});
+
+// Linked social accounts. Kept as a focused PUT (not part of the wide
+// profile PATCH) so the frontend can save them independently and we can
+// validate the shape strictly without nullable-merging other fields.
+router.put("/profiles/me/social-links", requireAuth, async (req, res) => {
+  const parsed = socialLinksSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid", details: parsed.error.flatten() });
+    return;
+  }
+  // Strip empty strings so we never persist `{ instagram: "" }`.
+  const cleaned = Object.fromEntries(
+    Object.entries(parsed.data).filter(([, v]) => typeof v === "string" && v.trim().length > 0),
+  );
+  const updated = await db
+    .update(profilesTable)
+    .set({ socialLinks: cleaned, updatedAt: new Date() })
+    .where(eq(profilesTable.userId, req.userId!))
+    .returning();
+  if (updated.length === 0) {
+    res.status(404).json({ error: "Profile not found" });
     return;
   }
   res.json(updated[0]);
