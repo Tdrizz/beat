@@ -14,6 +14,65 @@ interface Result {
 }
 
 /**
+ * Sample average skin colour from the central face region of an already-
+ * captured frame. We avoid MediaPipe here to keep the try-on flow self-
+ * contained; instead we sample two patches likely to land on cheek skin
+ * (left and right of centre, slightly below the vertical midpoint), then
+ * filter out non-skin-ish pixels by HSL bounds before averaging.
+ *
+ * Returns `null` if the captured frame is too dark / too small / not
+ * skin-shaped enough to trust.
+ */
+type SkinCategory = "Fair" | "Light" | "Medium Light" | "Medium" | "Tan" | "Deep";
+type SkinUndertone = "Warm" | "Cool" | "Neutral";
+
+function sampleSkinTone(
+  ctx: CanvasRenderingContext2D, w: number, h: number,
+): { hex: string; category: SkinCategory; undertone: SkinUndertone } | null {
+  // Guard against tiny / unusable frames where sampling would just be noise.
+  if (w < 160 || h < 160) return null;
+  const patches = [
+    { cx: w * 0.35, cy: h * 0.55 }, // left cheek-ish
+    { cx: w * 0.65, cy: h * 0.55 }, // right cheek-ish
+    { cx: w * 0.50, cy: h * 0.45 }, // bridge of nose / mid-face
+  ];
+  const radius = Math.max(8, Math.floor(Math.min(w, h) * 0.04));
+  let r = 0, g = 0, b = 0, n = 0;
+  for (const p of patches) {
+    const x = Math.max(0, Math.floor(p.cx - radius));
+    const y = Math.max(0, Math.floor(p.cy - radius));
+    const size = radius * 2;
+    let img: ImageData;
+    try { img = ctx.getImageData(x, y, size, size); } catch { return null; }
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const pr = d[i], pg = d[i + 1], pb = d[i + 2];
+      // crude skin-ish gate: red dominant, not pure black/white, not blue
+      if (pr < 30 && pg < 30 && pb < 30) continue;
+      if (pr > 245 && pg > 245 && pb > 245) continue;
+      if (pr <= pb) continue;
+      r += pr; g += pg; b += pb; n++;
+    }
+  }
+  if (n < 100) return null;
+  const ar = Math.round(r / n), ag = Math.round(g / n), ab = Math.round(b / n);
+  const hex = "#" + [ar, ag, ab].map(v => v.toString(16).padStart(2, "0")).join("");
+  // crude lightness for category
+  const max = Math.max(ar, ag, ab), min = Math.min(ar, ag, ab);
+  const l = ((max + min) / 2) / 255 * 100;
+  let category: SkinCategory = "Medium";
+  if (l > 73) category = "Fair";
+  else if (l > 62) category = "Light";
+  else if (l > 52) category = "Medium Light";
+  else if (l > 42) category = "Medium";
+  else if (l > 30) category = "Tan";
+  else category = "Deep";
+  const warmBias = ar - ab;
+  const undertone: SkinUndertone = warmBias > 25 ? "Warm" : warmBias < -10 ? "Cool" : "Neutral";
+  return { hex, category, undertone };
+}
+
+/**
  * Captures the current camera frame, sends it to the AI try-on endpoint along
  * with a structured description of the chosen look, and returns a photoreal
  * generated image of the user wearing the makeup.
@@ -66,6 +125,11 @@ export function useAITryOn() {
       const imageBase64 = dataUrl.split(",")[1];
       if (!imageBase64) throw new Error("Failed to encode frame");
 
+      // 1b. Sample skin tone from the captured frame so the model can
+      //     adapt foundation match, blush undertone, and lipstick translucency
+      //     to the actual user instead of painting a generic shade.
+      const skinTone = sampleSkinTone(ctx, w, h);
+
       // 2. Build the look payload — only steps that have a real shade.
       const stepKeys = ["base", "brows", "eyes", "cheeks", "lips"] as const;
       const steps = stepKeys
@@ -93,6 +157,7 @@ export function useAITryOn() {
           lookDescription: look.description,
           intensity,
           steps,
+          skinTone,
         }),
       });
 

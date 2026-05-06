@@ -28,6 +28,14 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   mechanism in `artifacts/glamr`. Endpoint: `POST /api/ai-tryon`. Frontend:
   `useCamera` (live preview) + `useAITryOn` hook + `AITryOnModal`. Model:
   `gemini-2.5-flash-image` (nano banana).
+- **Skin-tone adaptation**: `useAITryOn` samples the captured frame
+  (cheek/nose patches) and sends `{ hex, category, undertone }` to the API.
+  `aiTryon.ts` enum-validates these (no prompt injection) and adds
+  per-undertone guidance to the prompt so foundation matches and
+  blush/lip shades flatter the user, while preserving original skin texture.
+- **Collapsible side panel**: `TryOn.tsx` ships a `panelCollapsed` toggle
+  (defaults collapsed on mobile via `matchMedia`). Collapsed → camera fills
+  the viewport and a floating "Look details" pill restores the panel.
 - The previous canvas-based AR overlay engine (MediaPipe FaceLandmarker +
   `makeupRenderer` + `shadeMatch` + `useFaceAR`) has been removed from the
   try-on flow. `useFaceAnalysis` is still used by `LookMatch.tsx` for face/skin

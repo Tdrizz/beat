@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Loader2, Camera as CameraIcon, ChevronLeft, ChevronRight,
   CheckCircle2, Play, User, ShoppingBag, ChevronDown, ChevronUp,
-  ExternalLink, Youtube, Sparkles, Image as ImageIcon
+  ExternalLink, Youtube, Sparkles, Image as ImageIcon, Info, PanelRightClose
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -246,8 +246,18 @@ export default function TryOn() {
   const aiTryon = useAITryOn();
   const [aiTryonOpen, setAiTryonOpen] = useState(false);
   const [aiIntensity, setAiIntensity] = useState(60);
-  const lastResultUrl = useRef<string | null>(null);
-  if (aiTryon.result?.imageUrl) lastResultUrl.current = aiTryon.result.imageUrl;
+  // Collapsed state for the right-hand "About this look" panel — when on,
+  // the camera area uses the entire viewport. Defaults to collapsed on mobile
+  // so the camera dominates from the first frame.
+  const [panelCollapsed, setPanelCollapsed] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
+  );
+  // Track the last successful image as state (not a render-phase ref mutation
+  // — that was a React anti-pattern that could lead to inconsistent renders).
+  const [lastResultUrl, setLastResultUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (aiTryon.result?.imageUrl) setLastResultUrl(aiTryon.result.imageUrl);
+  }, [aiTryon.result?.imageUrl]);
 
   const runAITryon = () => {
     if (!baseLook) return;
@@ -257,16 +267,23 @@ export default function TryOn() {
 
   // Auto-fire AI try-on as soon as the camera is ready. We only auto-fire
   // once per look (tracked via a ref so re-renders don't re-trigger). The
-  // user can still tap the FAB to regenerate. Short delay lets the camera
-  // settle so the captured frame isn't a black/auto-exposing first frame.
+  // user can still tap the FAB to regenerate. We also wait for the video to
+  // actually have frame data so we don't capture a black first-frame.
   const autoFiredForLook = useRef<string | null>(null);
   useEffect(() => {
     if (!isReady || !baseLook) return;
     if (autoFiredForLook.current === baseLook.id) return;
     autoFiredForLook.current = baseLook.id;
     const t = window.setTimeout(() => {
+      const v = videoRef.current;
+      // readyState >= 2 (HAVE_CURRENT_DATA) means at least one frame is
+      // decoded. Avoids capturing a black/exposure-warming-up first frame.
+      if (!v || v.readyState < 2 || v.videoWidth === 0) {
+        autoFiredForLook.current = null; // allow another attempt on next render
+        return;
+      }
       setAiTryonOpen(true);
-      aiTryon.run({ video: videoRef.current, look: baseLook, intensity: aiIntensity });
+      aiTryon.run({ video: v, look: baseLook, intensity: aiIntensity });
     }, 900);
     return () => window.clearTimeout(t);
     // aiTryon / videoRef are stable enough; we deliberately key off camera
@@ -397,7 +414,7 @@ export default function TryOn() {
             >
               <User className="w-5 h-5" />
             </Button>
-            {lastResultUrl.current && (
+            {lastResultUrl && (
               <Button
                 variant="ghost" size="icon"
                 className="rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur-md border border-white/10"
@@ -422,7 +439,7 @@ export default function TryOn() {
             >
               {isGenerating ? (
                 <><Loader2 className="w-5 h-5 animate-spin" />Painting your look…</>
-              ) : lastResultUrl.current ? (
+              ) : lastResultUrl ? (
                 <><Sparkles className="w-5 h-5" />Regenerate</>
               ) : (
                 <><Sparkles className="w-5 h-5" />Try this look with AI</>
@@ -431,7 +448,7 @@ export default function TryOn() {
             <p className="text-[11px] text-white/60 font-medium tracking-wide">
               {isGenerating
                 ? "Hold still — generating your photoreal preview"
-                : lastResultUrl.current
+                : lastResultUrl
                   ? "Tap to generate a fresh take"
                   : "Auto-generating as soon as the camera is ready…"}
             </p>
@@ -441,7 +458,7 @@ export default function TryOn() {
         <AITryOnModal
           open={aiTryonOpen}
           state={aiTryon.state}
-          imageUrl={aiTryon.result?.imageUrl ?? lastResultUrl.current ?? null}
+          imageUrl={aiTryon.result?.imageUrl ?? lastResultUrl ?? null}
           error={aiTryon.error}
           lookName={baseLook.name}
           intensity={aiIntensity}
@@ -461,14 +478,50 @@ export default function TryOn() {
         </AnimatePresence>
       </div>
 
+      {/* Floating "show details" pill — only visible when panel is collapsed.
+          Sits above the FAB so it's always reachable on mobile. */}
+      <AnimatePresence>
+        {panelCollapsed && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            onClick={() => setPanelCollapsed(false)}
+            className="absolute top-20 right-4 z-30 flex items-center gap-1.5 px-3 py-2 rounded-full bg-black/55 hover:bg-black/70 backdrop-blur-md text-white text-xs font-semibold border border-white/15 shadow-lg"
+            title="Show look details"
+          >
+            <Info className="w-3.5 h-3.5" />
+            Look details
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       {/* ── Side Panel ───────────────────────────────────────────────────────── */}
-      <div className="w-full md:w-96 bg-card/95 backdrop-blur-xl border-t md:border-t-0 md:border-l border-border flex flex-col z-20 h-[48vh] md:h-full shrink-0">
+      <div
+        className={`bg-card/95 backdrop-blur-xl border-t md:border-t-0 md:border-l border-border flex flex-col z-20 shrink-0 transition-all duration-300 ease-out ${
+          panelCollapsed
+            ? "w-0 h-0 md:h-full md:w-0 overflow-hidden border-0"
+            : "w-full md:w-96 h-[48vh] md:h-full"
+        }`}
+      >
 
         {/* Look story */}
         <div className="p-4 border-b border-border shrink-0">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 gap-2">
             <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">About this Look</h3>
-            <Badge variant="outline" className="text-[10px]">{baseLook.difficulty} · {baseLook.timeEstimate}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px]">{baseLook.difficulty} · {baseLook.timeEstimate}</Badge>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+                onClick={() => setPanelCollapsed(true)}
+                title="Hide panel"
+                aria-label="Hide look details panel"
+              >
+                <PanelRightClose className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           <p className="text-sm text-foreground/90 leading-relaxed">{baseLook.description}</p>
         </div>

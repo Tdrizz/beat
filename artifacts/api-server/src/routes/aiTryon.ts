@@ -30,6 +30,19 @@ const TryonBody = z.object({
     )
     .min(1)
     .max(10),
+  // Optional: client-measured skin tone sampled from the captured frame.
+  // When present, the prompt instructs the model to harmonise pigments to
+  // this skin so foundation matches and lip/blush undertones flatter the user.
+  skinTone: z
+    .object({
+      hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+      // Enum-locked so a malicious client cannot inject newlines or extra
+      // instructions into the prompt via these free-text-looking fields.
+      category: z.enum(["Fair", "Light", "Medium Light", "Medium", "Tan", "Deep"]),
+      undertone: z.enum(["Warm", "Cool", "Neutral"]),
+    })
+    .nullable()
+    .optional(),
 });
 
 // Translate a 0–100 intensity into a short natural-language descriptor that
@@ -69,11 +82,33 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
     lines.push(s.instruction ? `${piece}. ${s.instruction}` : piece);
   }
   lines.push("");
+  if (parsed.skinTone) {
+    lines.push("");
+    lines.push(
+      `USER SKIN TONE (measured from the photo): ${parsed.skinTone.category} with ${parsed.skinTone.undertone} undertone (approx ${parsed.skinTone.hex}).`,
+    );
+    lines.push(
+      "Adapt every product to this skin so the result looks custom-mixed for this person:",
+    );
+    lines.push(
+      "  • Foundation/complexion must match the measured tone exactly — no lightening, darkening, ashy cast, or orange cast.",
+    );
+    lines.push(
+      "  • Translate blush and lip shades through the user's undertone — warm undertones lean peach/coral/terracotta, cool undertones lean rose/berry/mauve, neutral can wear either.",
+    );
+    lines.push(
+      "  • Eyeshadow and eyeliner pigments should keep their hue identity but render with the depth and translucency that flatters this skin (deeper skin → richer pigment payoff; fairer skin → softer wash).",
+    );
+    lines.push(
+      "  • Preserve the user's natural skin texture — pores, freckles, fine lines, scars, moles — visible THROUGH the makeup. Foundation should look skin-like, never plastic or heavily airbrushed.",
+    );
+  }
+  lines.push("");
   lines.push("STRICT RULES:");
   lines.push("- Preserve the person's identity, face shape, bone structure, eye shape, nose, lip shape and proportions exactly.");
   lines.push("- Preserve the original lighting, camera angle, background, hair, clothing and skin texture (pores, freckles, fine lines).");
-  lines.push("- Do NOT change race, age, gender, expression, or hairstyle.");
-  lines.push("- Do NOT smooth or airbrush the skin beyond what real makeup would do.");
+  lines.push("- Do NOT change race, age, gender, expression, hairstyle, or skin tone.");
+  lines.push("- Do NOT smooth or airbrush the skin beyond what real makeup would do — pores and micro-texture must remain visible.");
   lines.push("- Apply makeup precisely to the correct facial regions: eyeshadow only on lids, lipstick only on lips, blush only on cheek apples, etc.");
   lines.push("- Output a single photorealistic image of the same person wearing the look. No text, no watermark, no border.");
   return lines.join("\n");
