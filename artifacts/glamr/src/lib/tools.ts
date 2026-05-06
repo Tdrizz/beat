@@ -36,6 +36,8 @@ export const TOOL_CATEGORY_LABELS: Record<ToolCategory, string> = {
 
 export interface Tool {
   id: string;
+  /** Path under artifacts/glamr/public served at the same URL. */
+  image: string;
   brand: string;
   name: string;
   category: ToolCategory;
@@ -54,6 +56,7 @@ export const TOOLS: Tool[] = [
   // ── Face brushes ────────────────────────────────────────────────────
   {
     id: "rt-expert-face",
+    image: "/tools/rt-expert-face.png",
     brand: "Real Techniques",
     name: "Expert Face Brush",
     category: "face-brush",
@@ -65,6 +68,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "morphe-m439",
+    image: "/tools/morphe-m439.jpg",
     brand: "Morphe",
     name: "M439 Deluxe Buffer Brush",
     category: "face-brush",
@@ -76,6 +80,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "sephora-pro-50",
+    image: "/tools/sephora-pro-50.png",
     brand: "Sephora Collection",
     name: "Pro Press Powder Brush #50",
     category: "face-brush",
@@ -87,6 +92,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "fenty-face-110",
+    image: "/tools/fenty-face-110.png",
     brand: "Fenty Beauty",
     name: "Face Shaping Brush 110",
     category: "face-brush",
@@ -98,6 +104,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "ct-powder-blush",
+    image: "/tools/ct-powder-blush.jpg",
     brand: "Charlotte Tilbury",
     name: "Powder & Sculpt Brush",
     category: "face-brush",
@@ -109,6 +116,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "mac-129",
+    image: "/tools/mac-129.jpg",
     brand: "MAC Cosmetics",
     name: "129 Powder/Blush Brush",
     category: "face-brush",
@@ -120,6 +128,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "rare-liquid-touch",
+    image: "/tools/rare-liquid-touch.jpg",
     brand: "Rare Beauty",
     name: "Liquid Touch Foundation Brush",
     category: "face-brush",
@@ -131,6 +140,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "shiseido-fude",
+    image: "/tools/shiseido-fude.jpg",
     brand: "Shiseido",
     name: "Daiya Fude Face Duo Brush",
     category: "face-brush",
@@ -144,6 +154,7 @@ export const TOOLS: Tool[] = [
   // ── Eye brushes ─────────────────────────────────────────────────────
   {
     id: "ej-base-shader",
+    image: "/tools/ej-base-shader.jpg",
     brand: "e.l.f. Cosmetics",
     name: "Eye Shadow Brush",
     category: "eye-brush",
@@ -155,6 +166,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "morphe-m330",
+    image: "/tools/morphe-m330.jpg",
     brand: "Morphe",
     name: "M330 Blending Crease Brush",
     category: "eye-brush",
@@ -166,6 +178,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "mac-217",
+    image: "/tools/mac-217.jpg",
     brand: "MAC Cosmetics",
     name: "217 Blending Brush",
     category: "eye-brush",
@@ -177,6 +190,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "sigma-e25",
+    image: "/tools/sigma-e25.jpg",
     brand: "Sigma Beauty",
     name: "E25 Blending Brush",
     category: "eye-brush",
@@ -188,6 +202,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "natasha-12",
+    image: "/tools/natasha-12.jpg",
     brand: "Natasha Denona",
     name: "Brush 12 Eye Detail",
     category: "eye-brush",
@@ -199,6 +214,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "huda-smokey-obsessions",
+    image: "/tools/huda-smokey-obsessions.jpg",
     brand: "Huda Beauty",
     name: "Smokey Eye Brush Set (4-pc)",
     category: "eye-brush",
@@ -212,6 +228,7 @@ export const TOOLS: Tool[] = [
   // ── Lip brushes ─────────────────────────────────────────────────────
   {
     id: "ej-lip",
+    image: "/tools/ej-lip.png",
     brand: "e.l.f. Cosmetics",
     name: "Lip Defining Brush",
     category: "lip-brush",
@@ -223,6 +240,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "rt-lip",
+    image: "/tools/rt-lip.jpg",
     brand: "Real Techniques",
     name: "Detailer Lip Brush",
     category: "lip-brush",
@@ -234,6 +252,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "mac-318",
+    image: "/tools/mac-318.png",
     brand: "MAC Cosmetics",
     name: "318 Retractable Lip Brush",
     category: "lip-brush",
@@ -247,6 +266,7 @@ export const TOOLS: Tool[] = [
   // ── Sponges ─────────────────────────────────────────────────────────
   {
     id: "rt-miracle",
+    image: "/tools/rt-miracle.jpg",
     brand: "Real Techniques",
     name: "Miracle Complexion Sponge",
     category: "sponge",
@@ -258,6 +278,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "morphe-bake",
+    image: "/tools/morphe-bake.jpg",
     brand: "Morphe",
     name: "Beautiful Bake Sponge Set",
     category: "sponge",
@@ -269,6 +290,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "bb-original",
+    image: "/tools/bb-original.jpg",
     brand: "Beautyblender",
     name: "Original Beautyblender",
     category: "sponge",
@@ -280,6 +302,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "bb-power-pocket",
+    image: "/tools/bb-power-pocket.jpg",
     brand: "Beautyblender",
     name: "Power Pocket Puff",
     category: "sponge",
@@ -293,6 +316,7 @@ export const TOOLS: Tool[] = [
   // ── Lash tools ──────────────────────────────────────────────────────
   {
     id: "twz-lash",
+    image: "/tools/twz-lash.jpg",
     brand: "Tweezerman",
     name: "Classic Lash Curler",
     category: "lashes",
@@ -304,6 +328,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "shiseido-curler",
+    image: "/tools/shiseido-curler.webp",
     brand: "Shiseido",
     name: "Eyelash Curler",
     category: "lashes",
@@ -315,6 +340,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "surratt-relevee",
+    image: "/tools/surratt-relevee.png",
     brand: "Surratt",
     name: "Relevée Lash Curler",
     category: "lashes",
@@ -326,6 +352,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "ardell-wispies",
+    image: "/tools/ardell-wispies.jpg",
     brand: "Ardell",
     name: "Demi Wispies False Lashes",
     category: "lashes",
@@ -337,6 +364,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "lf-london",
+    image: "/tools/lf-london.jpg",
     brand: "Lilly Lashes",
     name: "London 3D Mink Lashes",
     category: "lashes",
@@ -350,6 +378,7 @@ export const TOOLS: Tool[] = [
   // ── Brow tools ──────────────────────────────────────────────────────
   {
     id: "anastasia-7b",
+    image: "/tools/anastasia-7b.jpg",
     brand: "Anastasia Beverly Hills",
     name: "Brush #7B Duo",
     category: "brows",
@@ -361,6 +390,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "twz-slant",
+    image: "/tools/twz-slant.jpg",
     brand: "Tweezerman",
     name: "Slant Tweezer",
     category: "brows",
@@ -372,6 +402,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "rt-brow-set",
+    image: "/tools/rt-brow-set.jpg",
     brand: "Real Techniques",
     name: "Brow Shaping Set",
     category: "brows",
@@ -385,6 +416,7 @@ export const TOOLS: Tool[] = [
   // ── Skin tools ──────────────────────────────────────────────────────
   {
     id: "mz-rose-quartz",
+    image: "/tools/mz-rose-quartz.jpg",
     brand: "Mount Lai",
     name: "Rose Quartz Gua Sha",
     category: "skin-tools",
@@ -396,6 +428,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "nurse-jamie",
+    image: "/tools/nurse-jamie.jpg",
     brand: "Nurse Jamie",
     name: "Uplift Massaging Beauty Roller",
     category: "skin-tools",
@@ -407,6 +440,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "foreo-luna",
+    image: "/tools/foreo-luna.jpg",
     brand: "Foreo",
     name: "Luna 4 Cleansing Device",
     category: "skin-tools",
@@ -418,6 +452,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "solawave",
+    image: "/tools/solawave.png",
     brand: "SolaWave",
     name: "4-in-1 Radiant Renewal Wand",
     category: "skin-tools",
@@ -429,6 +464,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "drd-nuface",
+    image: "/tools/drd-nuface.webp",
     brand: "NuFace",
     name: "Trinity+ Microcurrent Device",
     category: "skin-tools",
@@ -442,6 +478,7 @@ export const TOOLS: Tool[] = [
   // ── Brush sets ──────────────────────────────────────────────────────
   {
     id: "rt-everyday",
+    image: "/tools/rt-everyday.jpg",
     brand: "Real Techniques",
     name: "Everyday Essentials Set (5-pc)",
     category: "sets",
@@ -453,6 +490,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "morphe-606",
+    image: "/tools/morphe-606.jpg",
     brand: "Morphe",
     name: "606 6-Piece Eye Set",
     category: "sets",
@@ -464,6 +502,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "sigma-essential",
+    image: "/tools/sigma-essential.webp",
     brand: "Sigma Beauty",
     name: "Essential Kit Mr. Bunny",
     category: "sets",
@@ -475,6 +514,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "westman-eye",
+    image: "/tools/westman-eye.jpg",
     brand: "Westman Atelier",
     name: "Eye Brush Trio",
     category: "sets",

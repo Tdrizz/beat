@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ImageOff } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,40 +143,60 @@ export default function Tools() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {visible.map((t) => (
-              <a
-                key={t.id}
-                href={t.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Visit ${t.brand} — ${t.name}, ${formatPrice(t.priceCents, t.currency)}`}
-                className="bg-card border border-border rounded-2xl p-4 hover:border-primary/50 hover:shadow-sm transition-all group flex flex-col"
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-14 h-14 rounded-xl shrink-0 bg-gradient-to-br ${t.swatch} shadow-sm`}
-                    aria-hidden
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{t.brand}</p>
-                    <p className="font-semibold text-sm leading-tight">{t.name}</p>
-                    <p className="text-[11px] text-muted-foreground capitalize mt-0.5">
-                      {TOOL_CATEGORY_LABELS[t.category]}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-3 leading-snug flex-1">{t.use}</p>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60">
-                  <span className="text-base font-bold text-primary">{formatPrice(t.priceCents, t.currency)}</span>
-                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary">
-                    Visit brand <ExternalLink className="w-3 h-3" />
-                  </span>
-                </div>
-              </a>
+              <ToolCard key={t.id} t={t} />
             ))}
           </div>
         )}
       </main>
     </div>
+  );
+}
+
+// Card renders the real product photo on top with the gradient swatch
+// living *behind* it as a graceful fallback — if the image 404s or the
+// network blocks it, we hide the <img> and the swatch shows through with
+// an ImageOff hint, so the card never collapses.
+function ToolCard({ t }: { t: import("@/lib/tools").Tool }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <a
+      href={t.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Visit ${t.brand} — ${t.name}, ${formatPrice(t.priceCents, t.currency)}`}
+      className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-sm transition-all group flex flex-col"
+    >
+      <div className={`relative aspect-[4/3] w-full bg-gradient-to-br ${t.swatch} overflow-hidden`}>
+        {!broken ? (
+          <img
+            src={t.image}
+            alt={`${t.brand} ${t.name}`}
+            loading="lazy"
+            decoding="async"
+            onError={() => setBroken(true)}
+            className="absolute inset-0 w-full h-full object-contain p-4 mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-white/70">
+            <ImageOff className="w-6 h-6" />
+          </div>
+        )}
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">{t.brand}</p>
+        <p className="font-semibold text-sm leading-tight">{t.name}</p>
+        <p className="text-[11px] text-muted-foreground capitalize mt-0.5">
+          {TOOL_CATEGORY_LABELS[t.category]}
+        </p>
+        <p className="text-xs text-muted-foreground mt-2 leading-snug flex-1">{t.use}</p>
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/60">
+          <span className="text-base font-bold text-primary">{formatPrice(t.priceCents, t.currency)}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary">
+            Visit brand <ExternalLink className="w-3 h-3" />
+          </span>
+        </div>
+      </div>
+    </a>
   );
 }
 
