@@ -151,11 +151,48 @@ export function useFaceAR(
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // ── One-Euro filter ────────────────────────────────────────────────────
+    // Adaptive low-pass filter that beats fixed EMA for face tracking:
+    //   • Heavy smoothing when the user is still → no jitter
+    //   • Light smoothing when the user moves fast → no lag
+    // Reference: Casiez, Roussel, Vogel (2012). One state buffer per landmark
+    // coordinate. Tuned for ~30Hz face landmarks.
+    const ONE_EURO_MIN_CUTOFF = 1.2;   // Hz — base cutoff (lower = smoother when still)
+    const ONE_EURO_BETA       = 0.020; // velocity coefficient (higher = faster response to motion)
+    const ONE_EURO_D_CUTOFF   = 1.0;   // Hz — derivative cutoff
+
+    type EuroState = { x: number; dx: number; t: number; init: boolean };
+    const makeState = (n: number): EuroState[] =>
+      Array.from({ length: n }, () => ({ x: 0, dx: 0, t: 0, init: false }));
+
+    let xStates: EuroState[] | null = null;
+    let yStates: EuroState[] | null = null;
+    let zStates: EuroState[] | null = null;
+
+    const alphaFor = (cutoff: number, dt: number) => {
+      const tau = 1 / (2 * Math.PI * cutoff);
+      return 1 / (1 + tau / dt);
+    };
+
+    const oneEuro = (state: EuroState, value: number, t: number) => {
+      if (!state.init) {
+        state.x = value; state.dx = 0; state.t = t; state.init = true;
+        return value;
+      }
+      const dt = Math.max(1e-3, (t - state.t) / 1000);
+      state.t = t;
+      // Derivative estimate, low-passed
+      const dxRaw = (value - state.x) / dt;
+      const aD = alphaFor(ONE_EURO_D_CUTOFF, dt);
+      state.dx = aD * dxRaw + (1 - aD) * state.dx;
+      // Adaptive cutoff
+      const cutoff = ONE_EURO_MIN_CUTOFF + ONE_EURO_BETA * Math.abs(state.dx);
+      const a = alphaFor(cutoff, dt);
+      state.x = a * value + (1 - a) * state.x;
+      return state.x;
+    };
+
     let lastVideoTime = -1;
-    // Smoothed landmark buffer — EMA filter to remove single-frame jitter.
-    // Without this, the overlay vibrates frame-to-frame and reads as an AR decal.
-    let smoothed: { x: number; y: number; z: number }[] | null = null;
-    const SMOOTH_ALPHA = 0.55; // higher = smoother but laggier; 0.55 is a good balance
 
     function renderLoop() {
       if (video.readyState === 4) {
@@ -163,37 +200,49 @@ export function useFaceAR(
         if (lastVideoTime !== video.currentTime) {
           lastVideoTime = video.currentTime;
           try {
+            // Keep canvas internal resolution in sync with the video stream.
+            // If the camera resolution changes (e.g. orientation switch), the
+            // canvas must follow or the overlay will scale incorrectly relative
+            // to the normalized landmarks.
+            if (
+              video.videoWidth > 0 &&
+              (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight)
+            ) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+            }
+
             const results = landmarkerRef.current!.detectForVideo(video, startTimeMs);
             ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
             if (results.faceLandmarks && results.faceLandmarks.length > 0) {
               const raw = results.faceLandmarks[0];
 
-              // EMA smooth: out = prev*α + cur*(1-α)
-              if (!smoothed || smoothed.length !== raw.length) {
-                smoothed = raw.map(p => ({ x: p.x, y: p.y, z: p.z ?? 0 }));
-              } else {
-                const a = SMOOTH_ALPHA;
-                for (let i = 0; i < raw.length; i++) {
-                  smoothed[i].x = smoothed[i].x * a + raw[i].x * (1 - a);
-                  smoothed[i].y = smoothed[i].y * a + raw[i].y * (1 - a);
-                  smoothed[i].z = smoothed[i].z * a + (raw[i].z ?? 0) * (1 - a);
-                }
+              if (!xStates || xStates.length !== raw.length) {
+                xStates = makeState(raw.length);
+                yStates = makeState(raw.length);
+                zStates = makeState(raw.length);
               }
 
-              // Build a NormalizedLandmark-shaped array for downstream consumers
-              const out = smoothed.map((p, i) => ({
-                x: p.x, y: p.y, z: p.z,
-                visibility: raw[i].visibility,
-              })) as any;
+              const out = new Array(raw.length);
+              for (let i = 0; i < raw.length; i++) {
+                const p = raw[i];
+                out[i] = {
+                  x: oneEuro(xStates[i], p.x, startTimeMs),
+                  y: oneEuro(yStates![i], p.y, startTimeMs),
+                  z: oneEuro(zStates![i], p.z ?? 0, startTimeMs),
+                  visibility: p.visibility,
+                };
+              }
 
-              latestLandmarksRef.current = out;
+              latestLandmarksRef.current = out as any;
               if (currentLook) {
-                drawMakeup(ctx!, out, canvas.width, canvas.height, activeSteps, currentLook);
+                drawMakeup(ctx!, out as any, canvas.width, canvas.height, activeSteps, currentLook);
               }
             } else {
               latestLandmarksRef.current = null;
-              smoothed = null;
+              // Reset filter state so it re-initializes cleanly when the face returns
+              xStates = null; yStates = null; zStates = null;
             }
           } catch (e) {
             console.error(e);

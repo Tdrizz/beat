@@ -44,8 +44,19 @@ const R_BROW = [300, 293, 334, 296, 336, 285, 295, 282, 283, 276];
 const L_BROW_BONE = [46, 53, 52, 65, 55, 107, 66, 105, 63, 70, 156, 124, 35, 31, 226, 247];
 const R_BROW_BONE = [276, 283, 282, 295, 285, 336, 296, 334, 293, 300, 383, 353, 265, 261, 446, 467];
 
-const LIPS_OUTER = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78, 191, 80, 81, 82];
-const LIPS_INNER = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95];
+// Canonical MediaPipe FaceMesh lip perimeters (each is a single closed loop,
+// 20 vertices, traversed in order around the contour). Earlier versions of
+// LIPS_OUTER mixed in inner-lip indices, which produced a self-intersecting
+// polygon and made the lipstick miss parts of the upper lip and bleed into
+// the mouth opening.
+const LIPS_OUTER = [
+  61, 185, 40, 39, 37, 0, 267, 269, 270, 409,   // upper lip, left → right
+  291, 375, 321, 405, 314, 17, 84, 181, 91, 146 // lower lip, right → left
+];
+const LIPS_INNER = [
+  78, 191, 80, 81, 82, 13, 312, 311, 310, 415,  // upper inner, left → right
+  308, 324, 318, 402, 317, 14, 87, 178, 88, 95  // lower inner, right → left
+];
 
 const L_CHEEK = [116, 123, 147, 213, 192, 187, 207, 206, 203, 142, 126, 217, 174, 196, 197];
 const R_CHEEK = [345, 352, 376, 433, 416, 411, 427, 426, 423, 371, 355, 437, 399, 420, 421];
