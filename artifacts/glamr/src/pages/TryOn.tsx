@@ -3,6 +3,8 @@ import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks } from "../lib/looks";
 import { useFaceAR } from "../hooks/useFaceAR";
+import { useAITryOn } from "../hooks/useAITryOn";
+import { AITryOnModal } from "../components/AITryOnModal";
 import { sampleSkinProfile, matchShadesToSkin, DEPTH_LABELS, UNDERTONE_LABELS, type SkinProfile } from "../lib/shadeMatch";
 import { VoiceGuide } from "../components/VoiceGuide";
 import { AvatarSelector, AvatarFace, AVATARS, type Avatar } from "../components/AvatarSelector";
@@ -18,7 +20,7 @@ import {
   ArrowLeft, Download, Loader2, Camera as CameraIcon,
   Columns2, Maximize2, ChevronLeft, ChevronRight, Zap,
   Pipette, CheckCircle2, RefreshCw, Play, User, ShoppingBag,
-  ChevronDown, ChevronUp, ExternalLink, Youtube
+  ChevronDown, ChevronUp, ExternalLink, Youtube, Sparkles
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -393,6 +395,22 @@ export default function TryOn() {
     setSelectedAvatarId(avatar?.id ?? null);
   };
 
+  // ── AI photoreal try-on ──────────────────────────────────────────────────
+  // Captures the current camera frame and asks Gemini 2.5 Flash Image to
+  // repaint it with the selected look applied — produces a photoreal result
+  // that follows the user's face structure and lighting (no canvas overlay).
+  const aiTryon = useAITryOn();
+  const [aiTryonOpen, setAiTryonOpen] = useState(false);
+  const runAITryon = () => {
+    if (!activeLook) return;
+    setAiTryonOpen(true);
+    aiTryon.run({ video: videoRef.current, look: activeLook });
+  };
+  const closeAITryon = () => {
+    setAiTryonOpen(false);
+    aiTryon.reset();
+  };
+
   if (!baseLook) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
@@ -546,6 +564,34 @@ export default function TryOn() {
             </Button>
           </div>
         </div>
+
+        {/* AI photoreal try-on FAB — bottom centre, above the controls panel */}
+        {!guidedMode && (
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30">
+            <Button
+              onClick={runAITryon}
+              disabled={!isReady || aiTryon.state === "capturing" || aiTryon.state === "generating"}
+              className="rounded-full gap-2 px-5 py-6 text-sm font-bold shadow-2xl bg-gradient-to-r from-primary via-accent to-primary text-primary-foreground hover:opacity-95 disabled:opacity-60"
+              title="Generate a photoreal AI try-on"
+            >
+              {aiTryon.state === "capturing" || aiTryon.state === "generating" ? (
+                <><Loader2 className="w-4 h-4 animate-spin" />Painting…</>
+              ) : (
+                <><Sparkles className="w-4 h-4" />AI Try-On</>
+              )}
+            </Button>
+          </div>
+        )}
+
+        <AITryOnModal
+          open={aiTryonOpen}
+          state={aiTryon.state}
+          imageUrl={aiTryon.result?.imageUrl ?? null}
+          error={aiTryon.error}
+          lookName={activeLook?.name ?? baseLook.name}
+          onClose={closeAITryon}
+          onRetry={runAITryon}
+        />
 
         {/* Avatar selector sheet */}
         <AnimatePresence>

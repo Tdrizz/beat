@@ -4,6 +4,12 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
+## AI
+
+- Gemini AI integration (Replit-managed, no key required) used for photoreal AI try-on
+  in `artifacts/glamr`. Endpoint: `POST /api/ai-tryon`. Frontend: `useAITryOn` hook +
+  `AITryOnModal`. Model: `gemini-2.5-flash-image` (nano banana).
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
