@@ -143,6 +143,13 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   `lib/object-storage-web` `<ObjectUploader>` (Uppy-based). User uploads go
   through a presigned PUT (`POST /api/storage/uploads/request-url`) and are
   served back via `/api/storage/objects/...`.
+- **In-app camera capture**: `<CameraCapture>` (built on `useCamera`,
+  which now takes `{ facingMode }` and re-runs `getUserMedia` on flip).
+  Live preview → snap → retake or "Use this photo" → JPEG blob handed to
+  parent. Upload composer exposes both "Take photo" and "From library"
+  CTAs, sharing one `uploadBlob()` helper so camera + AI try-on prefill +
+  library uploads all use the same presigned-PUT pipeline. Selfies are
+  mirrored on both preview and capture so saved text reads correctly.
 - **Affiliate**: brands seeded on first boot (`lib/seedBrands.ts`).
   `AffiliateProductsForLook` widget renders on `LookDetail` and inside `TryOn`
   side-panel; clicks go through `GET /api/affiliate/click/:productId?creator=`

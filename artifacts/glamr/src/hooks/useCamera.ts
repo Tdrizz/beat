@@ -7,12 +7,15 @@ import { useEffect, useRef, useState } from "react";
  * Replaces the older `useFaceAR` (which also ran MediaPipe + a canvas overlay)
  * — for the AI try-on flow we only need the live preview.
  */
-export function useCamera() {
+export function useCamera(opts: { facingMode?: "user" | "environment" } = {}) {
+  const facingMode = opts.facingMode ?? "user";
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsReady(false);
+    setError(null);
     let stream: MediaStream | null = null;
     let cancelled = false;
 
@@ -27,7 +30,7 @@ export function useCamera() {
 
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false,
         });
 
@@ -72,7 +75,7 @@ export function useCamera() {
         video.onloadeddata = null;
       }
     };
-  }, []);
+  }, [facingMode]);
 
   return { videoRef, isReady, error };
 }
