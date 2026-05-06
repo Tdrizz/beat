@@ -1,6 +1,7 @@
 import { useEffect, useState, type RefObject } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, X, Download, Sparkles, AlertCircle, RefreshCw, Camera, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, X, Download, Sparkles, AlertCircle, RefreshCw, Camera, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import type { AngleResult } from "../hooks/useAITryOn";
@@ -13,6 +14,9 @@ interface Props {
   onSelectIndex: (i: number) => void;
   error: string | null;
   lookName: string;
+  /** Optional look id, used so a "Post to feed" deep-link can prefill
+   *  the catalogue dropdown on the upload composer. */
+  lookId?: string;
   intensity: number;
   onIntensityChange: (value: number) => void;
   onClose: () => void;
@@ -54,9 +58,33 @@ const ANGLE_PROMPTS = [
  */
 export function AITryOnModal({
   open, state, gallery, currentIndex, onSelectIndex,
-  error, lookName, intensity, onIntensityChange,
+  error, lookName, lookId, intensity, onIntensityChange,
   onClose, onCaptureAngle, videoRef,
 }: Props) {
+  const [, navigate] = useLocation();
+  // Hand the current generated frame off to the Upload composer via
+  // sessionStorage. We can't pass the dataURL through a query string
+  // (URLs would be 1MB+) and we don't want to round-trip through the
+  // server twice. Upload reads the key on mount and uploads the blob.
+  const handlePostToFeed = () => {
+    const cur = gallery[currentIndex];
+    if (!cur) return;
+    try {
+      window.sessionStorage.setItem(
+        "beat:upload:prefill",
+        JSON.stringify({
+          dataUrl: cur.imageUrl,
+          caption: `${lookName} · AI try-on`,
+          lookId: lookId ?? "",
+        }),
+      );
+      navigate("/upload");
+    } catch {
+      // sessionStorage quota / private mode — just bail; the user can
+      // still save the image and re-upload manually.
+    }
+  };
+
   const isBusy = state === "capturing" || state === "generating";
   const current = gallery[currentIndex] ?? null;
   const hasImage = !!current && !isBusy && state !== "error";
@@ -298,15 +326,27 @@ export function AITryOnModal({
                 </Button>
               )}
               {hasImage && (
-                <Button
-                  variant="outline"
-                  className="rounded-full gap-1.5 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-                  onClick={handleDownload}
-                  disabled={isBusy}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Save
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    className="rounded-full gap-1.5 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                    onClick={handleDownload}
+                    disabled={isBusy}
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="rounded-full gap-1.5 border-primary/60 bg-primary/20 text-white hover:bg-primary/30 hover:text-white"
+                    onClick={handlePostToFeed}
+                    disabled={isBusy}
+                    title="Open the upload composer with this image prefilled"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Post to feed
+                  </Button>
+                </>
               )}
               {state === "error" && (
                 <>

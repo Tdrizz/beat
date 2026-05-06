@@ -24,19 +24,43 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ## Personalisation
 
-- **Beauty archetype quiz**: 5-question on-device quiz at `/archetype`
-  (no auth needed; result persisted in `localStorage` via `useArchetype`).
-  Six archetypes (Romantic / Siren / Icon / Muse / Rebel / Naturalist) each
-  carry a signature palette, mood-keyword matchers (used to filter the
-  existing look catalogue), and per-area makeup tips. Definitions in
-  `lib/archetypes.ts`, questions/scoring in `lib/archetypeQuiz.ts`.
+- **Beauty archetype quiz** ("Iola test"): 5-question on-device quiz at
+  `/archetype` (no auth needed; result persisted in `localStorage` via
+  `useArchetype`). Six archetypes (Romantic / Siren / Icon / Muse / Rebel /
+  Naturalist) each carry a signature palette, mood-keyword matchers, and
+  per-area tips. Definitions in `lib/archetypes.ts`, questions/scoring in
+  `lib/archetypeQuiz.ts`. Quiz has an Undo button that clears the prior
+  answer (so re-picking the same option still triggers auto-advance).
+- **Server mirror**: `profilesTable.archetype` (varchar(16),
+  enum-validated). `useArchetype` syncs to `PUT /profiles/me/archetype`
+  best-effort; ProfileSetup seeds the archetype on first profile create.
 - The archetype is plumbed into the AI try-on prompt — `useAITryOn` sends
-  `{ archetype }`, `aiTryon.ts` enum-validates it (no prompt injection)
-  and adds a short finish-bias paragraph (`ARCHETYPE_GUIDANCE`) so the
-  generated image leans the right direction (smokier / glowier / sharper)
-  on top of skin tone + the look's per-step shades.
-- Home shows an `<ArchetypeCallout />` between the daily-beat card and the
-  section shortcuts — invite card pre-quiz, personalised banner post-quiz.
+  `{ archetype }`, `aiTryon.ts` enum-validates it and adds a short
+  finish-bias paragraph (`ARCHETYPE_GUIDANCE`) so the generated image
+  leans the right direction on top of skin tone + per-step shades.
+- Home shows an `<ArchetypeCallout />`; TopNav has a permanent "Iola" link.
+
+### Archetype-driven features
+- **Iola feed scope** (`GET /api/feed?scope=iola`): server picks viewer's
+  archetype (profile col, falls back to `?archetype=`) and ILIKE-filters
+  posts by `mood` against `ARCHETYPE_MOOD_MATCHERS` (mirror of frontend
+  matchers in `artifacts/api-server/src/lib/archetypeMatch.ts`).
+- **Weekly challenge** (`GET /api/archetype/challenge?archetype=`):
+  pure-function rotation per ISO week, copy in `ARCHETYPE_CHALLENGES`.
+  Surfaced via `<WeeklyChallenge />` on Iola feed tab.
+- **Archetype-match notifications**: on `POST /api/posts`, server fans out
+  `kind: "match"` notifs (parallel, capped 50) to followers whose
+  archetype matches the post's mood. Rendered with Wand2 icon.
+- **Profile archetype card** on `UserProfile` + inline `<ArchetypeBadge />`
+  next to author handle on every PostCard.
+- **Brands "For the {archetype}" rail**: curated category + keyword
+  affinity per archetype filters the products grid.
+- **Shareable card**: result page has "Save card" → vanilla canvas
+  renders a 1080² PNG (gradient + name + tagline + palette + description).
+- **Post-to-feed from AI try-on**: AITryOnModal stashes the current
+  generated dataURL in sessionStorage (`beat:upload:prefill`); Upload
+  picks it up on mount, blob-uploads via the standard presigned PUT, and
+  prefills caption + lookId.
 
 ## AI
 

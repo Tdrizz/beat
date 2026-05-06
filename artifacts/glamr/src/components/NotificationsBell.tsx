@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/react";
-import { Bell, Heart, MessageCircle, UserPlus, MessageSquare, Sparkles } from "lucide-react";
+import { Bell, Heart, MessageCircle, UserPlus, MessageSquare, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ const ICONS = {
   follow: UserPlus,
   message: MessageSquare,
   system: Sparkles,
+  match: Wand2,
 } as const;
 
 function relativeTime(iso: string): string {
@@ -42,6 +43,8 @@ function describe(n: Notification): string {
       return `${who} started following you`;
     case "message":
       return `${who}: ${n.body || "sent you a message"}`;
+    case "match":
+      return `${who} posted a look that matches your archetype`;
     default:
       return n.body || "New notification";
   }
@@ -49,7 +52,7 @@ function describe(n: Notification): string {
 
 function linkFor(n: Notification): string {
   if (n.kind === "message" && n.actor) return `/messages/${n.actor.handle}`;
-  if ((n.kind === "like" || n.kind === "comment") && n.postId) return `/posts/${n.postId}`;
+  if ((n.kind === "like" || n.kind === "comment" || n.kind === "match") && n.postId) return `/posts/${n.postId}`;
   if (n.kind === "follow" && n.actor) return `/u/${n.actor.handle}`;
   return "/feed";
 }

@@ -6,6 +6,8 @@ import { api, type Profile } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useArchetype } from "@/hooks/useArchetype";
+import { ARCHETYPES } from "@/lib/archetypes";
 
 // Mandatory profile setup: every signed-in user must pick a handle + display
 // name before they can access the social features. Redirects home once a
@@ -26,6 +28,7 @@ export default function ProfileSetup() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
 
+  const { archetype } = useArchetype();
   const create = useMutation({
     mutationFn: () =>
       api.post<Profile>("/profiles", {
@@ -33,6 +36,9 @@ export default function ProfileSetup() {
         displayName: displayName.trim() || handle.trim(),
         bio: bio.trim() || null,
         avatarUrl: user?.imageUrl ?? null,
+        // Seed the new profile with whatever archetype the user picked
+        // pre-signup. Anonymous quiz → instant personalisation post-signup.
+        archetype: archetype ?? null,
       }),
     onSuccess: (created) => {
       qc.setQueryData(["me"], created);
@@ -72,6 +78,15 @@ export default function ProfileSetup() {
             <label className="text-xs font-semibold text-muted-foreground">BIO (OPTIONAL)</label>
             <Input value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Soft glam · NYC" maxLength={140} />
           </div>
+          {archetype && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center gap-3">
+              <div className="text-2xl">✨</div>
+              <div className="flex-1 text-xs">
+                <p className="font-semibold">Iola archetype: {ARCHETYPES[archetype].name}</p>
+                <p className="text-muted-foreground">We'll tune your feed and recommendations around this.</p>
+              </div>
+            </div>
+          )}
           {create.isError && <p className="text-sm text-red-500">{(create.error as Error).message}</p>}
           <Button className="w-full rounded-full" disabled={!valid || create.isPending} onClick={() => create.mutate()}>
             {create.isPending ? "Creating…" : "Create profile"}

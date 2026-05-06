@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@clerk/react";
 import { ARCHETYPES, type ArchetypeId } from "../lib/archetypes";
+import { api } from "../lib/api";
 
 /**
  * localStorage-backed archetype state. We don't persist server-side yet —
@@ -43,6 +45,7 @@ function read(): Stored | null {
 
 export function useArchetype() {
   const [stored, setStored] = useState<Stored | null>(() => read());
+  const { isSignedIn } = useAuth();
 
   // Re-sync if another tab takes the quiz — small touch, but it makes the
   // app feel alive when users have multiple tabs open.
@@ -54,6 +57,23 @@ export function useArchetype() {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  // Best-effort sync to the server when authed. The server treats this as
+  // fire-and-forget (204 if no profile yet) so we swallow errors. We only
+  // sync once per archetype value to avoid a write storm on tab focus.
+  const lastSyncedRef = useState<{ value: ArchetypeId | null }>({ value: null })[0];
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const a = stored?.archetype ?? null;
+    if (a === lastSyncedRef.value) return;
+    if (!a) return; // never push a null wipe — clear() is local-only
+    lastSyncedRef.value = a;
+    api.put("/profiles/me/archetype", { archetype: a }).catch(() => {
+      // Server is the secondary store; localStorage is canonical until the
+      // user has a profile. Silently retry next render if state changes.
+      lastSyncedRef.value = null;
+    });
+  }, [isSignedIn, stored?.archetype, lastSyncedRef]);
 
   const setArchetype = useCallback((archetype: ArchetypeId) => {
     const next: Stored = { archetype, takenAt: Date.now() };

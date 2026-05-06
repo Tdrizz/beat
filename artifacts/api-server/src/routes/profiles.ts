@@ -54,6 +54,35 @@ router.put("/profiles/me", requireAuth, async (req, res) => {
   res.json(updated[0]);
 });
 
+// Lightweight endpoint just for syncing the on-device archetype quiz result
+// to the server. We keep it separate from the full profile PUT so the
+// frontend can fire-and-forget on quiz completion without race-merging
+// other partial profile fields.
+import { ARCHETYPE_IDS } from "@workspace/db";
+import { z } from "zod/v4";
+const archetypeBody = z.object({ archetype: z.enum(ARCHETYPE_IDS).nullable() });
+router.put("/profiles/me/archetype", requireAuth, async (req, res) => {
+  const parsed = archetypeBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid archetype" });
+    return;
+  }
+  const updated = await db
+    .update(profilesTable)
+    .set({ archetype: parsed.data.archetype, updatedAt: new Date() })
+    .where(eq(profilesTable.userId, req.userId!))
+    .returning();
+  if (updated.length === 0) {
+    // Profile doesn't exist yet (e.g. user took the quiz before onboarding).
+    // Returning 204 is a deliberate no-op — the localStorage value is the
+    // source of truth until they create a profile, at which point
+    // ProfileSetup picks up the existing archetype and posts it.
+    res.status(204).end();
+    return;
+  }
+  res.json(updated[0]);
+});
+
 router.get("/profiles/:handle", optionalAuth, async (_req, res) => {
   const handle = p(_req.params.handle);
   const rows = await db.select().from(profilesTable).where(eq(profilesTable.handle, handle)).limit(1);

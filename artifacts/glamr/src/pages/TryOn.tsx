@@ -479,6 +479,7 @@ export default function TryOn() {
           onSelectIndex={aiTryon.setCurrentIndex}
           error={aiTryon.error}
           lookName={baseLook.name}
+          lookId={baseLook.id}
           intensity={aiIntensity}
           onIntensityChange={setAiIntensity}
           onClose={closeAITryon}

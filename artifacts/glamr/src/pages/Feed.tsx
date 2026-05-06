@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Plus, Filter, Flame, Users } from "lucide-react";
+import { Heart, MessageCircle, Plus, Filter, Flame, Users, Wand2 } from "lucide-react";
 import { api, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { TopNav } from "@/components/TopNav";
 import { ShareToDmButton } from "@/components/ShareToDmButton";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { WeeklyChallenge } from "@/components/WeeklyChallenge";
+import { ArchetypeBadge } from "@/components/ArchetypeBadge";
+import { useArchetype } from "@/hooks/useArchetype";
 import { SEASONS, SEASON_LABELS, type Season } from "@/lib/looks";
 
 function PostCard({ post }: { post: Post }) {
@@ -32,9 +35,12 @@ function PostCard({ post }: { post: Post }) {
         )}
         <div className="flex-1 min-w-0">
           {post.author && (
-            <Link href={`/u/${post.author.handle}`}>
-              <p className="text-sm font-semibold hover:underline cursor-pointer">@{post.author.handle}</p>
-            </Link>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Link href={`/u/${post.author.handle}`}>
+                <p className="text-sm font-semibold hover:underline cursor-pointer">@{post.author.handle}</p>
+              </Link>
+              <ArchetypeBadge archetype={post.author.archetype} />
+            </div>
           )}
           {post.season && (
             <p className="text-xs text-muted-foreground">
@@ -75,16 +81,20 @@ function PostCard({ post }: { post: Post }) {
   );
 }
 
-type Scope = "foryou" | "following";
+type Scope = "foryou" | "following" | "iola";
 
 export default function Feed() {
   const [season, setSeason] = useState<string | null>(null);
   const [scope, setScope] = useState<Scope>("foryou");
+  const { archetype } = useArchetype();
   const { data, isLoading } = useQuery({
-    queryKey: ["feed", scope, season],
+    queryKey: ["feed", scope, season, scope === "iola" ? archetype : null],
     queryFn: () => {
       const params = new URLSearchParams({ scope });
       if (season) params.set("season", season);
+      // Belt-and-braces: send archetype on the iola scope so signed-out
+      // users still get a personalised feed (server falls back to profile).
+      if (scope === "iola" && archetype) params.set("archetype", archetype);
       return api.get<{ posts: Post[]; nextCursor: string | null }>(`/feed?${params.toString()}`);
     },
   });
@@ -105,20 +115,32 @@ export default function Feed() {
           <Button
             size="sm"
             variant={scope === "foryou" ? "default" : "ghost"}
-            className="rounded-full flex-1 gap-1.5"
+            className="rounded-full flex-1 gap-1"
             onClick={() => setScope("foryou")}
           >
-            <Flame className="w-3.5 h-3.5" /> For you
+            <Flame className="w-3.5 h-3.5" /> <span className="hidden sm:inline">For you</span>
+          </Button>
+          <Button
+            size="sm"
+            variant={scope === "iola" ? "default" : "ghost"}
+            className="rounded-full flex-1 gap-1"
+            onClick={() => setScope("iola")}
+            disabled={!archetype}
+            title={archetype ? "Posts tuned to your archetype" : "Take the Iola test to unlock"}
+          >
+            <Wand2 className="w-3.5 h-3.5" /> Iola
           </Button>
           <Button
             size="sm"
             variant={scope === "following" ? "default" : "ghost"}
-            className="rounded-full flex-1 gap-1.5"
+            className="rounded-full flex-1 gap-1"
             onClick={() => setScope("following")}
           >
-            <Users className="w-3.5 h-3.5" /> Following
+            <Users className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Following</span>
           </Button>
         </div>
+
+        {scope === "iola" && <WeeklyChallenge />}
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />

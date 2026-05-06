@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ObjectUploader } from "@workspace/object-storage-web";
@@ -8,7 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, type Post } from "@/lib/api";
 import { ALL_LOOKS_FLAT, SEASONS, SEASON_LABELS, type Season } from "@/lib/looks";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
+
+// sessionStorage key used by AITryOnModal to deep-link a generated image
+// straight into the upload composer. We use sessionStorage (not query
+// params) because the image is a base64 dataURL — too big for a URL.
+const PREFILL_KEY = "beat:upload:prefill";
+interface UploadPrefill {
+  dataUrl: string;
+  caption?: string;
+  lookId?: string;
+}
 
 function UploadInner() {
   const [, navigate] = useLocation();
@@ -18,6 +28,47 @@ function UploadInner() {
   const [caption, setCaption] = useState("");
   const [lookId, setLookId] = useState<string>("");
   const [season, setSeason] = useState<Season | "">("");
+  const [prefilling, setPrefilling] = useState(false);
+  const [prefillError, setPrefillError] = useState<string | null>(null);
+
+  // On mount: if AITryOnModal stashed a prefill payload, upload it through
+  // the same presigned-URL pipeline the manual uploader uses. We clear the
+  // payload first so a refresh doesn't re-trigger the upload.
+  useEffect(() => {
+    let cancelled = false;
+    const raw = window.sessionStorage.getItem(PREFILL_KEY);
+    if (!raw) return;
+    window.sessionStorage.removeItem(PREFILL_KEY);
+    let payload: UploadPrefill;
+    try { payload = JSON.parse(raw); } catch { return; }
+    if (!payload.dataUrl) return;
+    setPrefilling(true);
+    if (payload.caption) setCaption(payload.caption);
+    if (payload.lookId) setLookId(payload.lookId);
+    (async () => {
+      try {
+        const blob = await (await fetch(payload.dataUrl)).blob();
+        const presigned = await api.post<{ uploadURL: string; objectPath: string }>(
+          "/storage/uploads/request-url",
+          { name: `tryon-${Date.now()}.png`, size: blob.size, contentType: blob.type || "image/png" },
+        );
+        const put = await fetch(presigned.uploadURL, {
+          method: "PUT",
+          headers: { "Content-Type": blob.type || "image/png" },
+          body: blob,
+        });
+        if (!put.ok) throw new Error(`Upload failed (${put.status})`);
+        if (cancelled) return;
+        setObjectPath(presigned.objectPath);
+        setImageUrl(`/api/storage${presigned.objectPath}`);
+      } catch (e) {
+        if (!cancelled) setPrefillError((e as Error).message);
+      } finally {
+        if (!cancelled) setPrefilling(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const create = useMutation({
     mutationFn: () =>
@@ -41,7 +92,12 @@ function UploadInner() {
       <main className="max-w-xl mx-auto px-4 py-6 space-y-4">
         <h1 className="font-serif text-3xl">Share a look</h1>
         <div className="aspect-square w-full border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center overflow-hidden bg-muted/30">
-          {imageUrl ? (
+          {prefilling ? (
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <p className="text-sm">Uploading your AI try-on…</p>
+            </div>
+          ) : imageUrl ? (
             <img src={imageUrl} alt="" className="w-full h-full object-cover" />
           ) : (
             <>
@@ -89,6 +145,7 @@ function UploadInner() {
             ))}
           </div>
         </div>
+        {prefillError && <p className="text-sm text-red-500">Couldn't auto-upload your AI try-on: {prefillError}. Pick a photo manually instead.</p>}
         {create.isError && <p className="text-sm text-red-500">{(create.error as Error).message}</p>}
         <Button className="w-full rounded-full" disabled={!imageUrl || create.isPending} onClick={() => create.mutate()}>
           {create.isPending ? "Posting…" : "Post"}

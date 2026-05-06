@@ -1,11 +1,12 @@
 import { Router, type IRouter } from "express";
-import { db, postsTable, profilesTable, likesTable, commentsTable, followsTable, insertPostSchema, insertCommentSchema } from "@workspace/db";
-import { and, desc, eq, sql, inArray, lt } from "drizzle-orm";
+import { db, postsTable, profilesTable, likesTable, commentsTable, followsTable, insertPostSchema, insertCommentSchema, ARCHETYPE_IDS, type ArchetypeId } from "@workspace/db";
+import { and, desc, eq, sql, inArray, lt, or, ilike } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
 import { notify } from "../lib/notify";
 import { rateLimit } from "../middlewares/rateLimit";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { ARCHETYPE_MOOD_MATCHERS, ARCHETYPE_CHALLENGES, postMatchesArchetype } from "../lib/archetypeMatch";
 
 const objectStorage = new ObjectStorageService();
 
@@ -29,7 +30,9 @@ async function hydratePosts(rows: typeof postsTable.$inferSelect[], viewerId?: s
 
 router.get("/feed", optionalAuth, async (req, res) => {
   const season = typeof req.query.season === "string" ? req.query.season : null;
-  const scope = req.query.scope === "following" ? "following" : "foryou";
+  const rawScope = String(req.query.scope ?? "foryou");
+  const scope: "foryou" | "following" | "iola" =
+    rawScope === "following" ? "following" : rawScope === "iola" ? "iola" : "foryou";
   const limit = Math.min(parseInt(String(req.query.limit ?? "30"), 10) || 30, 100);
   // Cursor is only honoured when sorting by createdAt (Following + season-only).
   // For-You uses a composite ranking that doesn't have a stable date cursor —
@@ -56,6 +59,33 @@ router.get("/feed", optionalAuth, async (req, res) => {
       return;
     }
     conds.push(inArray(postsTable.authorId, followees.map((f) => f.id)));
+  }
+
+  // Iola scope — match posts whose `mood` contains one of the viewer's
+  // archetype matcher substrings. Falls back gracefully when the viewer
+  // hasn't taken the quiz / has no profile (returns recent posts).
+  let iolaArchetype: ArchetypeId | null = null;
+  if (scope === "iola") {
+    // Prefer the server-side archetype on the viewer's profile; fall back
+    // to a `?archetype=` query param so signed-out users can still browse
+    // a personalised feed straight after taking the quiz.
+    if (req.userId) {
+      const me = await db.select({ a: profilesTable.archetype }).from(profilesTable).where(eq(profilesTable.userId, req.userId)).limit(1);
+      const a = me[0]?.a as ArchetypeId | null | undefined;
+      if (a && (ARCHETYPE_IDS as readonly string[]).includes(a)) iolaArchetype = a;
+    }
+    if (!iolaArchetype) {
+      const q = typeof req.query.archetype === "string" ? req.query.archetype : "";
+      if ((ARCHETYPE_IDS as readonly string[]).includes(q)) iolaArchetype = q as ArchetypeId;
+    }
+    if (iolaArchetype) {
+      const matchers = ARCHETYPE_MOOD_MATCHERS[iolaArchetype];
+      // SQL ILIKE OR — small N (~6) so this is a cheap predicate. We do
+      // NOT push a hard filter that would empty the feed for fresh users:
+      // matched posts surface first via ranking, others still appear.
+      const moodOr = or(...matchers.map((kw) => ilike(postsTable.mood, `%${kw}%`)));
+      if (moodOr) conds.push(moodOr);
+    }
   }
 
   // For You ranks recent posts by a small engagement boost. Cheap proxy
@@ -102,7 +132,57 @@ router.post("/posts", requireAuth, rateLimit({ scope: "post-create", max: 10, wi
     return;
   }
   const inserted = await db.insert(postsTable).values({ ...parsed.data, authorId: req.userId! }).returning();
-  res.status(201).json(inserted[0]);
+  // Cross-pollinate: notify followers whose archetype matches this post's
+  // mood. Best-effort, capped to 50 to keep it cheap; ignored if author
+  // has no followers or post has no mood.
+  const newPost = inserted[0];
+  if (newPost?.mood) {
+    try {
+      const followers = await db
+        .select({ id: followsTable.followerId, a: profilesTable.archetype })
+        .from(followsTable)
+        .innerJoin(profilesTable, eq(profilesTable.userId, followsTable.followerId))
+        .where(eq(followsTable.followeeId, req.userId!))
+        .limit(50);
+      // Fan out in parallel — notify() already swallows its own errors and
+      // we cap N at 50, so Promise.allSettled keeps the post-create latency
+      // bounded by the slowest insert rather than their sum.
+      await Promise.allSettled(
+        followers
+          .filter((f) => {
+            const a = f.a as ArchetypeId | null;
+            return a && postMatchesArchetype(newPost.mood, a);
+          })
+          .map((f) => notify({ recipientId: f.id, actorId: req.userId!, kind: "match", postId: newPost.id })),
+      );
+    } catch (e) {
+      req.log.warn({ err: e }, "Archetype match notify failed");
+    }
+  }
+  res.status(201).json(newPost);
+});
+
+// Weekly archetype challenge — pure function of the current ISO week so
+// every viewer of the same archetype sees the same prompt all week. No DB
+// row needed; we just key the copy off the week number to add variation.
+router.get("/archetype/challenge", optionalAuth, async (req, res) => {
+  const a = typeof req.query.archetype === "string" ? req.query.archetype : "";
+  if (!(ARCHETYPE_IDS as readonly string[]).includes(a)) {
+    res.status(400).json({ error: "Invalid archetype" });
+    return;
+  }
+  const challenge = ARCHETYPE_CHALLENGES[a as ArchetypeId];
+  // ISO week number (Mon-anchored) — 1-53. Used so the headline rotates
+  // between two variants per archetype as we add more.
+  const now = new Date();
+  const start = Date.UTC(now.getUTCFullYear(), 0, 1);
+  const days = Math.floor((now.getTime() - start) / 86400000);
+  const week = Math.floor((days + new Date(start).getUTCDay()) / 7) + 1;
+  // End of the current ISO week (Sunday 23:59:59Z) — close enough for a
+  // "ends in N days" countdown on the client.
+  const dayOfWeek = (now.getUTCDay() + 6) % 7; // Mon=0
+  const endsAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + (6 - dayOfWeek), 23, 59, 59));
+  res.json({ archetype: a, week, headline: challenge.headline, body: challenge.body, endsAt: endsAt.toISOString() });
 });
 
 router.get("/posts/:id", optionalAuth, async (req, res) => {

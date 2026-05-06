@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { UserButton, useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
-import { Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon, Store, BarChart3 } from "lucide-react";
+import { Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon, Store, BarChart3, Wand2 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
 const links = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/feed", label: "Feed", icon: Sparkles },
+  { href: "/archetype", label: "Iola", icon: Wand2 },
   { href: "/upload", label: "Share", icon: UploadIcon },
   { href: "/messages", label: "DMs", icon: MessageCircle },
   { href: "/brands", label: "Shop", icon: Store },

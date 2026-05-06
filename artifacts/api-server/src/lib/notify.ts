@@ -1,6 +1,6 @@
 import { db, notificationsTable } from "@workspace/db";
 
-export type NotifyKind = "like" | "comment" | "follow" | "message" | "system";
+export type NotifyKind = "like" | "comment" | "follow" | "message" | "system" | "match";
 
 interface NotifyArgs {
   recipientId: string;

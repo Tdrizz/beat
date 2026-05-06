@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Sparkles, RefreshCw, Heart, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, RefreshCw, Heart, ArrowRight, Download, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPE_QUIZ, scoreQuiz } from "../lib/archetypeQuiz";
 import {
@@ -52,6 +52,20 @@ export default function ArchetypePage() {
     }, 240);
   };
 
+  // Undo: rewind one step AND clear that step's answer so the auto-advance
+  // doesn't immediately re-fire if the user re-picks the same option.
+  const handleUndo = () => {
+    setStep((s) => {
+      const prev = Math.max(0, s - 1);
+      setAnswers((a) => {
+        const next = [...a];
+        next[prev] = null;
+        return next;
+      });
+      return prev;
+    });
+  };
+
   const handleRetake = () => {
     clear();
     setAnswers(Array(ARCHETYPE_QUIZ.length).fill(null));
@@ -86,7 +100,7 @@ export default function ArchetypePage() {
             question={q}
             selected={answers[step]}
             onAnswer={handleAnswer}
-            onBack={() => setStep((s) => Math.max(0, s - 1))}
+            onBack={handleUndo}
             onForward={() => setStep((s) => Math.min(ARCHETYPE_QUIZ.length - 1, s + 1))}
           />
         )}
@@ -182,8 +196,9 @@ function QuizView({
           disabled={step === 0}
           onClick={onBack}
           className="rounded-full gap-1.5 text-muted-foreground"
+          title="Undo last answer"
         >
-          <ChevronLeft className="w-4 h-4" /> Back
+          <Undo2 className="w-4 h-4" /> Undo
         </Button>
         <Button
           variant="ghost"
@@ -356,7 +371,10 @@ function ResultView({
         <div className="text-xs text-muted-foreground">
           {dateText ? <>Quiz taken {dateText}.</> : <>Your archetype is saved on this device.</>}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => downloadArchetypeCard(archetypeId)} className="rounded-full gap-1.5">
+            <Download className="w-3.5 h-3.5" /> Save card
+          </Button>
           <Button variant="outline" onClick={onRetake} className="rounded-full gap-1.5">
             <RefreshCw className="w-3.5 h-3.5" /> Retake
           </Button>
@@ -370,4 +388,115 @@ function ResultView({
       </div>
     </motion.div>
   );
+}
+
+// ── Shareable card export ───────────────────────────────────────────────────
+//
+// Renders the archetype hero into a square PNG via a one-shot OffscreenCanvas
+// (falls back to an in-memory <canvas>). Vanilla canvas keeps the bundle
+// dep-free — html2canvas would add ~50KB and we only need a static layout.
+
+function downloadArchetypeCard(id: ArchetypeId) {
+  const arch = ARCHETYPES[id];
+  const W = 1080, H = 1080;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  // Background gradient — same diagonal as the on-screen hero.
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, arch.palette[0]);
+  grad.addColorStop(1, arch.palette[2]);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle radial glow in the upper right corner.
+  const glow = ctx.createRadialGradient(W * 0.85, H * 0.18, 30, W * 0.85, H * 0.18, 380);
+  glow.addColorStop(0, hexA(arch.palette[3], 0.55));
+  glow.addColorStop(1, hexA(arch.palette[3], 0));
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  const fg = pickFg(arch.palette[1] ?? arch.palette[0]);
+  const isLight = fg === "light";
+  const textCol = isLight ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.88)";
+  const subCol = isLight ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0.65)";
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = subCol;
+  ctx.font = "600 28px ui-sans-serif, system-ui, sans-serif";
+  ctx.fillText("BEAT · IOLA ARCHETYPE", 80, 140);
+
+  ctx.fillStyle = textCol;
+  ctx.font = "bold 130px ui-serif, Georgia, serif";
+  ctx.fillText(arch.name, 80, 320);
+
+  ctx.fillStyle = subCol;
+  ctx.font = "italic 38px ui-serif, Georgia, serif";
+  ctx.fillText(arch.tagline, 80, 380);
+
+  // Palette swatches — five circles in a row.
+  const swatchY = 540, swatchR = 56, gap = 36;
+  arch.palette.forEach((hex, i) => {
+    const x = 80 + swatchR + i * (swatchR * 2 + gap);
+    ctx.beginPath();
+    ctx.arc(x, swatchY, swatchR, 0, Math.PI * 2);
+    ctx.fillStyle = hex;
+    ctx.fill();
+    ctx.strokeStyle = isLight ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.25)";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  });
+
+  // Description — wrap by hand at ~38 chars per line, max 4 lines.
+  ctx.fillStyle = textCol;
+  ctx.font = "400 34px ui-sans-serif, system-ui, sans-serif";
+  const lines = wrap(ctx, arch.description, W - 160, 4);
+  lines.forEach((ln, i) => ctx.fillText(ln, 80, 720 + i * 50));
+
+  // Footer signature.
+  ctx.fillStyle = subCol;
+  ctx.font = "600 28px ui-sans-serif, system-ui, sans-serif";
+  ctx.fillText("Take the test → beat.app/archetype", 80, H - 80);
+
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `iola-${id}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, "image/png");
+}
+
+function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number, maxLines: number): string[] {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? cur + " " + w : w;
+    if (ctx.measureText(test).width > maxW) {
+      if (cur) lines.push(cur);
+      cur = w;
+      if (lines.length >= maxLines) break;
+    } else cur = test;
+  }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  if (lines.length === maxLines) {
+    const last = lines[maxLines - 1];
+    if (last) lines[maxLines - 1] = last.replace(/\s*\S*$/, "…");
+  }
+  return lines;
+}
+
+function hexA(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }

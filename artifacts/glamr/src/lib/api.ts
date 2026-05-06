@@ -42,6 +42,7 @@ export interface Profile {
   bio: string | null;
   avatarUrl: string | null;
   isCreator: boolean;
+  archetype: string | null;
   createdAt: string;
 }
 
@@ -102,7 +103,7 @@ export interface Notification {
   id: string;
   recipientId: string;
   actorId: string | null;
-  kind: "like" | "comment" | "follow" | "message" | "system";
+  kind: "like" | "comment" | "follow" | "message" | "system" | "match";
   postId: string | null;
   conversationId: string | null;
   body: string;
