@@ -5,6 +5,7 @@ import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks } 
 import { useCamera } from "../hooks/useCamera";
 import { useAITryOn } from "../hooks/useAITryOn";
 import { useStreak } from "../hooks/useStreak";
+import { useArchetype } from "../hooks/useArchetype";
 import { AITryOnModal } from "../components/AITryOnModal";
 import { AffiliateProductsForLook } from "../components/AffiliateProductsForLook";
 import { VoiceGuide } from "../components/VoiceGuide";
@@ -244,6 +245,10 @@ export default function TryOn() {
 
   // AI photoreal try-on
   const aiTryon = useAITryOn();
+  // Personalisation lens — mixed into the AI prompt server-side so the
+  // generated image bends toward the user's archetype on top of skin tone
+  // and the look's per-step shades.
+  const { archetype: userArchetype } = useArchetype();
   const [aiTryonOpen, setAiTryonOpen] = useState(false);
   const [aiIntensity, setAiIntensity] = useState(60);
   // Collapsed state for the right-hand "About this look" panel — when on,
@@ -266,6 +271,7 @@ export default function TryOn() {
       look: baseLook,
       intensity: aiIntensity,
       angleLabel,
+      archetype: userArchetype,
     });
   };
 
@@ -287,7 +293,13 @@ export default function TryOn() {
         return;
       }
       setAiTryonOpen(true);
-      aiTryon.run({ video: v, look: baseLook, intensity: aiIntensity, angleLabel: "Front" });
+      aiTryon.run({
+        video: v,
+        look: baseLook,
+        intensity: aiIntensity,
+        angleLabel: "Front",
+        archetype: userArchetype,
+      });
     }, 900);
     return () => window.clearTimeout(t);
     // aiTryon / videoRef are stable enough; we deliberately key off camera

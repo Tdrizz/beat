@@ -22,6 +22,22 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   `opacity-0 group-hover` (broken on touch); primary "Try with AI" + secondary
   "Details" link stay visible.
 
+## Personalisation
+
+- **Beauty archetype quiz**: 5-question on-device quiz at `/archetype`
+  (no auth needed; result persisted in `localStorage` via `useArchetype`).
+  Six archetypes (Romantic / Siren / Icon / Muse / Rebel / Naturalist) each
+  carry a signature palette, mood-keyword matchers (used to filter the
+  existing look catalogue), and per-area makeup tips. Definitions in
+  `lib/archetypes.ts`, questions/scoring in `lib/archetypeQuiz.ts`.
+- The archetype is plumbed into the AI try-on prompt — `useAITryOn` sends
+  `{ archetype }`, `aiTryon.ts` enum-validates it (no prompt injection)
+  and adds a short finish-bias paragraph (`ARCHETYPE_GUIDANCE`) so the
+  generated image leans the right direction (smokier / glowier / sharper)
+  on top of skin tone + the look's per-step shades.
+- Home shows an `<ArchetypeCallout />` between the daily-beat card and the
+  section shortcuts — invite card pre-quiz, personalised banner post-quiz.
+
 ## AI
 
 - Gemini AI integration (Replit-managed, no key required) is the **only** try-on

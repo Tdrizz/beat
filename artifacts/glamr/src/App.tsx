@@ -21,6 +21,7 @@ import MessageThread from "@/pages/MessageThread";
 import Brands from "@/pages/Brands";
 import UserProfile from "@/pages/UserProfile";
 import AffiliateStats from "@/pages/AffiliateStats";
+import Archetype from "@/pages/Archetype";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/skincare" component={Skincare} />
       <Route path="/diary" component={SkinDiary} />
       <Route path="/special-products" component={SpecialProducts} />
+      <Route path="/archetype" component={Archetype} />
 
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
       <Route path="/upload"><AuthedRoute><Upload /></AuthedRoute></Route>

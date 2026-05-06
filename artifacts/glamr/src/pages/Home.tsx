@@ -14,6 +14,7 @@ import { useFavorites } from "../hooks/useFavorites";
 import { useStreak } from "../hooks/useStreak";
 import { StreakBadge } from "../components/StreakBadge";
 import { MoodRail, type MoodOption } from "../components/MoodRail";
+import { ArchetypeCallout } from "../components/ArchetypeCallout";
 import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -608,6 +609,10 @@ export default function Home() {
       <div className="mt-6">
         <DailyBeatCard />
       </div>
+
+      {/* Archetype callout — entry point to the personality quiz, or a
+          banner showing the user's archetype if they've already taken it. */}
+      <ArchetypeCallout />
 
       {/* Section shortcuts */}
       <SectionShortcuts />

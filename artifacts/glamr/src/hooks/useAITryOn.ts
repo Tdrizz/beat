@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { Look } from "../lib/looks";
+import type { ArchetypeId } from "../lib/archetypes";
 
 interface RunArgs {
   video: HTMLVideoElement | null;
@@ -8,6 +9,10 @@ interface RunArgs {
   intensity?: number;
   /** Optional label for this capture, e.g. "Front", "Left ¾". */
   angleLabel?: string;
+  /** Optional beauty archetype from the on-device quiz. When present,
+   *  the server biases the finish (smokier / glowier / sharper / etc.)
+   *  toward the archetype while preserving the look's signature shades. */
+  archetype?: ArchetypeId | null;
 }
 
 export interface AngleResult {
@@ -101,7 +106,7 @@ export function useAITryOn() {
   // launching overlapping requests that would race on setState.
   const inFlight = useRef(false);
 
-  const run = useCallback(async ({ video, look, intensity = 60, angleLabel }: RunArgs) => {
+  const run = useCallback(async ({ video, look, intensity = 60, angleLabel, archetype }: RunArgs) => {
     if (inFlight.current) return;
     if (!video || !video.videoWidth || !video.videoHeight) {
       setError("Camera not ready yet — try again in a moment.");
@@ -158,6 +163,7 @@ export function useAITryOn() {
           intensity,
           steps,
           skinTone,
+          archetype: archetype ?? null,
         }),
       });
 

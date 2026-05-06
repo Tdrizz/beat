@@ -43,6 +43,14 @@ const TryonBody = z.object({
     })
     .nullable()
     .optional(),
+  // Optional: the user's beauty archetype from the on-device quiz. We use
+  // this to bias the model toward finishes that match the user's stated
+  // personality (e.g. siren → smokier, naturalist → softer). Enum-locked
+  // for the same prompt-injection reason as skinTone.
+  archetype: z
+    .enum(["romantic", "siren", "icon", "muse", "rebel", "naturalist"])
+    .nullable()
+    .optional(),
 });
 
 // Translate a 0–100 intensity into a short natural-language descriptor that
@@ -54,6 +62,26 @@ function intensityDescriptor(i: number): { label: string; guidance: string } {
   if (i <= 85)  return { label: "bold",          guidance: "Apply each product with bold saturation — rich pigment payoff, opaque coverage, strong but still photoreal." };
   return        { label: "full glam",            guidance: "Apply each product at maximum runway intensity — fully opaque, highly saturated pigment, dramatic high-impact finish." };
 }
+
+// Per-archetype prompt fragments. These are short, finish-focused nudges
+// the model layers on top of the look's per-step shades — they bend the
+// finish toward the user's personality without overriding the look's
+// signature shades or the user's skin tone. Kept short so they don't
+// crowd out the more important geometric/identity rules later in the prompt.
+const ARCHETYPE_GUIDANCE: Record<string, string> = {
+  romantic:
+    "User's beauty archetype is THE ROMANTIC: lean dewy and soft. Diffuse every edge. Favour rose/peach/petal undertones in blush and lip. Skin should look glowy, almost lit-from-within. No hard liner.",
+  siren:
+    "User's beauty archetype is THE SIREN: lean smouldering and high-impact. Push depth in the eye (smoke/aubergine/bronze) and pigment density on the lip. Sculpt cheeks with bronze/terracotta rather than pink. Skin polished and satin, never powdery.",
+  icon:
+    "User's beauty archetype is THE ICON: lean polished and timeless. Skin should look like couture-tailored second-skin foundation. Brows architectural and defined. Lines crisp. Restraint over invention — every element looks deliberate and editorial.",
+  muse:
+    "User's beauty archetype is THE MUSE: lean painterly and ethereal. Allow subtle iridescence on lid and high points. Embrace unexpected colour temperatures (lavender, gold, rust) within the look's palette. Skin lit-from-within, brows soft and brushed up.",
+  rebel:
+    "User's beauty archetype is THE REBEL: lean graphic and high-contrast. Sharper liner edges, punchier pigment, willingness to render lips matte and dark. Skin can be matte rather than dewy to make colour pop. Brushy unconventional brow.",
+  naturalist:
+    "User's beauty archetype is THE NATURALIST: lean fresh and skin-first. Render every product as the lightest credible interpretation of its shade — think tinted balm, cream stain, sheer wash. Glow comes from skin care, not shimmer. Brows fluffy and undone.",
+};
 
 const STEP_LABELS: Record<string, string> = {
   base:   "Foundation / complexion",
@@ -82,6 +110,13 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
     lines.push(s.instruction ? `${piece}. ${s.instruction}` : piece);
   }
   lines.push("");
+  if (parsed.archetype) {
+    const guidance = ARCHETYPE_GUIDANCE[parsed.archetype];
+    if (guidance) {
+      lines.push(guidance);
+      lines.push("");
+    }
+  }
   if (parsed.skinTone) {
     lines.push("");
     lines.push(
