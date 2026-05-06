@@ -1,4 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+/* Girly + bubbly type system:
+ *   • Body sans → Quicksand: rounded terminals, gentle stroke contrast,
+ *     reads as friendly without sacrificing legibility at small sizes.
+ *   • Display/serif → Fredoka: a soft, "marshmallow" rounded display
+ *     with no sharp edges, perfect for headlines / brand name.
+ *   • Accent script → Caveat: hand-written feel, used sparingly via
+ *     `font-script` for tiny flourishes (e.g. greetings).
+ */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fredoka:wght@500;600;700&family=Caveat:wght@500;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -59,6 +67,7 @@
 
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
+  --font-script: var(--app-font-script);
   --font-mono: var(--app-font-mono);
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -119,8 +128,9 @@
   --chart-4: 35 80% 65%;
   --chart-5: 195 50% 60%;
 
-  --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: 'Playfair Display', serif;
+  --app-font-sans: 'Quicksand', 'Nunito', system-ui, sans-serif;
+  --app-font-serif: 'Fredoka', 'Quicksand', sans-serif;
+  --app-font-script: 'Caveat', cursive;
   --app-font-mono: Menlo, monospace;
   --radius: .75rem;
   --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.02);
@@ -205,6 +215,9 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    /* Slightly looser letter-spacing balances Quicksand's rounded forms
+     * and gives the whole app a softer, more "bubbly" rhythm. */
+    letter-spacing: 0.005em;
     /* Chic ambient background — soft blush + cream + mauve radial wash
      * topped with a couture floral & butterfly motif. The motif is a
      * single tileable SVG (320×320) of camellia-style flowers, leaf
