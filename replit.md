@@ -162,6 +162,16 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   MessageThread, Brands, UserProfile, AffiliateStats. `TopNav` is the shared
   shell.
 
+## Brushes & tools
+
+`/tools` (`pages/Tools.tsx` + `lib/tools.ts`) — curated catalogue of 38
+makeup tools across 24 popular brands (Real Techniques, Morphe, Fenty,
+MAC, Charlotte Tilbury, Beautyblender, Tweezerman, Sigma, Shiseido, …).
+Eight categories (face/eye/lip brushes, sponges, lashes, brows, skin
+tools, sets) with search, brand-select, and price sort. Static dataset
+(prices are USD MSRP, not affiliate clicks). Linked from `TopNav`'s
+hamburger drawer (Brush icon).
+
 ## Navigation
 
 - **Desktop** (`≥sm`): `<TopNav />` shows the Beat wordmark + 6 primary

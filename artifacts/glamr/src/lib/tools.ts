@@ -1,0 +1,495 @@
+// Curated catalogue of makeup brushes + tools from popular brands.
+// This is a static, hand-picked list — prices are USD MSRP at time of
+// curation and may drift; we surface that disclaimer in the UI.
+//
+// IMPORTANT: This catalogue is intentionally NOT wired through the
+// affiliate-click tracker (`/api/affiliate/click/:productId`). The
+// affiliate flow only resolves IDs that exist in the seeded
+// `productsTable`, and these tool brands aren't part of the affiliate
+// program. We link directly to brand homepages instead — clicks are
+// not tracked or attributed to creators, by design. If the program
+// expands to cover these brands, migrate `Tool` to reference a real
+// `productsTable.id` and switch the anchor to the affiliate redirect.
+
+export const TOOL_CATEGORIES = [
+  "face-brush",
+  "eye-brush",
+  "lip-brush",
+  "sponge",
+  "lashes",
+  "brows",
+  "skin-tools",
+  "sets",
+] as const;
+export type ToolCategory = typeof TOOL_CATEGORIES[number];
+
+export const TOOL_CATEGORY_LABELS: Record<ToolCategory, string> = {
+  "face-brush":  "Face brushes",
+  "eye-brush":   "Eye brushes",
+  "lip-brush":   "Lip brushes",
+  "sponge":      "Sponges",
+  "lashes":      "Lash tools",
+  "brows":       "Brow tools",
+  "skin-tools":  "Skin tools",
+  "sets":        "Brush sets",
+};
+
+export interface Tool {
+  id: string;
+  brand: string;
+  name: string;
+  category: ToolCategory;
+  /** Short purpose-led blurb shown on the card. */
+  use: string;
+  priceCents: number;
+  currency: "USD";
+  /** Brand product page or retailer page. */
+  url: string;
+  /** Tailwind gradient class for the visual swatch. */
+  swatch: string;
+}
+
+// Sorted roughly by price within each category for predictable grids.
+export const TOOLS: Tool[] = [
+  // ── Face brushes ────────────────────────────────────────────────────
+  {
+    id: "rt-expert-face",
+    brand: "Real Techniques",
+    name: "Expert Face Brush",
+    category: "face-brush",
+    use: "Stippling foundation for an airbrushed base.",
+    priceCents: 999,
+    currency: "USD",
+    url: "https://www.realtechniques.com/",
+    swatch: "from-rose-300 to-pink-400",
+  },
+  {
+    id: "morphe-m439",
+    brand: "Morphe",
+    name: "M439 Deluxe Buffer Brush",
+    category: "face-brush",
+    use: "Dense, flat-top buffer for liquid + cream foundation.",
+    priceCents: 1500,
+    currency: "USD",
+    url: "https://www.morphe.com/",
+    swatch: "from-amber-300 to-rose-400",
+  },
+  {
+    id: "sephora-pro-50",
+    brand: "Sephora Collection",
+    name: "Pro Press Powder Brush #50",
+    category: "face-brush",
+    use: "Pressed-powder setting + bronzer pickup.",
+    priceCents: 3000,
+    currency: "USD",
+    url: "https://www.sephora.com/",
+    swatch: "from-stone-300 to-amber-400",
+  },
+  {
+    id: "fenty-face-110",
+    brand: "Fenty Beauty",
+    name: "Face Shaping Brush 110",
+    category: "face-brush",
+    use: "Tapered domed brush for contour + bronzer placement.",
+    priceCents: 3400,
+    currency: "USD",
+    url: "https://fentybeauty.com/",
+    swatch: "from-amber-700 to-rose-500",
+  },
+  {
+    id: "ct-powder-blush",
+    brand: "Charlotte Tilbury",
+    name: "Powder & Sculpt Brush",
+    category: "face-brush",
+    use: "Dual-purpose — sets powder, sculpts cheekbones.",
+    priceCents: 5500,
+    currency: "USD",
+    url: "https://www.charlottetilbury.com/",
+    swatch: "from-rose-400 to-fuchsia-500",
+  },
+  {
+    id: "mac-129",
+    brand: "MAC Cosmetics",
+    name: "129 Powder/Blush Brush",
+    category: "face-brush",
+    use: "Cult classic — soft natural fibres for blush.",
+    priceCents: 4400,
+    currency: "USD",
+    url: "https://www.maccosmetics.com/",
+    swatch: "from-pink-300 to-rose-400",
+  },
+  {
+    id: "rare-liquid-touch",
+    brand: "Rare Beauty",
+    name: "Liquid Touch Foundation Brush",
+    category: "face-brush",
+    use: "Two-sided synthetic for seamless liquid blending.",
+    priceCents: 3000,
+    currency: "USD",
+    url: "https://www.rarebeauty.com/",
+    swatch: "from-rose-200 to-rose-400",
+  },
+  {
+    id: "shiseido-fude",
+    brand: "Shiseido",
+    name: "Daiya Fude Face Duo Brush",
+    category: "face-brush",
+    use: "Hand-cut Japanese fude for cheek + highlight.",
+    priceCents: 6800,
+    currency: "USD",
+    url: "https://www.shiseido.com/",
+    swatch: "from-stone-400 to-rose-500",
+  },
+
+  // ── Eye brushes ─────────────────────────────────────────────────────
+  {
+    id: "ej-base-shader",
+    brand: "e.l.f. Cosmetics",
+    name: "Eye Shadow Brush",
+    category: "eye-brush",
+    use: "Flat shader for packing pigment on the lid.",
+    priceCents: 300,
+    currency: "USD",
+    url: "https://www.elfcosmetics.com/",
+    swatch: "from-teal-300 to-emerald-400",
+  },
+  {
+    id: "morphe-m330",
+    brand: "Morphe",
+    name: "M330 Blending Crease Brush",
+    category: "eye-brush",
+    use: "Soft tapered fibres for windshield-wiper crease blending.",
+    priceCents: 1200,
+    currency: "USD",
+    url: "https://www.morphe.com/",
+    swatch: "from-amber-400 to-orange-500",
+  },
+  {
+    id: "mac-217",
+    brand: "MAC Cosmetics",
+    name: "217 Blending Brush",
+    category: "eye-brush",
+    use: "The industry-standard blending brush.",
+    priceCents: 3000,
+    currency: "USD",
+    url: "https://www.maccosmetics.com/",
+    swatch: "from-stone-300 to-stone-500",
+  },
+  {
+    id: "sigma-e25",
+    brand: "Sigma Beauty",
+    name: "E25 Blending Brush",
+    category: "eye-brush",
+    use: "Synthetic dupe of the MAC 217 — vegan + cruelty-free.",
+    priceCents: 1600,
+    currency: "USD",
+    url: "https://www.sigmabeauty.com/",
+    swatch: "from-violet-400 to-purple-500",
+  },
+  {
+    id: "natasha-12",
+    brand: "Natasha Denona",
+    name: "Brush 12 Eye Detail",
+    category: "eye-brush",
+    use: "Pencil brush for smudging liner + smoking out the lash line.",
+    priceCents: 3500,
+    currency: "USD",
+    url: "https://www.natashadenona.com/",
+    swatch: "from-zinc-700 to-zinc-900",
+  },
+  {
+    id: "huda-smokey-obsessions",
+    brand: "Huda Beauty",
+    name: "Smokey Eye Brush Set (4-pc)",
+    category: "eye-brush",
+    use: "Crease, packer, smudger, blender — full smokey kit.",
+    priceCents: 6500,
+    currency: "USD",
+    url: "https://hudabeauty.com/",
+    swatch: "from-rose-500 to-fuchsia-700",
+  },
+
+  // ── Lip brushes ─────────────────────────────────────────────────────
+  {
+    id: "ej-lip",
+    brand: "e.l.f. Cosmetics",
+    name: "Lip Defining Brush",
+    category: "lip-brush",
+    use: "Tapered tip for sharp lip lines.",
+    priceCents: 300,
+    currency: "USD",
+    url: "https://www.elfcosmetics.com/",
+    swatch: "from-rose-400 to-pink-600",
+  },
+  {
+    id: "rt-lip",
+    brand: "Real Techniques",
+    name: "Detailer Lip Brush",
+    category: "lip-brush",
+    use: "Synthetic flat tip — works with cream + liquid lips.",
+    priceCents: 600,
+    currency: "USD",
+    url: "https://www.realtechniques.com/",
+    swatch: "from-rose-500 to-red-600",
+  },
+  {
+    id: "mac-318",
+    brand: "MAC Cosmetics",
+    name: "318 Retractable Lip Brush",
+    category: "lip-brush",
+    use: "Compact retractable — perfect for the bag.",
+    priceCents: 2500,
+    currency: "USD",
+    url: "https://www.maccosmetics.com/",
+    swatch: "from-rose-600 to-rose-800",
+  },
+
+  // ── Sponges ─────────────────────────────────────────────────────────
+  {
+    id: "rt-miracle",
+    brand: "Real Techniques",
+    name: "Miracle Complexion Sponge",
+    category: "sponge",
+    use: "Flat edge for contour, rounded base for cheeks.",
+    priceCents: 700,
+    currency: "USD",
+    url: "https://www.realtechniques.com/",
+    swatch: "from-orange-300 to-rose-400",
+  },
+  {
+    id: "morphe-bake",
+    brand: "Morphe",
+    name: "Beautiful Bake Sponge Set",
+    category: "sponge",
+    use: "Two sponges sized for under-eye baking + setting.",
+    priceCents: 1000,
+    currency: "USD",
+    url: "https://www.morphe.com/",
+    swatch: "from-amber-200 to-orange-400",
+  },
+  {
+    id: "bb-original",
+    brand: "Beautyblender",
+    name: "Original Beautyblender",
+    category: "sponge",
+    use: "The OG egg sponge — bouncy, edgeless finish.",
+    priceCents: 2000,
+    currency: "USD",
+    url: "https://www.beautyblender.com/",
+    swatch: "from-pink-400 to-rose-500",
+  },
+  {
+    id: "bb-power-pocket",
+    brand: "Beautyblender",
+    name: "Power Pocket Puff",
+    category: "sponge",
+    use: "Plush velour puff for setting powder.",
+    priceCents: 1600,
+    currency: "USD",
+    url: "https://www.beautyblender.com/",
+    swatch: "from-violet-300 to-purple-500",
+  },
+
+  // ── Lash tools ──────────────────────────────────────────────────────
+  {
+    id: "twz-lash",
+    brand: "Tweezerman",
+    name: "Classic Lash Curler",
+    category: "lashes",
+    use: "Award-winning silicone-padded curl.",
+    priceCents: 2300,
+    currency: "USD",
+    url: "https://www.tweezerman.com/",
+    swatch: "from-stone-400 to-zinc-600",
+  },
+  {
+    id: "shiseido-curler",
+    brand: "Shiseido",
+    name: "Eyelash Curler",
+    category: "lashes",
+    use: "Cult-favourite curve fits nearly every eye shape.",
+    priceCents: 2300,
+    currency: "USD",
+    url: "https://www.shiseido.com/",
+    swatch: "from-rose-300 to-rose-500",
+  },
+  {
+    id: "surratt-relevee",
+    brand: "Surratt",
+    name: "Relevée Lash Curler",
+    category: "lashes",
+    use: "Hand-finished, weighted handle for precision.",
+    priceCents: 2700,
+    currency: "USD",
+    url: "https://surrattbeauty.com/",
+    swatch: "from-amber-400 to-rose-500",
+  },
+  {
+    id: "ardell-wispies",
+    brand: "Ardell",
+    name: "Demi Wispies False Lashes",
+    category: "lashes",
+    use: "Reusable strip lashes — natural feathered look.",
+    priceCents: 599,
+    currency: "USD",
+    url: "https://www.ardellbeauty.com/",
+    swatch: "from-zinc-700 to-black",
+  },
+  {
+    id: "lf-london",
+    brand: "Lilly Lashes",
+    name: "London 3D Mink Lashes",
+    category: "lashes",
+    use: "Dramatic 3D mink for special occasions.",
+    priceCents: 2900,
+    currency: "USD",
+    url: "https://www.lillylashes.com/",
+    swatch: "from-zinc-800 to-black",
+  },
+
+  // ── Brow tools ──────────────────────────────────────────────────────
+  {
+    id: "anastasia-7b",
+    brand: "Anastasia Beverly Hills",
+    name: "Brush #7B Duo",
+    category: "brows",
+    use: "Angled brush + spoolie — applies + blends brow product.",
+    priceCents: 2200,
+    currency: "USD",
+    url: "https://www.anastasiabeverlyhills.com/",
+    swatch: "from-amber-700 to-stone-700",
+  },
+  {
+    id: "twz-slant",
+    brand: "Tweezerman",
+    name: "Slant Tweezer",
+    category: "brows",
+    use: "Hand-filed angled tip — the gold standard.",
+    priceCents: 2500,
+    currency: "USD",
+    url: "https://www.tweezerman.com/",
+    swatch: "from-stone-300 to-zinc-500",
+  },
+  {
+    id: "rt-brow-set",
+    brand: "Real Techniques",
+    name: "Brow Shaping Set",
+    category: "brows",
+    use: "Spoolie + angled liner duo for filled, fluffed brows.",
+    priceCents: 1100,
+    currency: "USD",
+    url: "https://www.realtechniques.com/",
+    swatch: "from-stone-400 to-amber-600",
+  },
+
+  // ── Skin tools ──────────────────────────────────────────────────────
+  {
+    id: "mz-rose-quartz",
+    brand: "Mount Lai",
+    name: "Rose Quartz Gua Sha",
+    category: "skin-tools",
+    use: "Lymphatic drainage + sculpting along the jawline.",
+    priceCents: 3400,
+    currency: "USD",
+    url: "https://mountlai.com/",
+    swatch: "from-rose-200 to-pink-300",
+  },
+  {
+    id: "nurse-jamie",
+    brand: "Nurse Jamie",
+    name: "Uplift Massaging Beauty Roller",
+    category: "skin-tools",
+    use: "24-stone roller for tone + lift; loved by Kim K.",
+    priceCents: 6900,
+    currency: "USD",
+    url: "https://www.nursejamie.com/",
+    swatch: "from-stone-300 to-rose-400",
+  },
+  {
+    id: "foreo-luna",
+    brand: "Foreo",
+    name: "Luna 4 Cleansing Device",
+    category: "skin-tools",
+    use: "Silicone sonic cleansing — replaces brush heads.",
+    priceCents: 27900,
+    currency: "USD",
+    url: "https://www.foreo.com/",
+    swatch: "from-pink-400 to-fuchsia-500",
+  },
+  {
+    id: "solawave",
+    brand: "SolaWave",
+    name: "4-in-1 Radiant Renewal Wand",
+    category: "skin-tools",
+    use: "Red light + microcurrent + warmth + massage.",
+    priceCents: 16900,
+    currency: "USD",
+    url: "https://solawave.co/",
+    swatch: "from-rose-400 to-amber-400",
+  },
+  {
+    id: "drd-nuface",
+    brand: "NuFace",
+    name: "Trinity+ Microcurrent Device",
+    category: "skin-tools",
+    use: "FDA-cleared microcurrent for facial toning.",
+    priceCents: 39500,
+    currency: "USD",
+    url: "https://www.nuface.com/",
+    swatch: "from-fuchsia-500 to-purple-600",
+  },
+
+  // ── Brush sets ──────────────────────────────────────────────────────
+  {
+    id: "rt-everyday",
+    brand: "Real Techniques",
+    name: "Everyday Essentials Set (5-pc)",
+    category: "sets",
+    use: "Sponge + 4 brushes for a full face — best beginner kit.",
+    priceCents: 2400,
+    currency: "USD",
+    url: "https://www.realtechniques.com/",
+    swatch: "from-orange-300 to-rose-500",
+  },
+  {
+    id: "morphe-606",
+    brand: "Morphe",
+    name: "606 6-Piece Eye Set",
+    category: "sets",
+    use: "Six fluffy eye brushes — covers any eye look.",
+    priceCents: 2500,
+    currency: "USD",
+    url: "https://www.morphe.com/",
+    swatch: "from-amber-400 to-rose-500",
+  },
+  {
+    id: "sigma-essential",
+    brand: "Sigma Beauty",
+    name: "Essential Kit Mr. Bunny",
+    category: "sets",
+    use: "12 face + eye brushes in a luxe travel case.",
+    priceCents: 18900,
+    currency: "USD",
+    url: "https://www.sigmabeauty.com/",
+    swatch: "from-purple-400 to-violet-600",
+  },
+  {
+    id: "westman-eye",
+    brand: "Westman Atelier",
+    name: "Eye Brush Trio",
+    category: "sets",
+    use: "Three hand-shaped brushes for soft editorial eyes.",
+    priceCents: 21000,
+    currency: "USD",
+    url: "https://www.westman-atelier.com/",
+    swatch: "from-amber-500 to-rose-400",
+  },
+];
+
+export const TOOL_BRANDS: string[] = Array.from(
+  new Set(TOOLS.map((t) => t.brand)),
+).sort();
+
+export function formatPrice(cents: number, currency: "USD" = "USD"): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+}

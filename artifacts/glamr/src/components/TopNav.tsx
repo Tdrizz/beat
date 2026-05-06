@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
-  Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar,
+  Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, Brush,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
@@ -31,6 +31,7 @@ type NavItem = {
   authed?: boolean;
 };
 const SECONDARY: NavItem[] = [
+  { href: "/tools",     label: "Brushes & tools", icon: Brush },
   { href: "/match",     label: "Look match",   icon: ScanFace },
   { href: "/skincare",  label: "Skincare",     icon: Heart },
   { href: "/diary",     label: "Skin diary",   icon: BookOpen },
