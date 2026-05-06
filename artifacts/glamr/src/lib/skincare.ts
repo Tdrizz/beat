@@ -216,7 +216,7 @@ export const weeklyTreatments: RoutineStep[] = [
 export interface Ingredient {
   id: string;
   name: string;
-  category: "Hydrator" | "Exfoliant" | "Antioxidant" | "Cell-Turnover" | "Barrier" | "Brightener" | "Soothing";
+  category: "Hydrator" | "Exfoliant" | "Antioxidant" | "Cell-Turnover" | "Barrier" | "Brightener" | "Soothing" | "Anti-Aging";
   what: string;
   benefits: string[];
   bestFor: SkinType[];

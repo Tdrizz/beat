@@ -187,19 +187,3 @@ export const lookGuides: LookProductGuide[] = [
     ],
   },
 ];
-
-// Export all universal products for use across the app
-export {
-  universalBaseProducts,
-  universalConcealerProducts,
-  universalPrimerProducts,
-  universalSettingProducts,
-  universalBlushProducts,
-  universalHighlighterProducts,
-  universalContourProducts,
-  universalEyeshadowProducts,
-  universalLipProducts,
-  universalLinerProducts,
-  universalMascaraProducts,
-  universalBrowProducts,
-};

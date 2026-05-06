@@ -459,7 +459,7 @@ export default function TryOn() {
         <AnimatePresence>
           {guidedMode && (
             <GuidedOverlayPanel
-              look={activeLook}
+              look={activeLook ?? undefined}
               currentIdx={currentGuideStepIdx}
               onNext={nextGuideStep}
               onPrev={prevGuideStep}
