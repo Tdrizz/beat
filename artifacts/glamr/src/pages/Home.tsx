@@ -34,6 +34,93 @@ type Difficulty = "All" | "Beginner" | "Intermediate" | "Advanced";
 
 // ── Vanity Bulb Row ────────────────────────────────────────────────────────────
 
+/* Decorative SVG butterfly used to flank the "Beat" wordmark.
+ * Wings flap subtly via a perspective skew on a framer-motion loop —
+ * subtle enough to feel alive without being distracting. */
+function Butterfly({ side }: { side: "left" | "right" }) {
+  const flip = side === "right" ? -1 : 1;
+  return (
+    <motion.svg
+      viewBox="0 0 64 64"
+      width={44}
+      height={44}
+      className="shrink-0 -mb-2 sm:-mb-3"
+      style={{ transform: `scaleX(${flip})` }}
+      initial={{ rotate: 0 }}
+      animate={{ rotate: [0, -4, 0, 4, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={`bf-${side}-wing`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f9a8d4" />
+          <stop offset="55%" stopColor="#f472b6" />
+          <stop offset="100%" stopColor="#c026d3" />
+        </linearGradient>
+      </defs>
+      {/* Body */}
+      <path
+        d="M32 14 C30 22 30 42 32 50 C34 42 34 22 32 14 Z"
+        fill="#7e22ce"
+        opacity="0.85"
+      />
+      {/* Antennae */}
+      <path
+        d="M32 14 C30 9 26 7 22 8 M32 14 C34 9 38 7 42 8"
+        stroke="#7e22ce"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Upper wings */}
+      <motion.g
+        animate={{ scaleX: [1, 0.92, 1, 0.92, 1] }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+        style={{ transformOrigin: "32px 28px" }}
+      >
+        <path
+          d="M32 26 C18 10 4 14 6 26 C8 34 20 32 32 30 Z"
+          fill={`url(#bf-${side}-wing)`}
+          stroke="#9d174d"
+          strokeWidth="1"
+          opacity="0.9"
+        />
+        <path
+          d="M32 26 C46 10 60 14 58 26 C56 34 44 32 32 30 Z"
+          fill={`url(#bf-${side}-wing)`}
+          stroke="#9d174d"
+          strokeWidth="1"
+          opacity="0.9"
+        />
+        {/* Wing dots */}
+        <circle cx="14" cy="22" r="1.6" fill="#fff" opacity="0.85" />
+        <circle cx="50" cy="22" r="1.6" fill="#fff" opacity="0.85" />
+      </motion.g>
+      {/* Lower wings */}
+      <motion.g
+        animate={{ scaleX: [1, 0.94, 1, 0.94, 1] }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut", delay: 0.1 }}
+        style={{ transformOrigin: "32px 36px" }}
+      >
+        <path
+          d="M32 34 C22 38 14 48 20 54 C26 56 30 46 32 40 Z"
+          fill={`url(#bf-${side}-wing)`}
+          stroke="#9d174d"
+          strokeWidth="1"
+          opacity="0.85"
+        />
+        <path
+          d="M32 34 C42 38 50 48 44 54 C38 56 34 46 32 40 Z"
+          fill={`url(#bf-${side}-wing)`}
+          stroke="#9d174d"
+          strokeWidth="1"
+          opacity="0.85"
+        />
+      </motion.g>
+    </motion.svg>
+  );
+}
+
 function VanityBulbs({ count = 12 }: { count?: number }) {
   return (
     <div className="vanity-bulbs w-full py-3">
@@ -632,15 +719,48 @@ export default function Home() {
         <header className="pt-5 pb-6 px-5 max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
 
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-foreground/50">Beat</p>
-                <h1 className="font-serif text-3xl md:text-4xl font-bold leading-tight text-foreground mt-0.5">
-                  {greeting}
-                  <Sparkles className="inline-block w-5 h-5 ml-1.5 text-primary" />
-                </h1>
+            {/* Brand wordmark + slogan + butterflies.
+              * Layout choices:
+              *   • "Beat" is now the dominant element — Fredoka, oversized, with
+              *     a soft rose→fuchsia gradient fill so it reads as the hero.
+              *   • Two hand-drawn butterflies flank the wordmark (gently
+              *     animated wing-flap via framer-motion) to reinforce the
+              *     floral motif without feeling like clipart.
+              *   • Slogan sits underneath in Caveat (script) for a hand-
+              *     written, intimate feel.
+              *   • Personalised greeting is preserved underneath, smaller, so
+              *     the daily-personalisation hit isn't lost.
+              *   • Streak badge floats top-right, away from the centred wordmark.
+              */}
+            <div className="relative mb-5">
+              <div className="absolute right-0 top-0">
+                <StreakBadge current={streak.current} triedToday={streak.triedToday} />
               </div>
-              <StreakBadge current={streak.current} triedToday={streak.triedToday} />
+
+              <div className="flex flex-col items-center text-center pt-1">
+                <div className="flex items-end justify-center gap-2 sm:gap-3">
+                  <Butterfly side="left" />
+                  <h1
+                    className="font-serif font-bold leading-none tracking-tight bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-600 bg-clip-text text-transparent drop-shadow-[0_2px_0_rgba(255,200,220,0.35)]"
+                    style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
+                  >
+                    Beat
+                  </h1>
+                  <Butterfly side="right" />
+                </div>
+
+                <p
+                  className="font-script text-foreground/70 mt-1"
+                  style={{ fontSize: "clamp(1.05rem, 4.5vw, 1.35rem)", lineHeight: 1.1 }}
+                >
+                  Makeup is art, not a mask.
+                </p>
+
+                <h2 className="font-serif text-lg md:text-xl font-semibold leading-tight text-foreground/80 mt-3">
+                  {greeting}
+                  <Sparkles className="inline-block w-4 h-4 ml-1.5 text-primary" />
+                </h2>
+              </div>
             </div>
 
             <MoodRail active={activeMood?.label ?? null} onSelect={handleMoodSelect} />
