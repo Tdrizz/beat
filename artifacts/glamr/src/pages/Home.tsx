@@ -11,6 +11,9 @@ import { brands, Brand } from "../lib/brands";
 import { palettes, Palette } from "../lib/palettes";
 import { getDailyBeat, SEASON_THEME } from "../lib/dailyBeat";
 import { useFavorites } from "../hooks/useFavorites";
+import { useStreak } from "../hooks/useStreak";
+import { StreakBadge } from "../components/StreakBadge";
+import { MoodRail, type MoodOption } from "../components/MoodRail";
 import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -146,14 +149,17 @@ function LookCard({ look, index, isFav, onToggleFav }: {
             <span className="italic text-primary/80 text-xs">{look.mood}</span>
           </CardDescription>
         </CardHeader>
-        <CardFooter className="pt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Link href={`/looks/${look.id}`} className="w-full">
-            <Button variant="outline" size="sm" className="w-full">See More</Button>
-          </Link>
-          <Link href={`/try-on/${look.id}`} className="w-full">
-            <Button size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-              <Camera className="w-3 h-3 mr-1.5" />Try Now
+        {/* CTAs always visible — hover-reveal hurts mobile usage (BJ Fogg:
+            keep the core action one tap away). Try-On is the primary
+            action; details is a secondary text link. */}
+        <CardFooter className="pt-2 flex items-center gap-2">
+          <Link href={`/try-on/${look.id}`} className="flex-1">
+            <Button size="sm" className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 font-semibold">
+              <Camera className="w-3.5 h-3.5" />Try with AI
             </Button>
+          </Link>
+          <Link href={`/looks/${look.id}`} className="shrink-0">
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground rounded-full">Details</Button>
           </Link>
         </CardFooter>
       </Card>
@@ -463,6 +469,16 @@ const EVERY_LOOK = [...allCompleteLooks, ...allEyeLooks, ...allLipLooks];
 
 // ── Home ──────────────────────────────────────────────────────────────────────
 
+// Time-aware greeting — small but powerful "personalisation" signal
+// (Self-Determination Theory: relatedness; Cialdini: liking/familiarity).
+function greetingForHour(h: number) {
+  if (h < 5)  return "Late night, gorgeous";
+  if (h < 12) return "Good morning, gorgeous";
+  if (h < 17) return "Good afternoon, gorgeous";
+  if (h < 21) return "Good evening, gorgeous";
+  return "Hello, night owl";
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("All");
@@ -471,7 +487,19 @@ export default function Home() {
   const [paletteQuery, setPaletteQuery] = useState("");
   const [countryRegion, setCountryRegion] = useState("All");
   const [countryQuery, setCountryQuery] = useState("");
+  const [activeMood, setActiveMood] = useState<MoodOption | null>(null);
   const { favorites, toggle, isFavorite } = useFavorites();
+  const streak = useStreak();
+  const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
+
+  const handleMoodSelect = (mood: MoodOption | null) => {
+    setActiveMood(mood);
+    setQuery(mood?.query ?? "");
+    // Smooth scroll the looks grid into view so the user immediately sees the result
+    requestAnimationFrame(() => {
+      document.getElementById("looks-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   const filter = (source: Look[]) => source.filter(l => {
     const q = query.trim().toLowerCase();
@@ -528,36 +556,56 @@ export default function Home() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground pb-20">
 
-      {/* Vanity header banner */}
+      {/* ── Hero: greeting + streak + mood (above the fold) ───────────────
+          Reordered around what daily users actually need first thing:
+          1) personalised greeting (relatedness)
+          2) streak badge (loss aversion / variable reward)
+          3) mood pill picker (mood-first selection — Hick's law)
+          4) compact "Find my look" link as secondary action.            */}
       <div className="vanity-bg pt-2">
         <VanityBulbs count={14} />
 
-        <header className="pt-6 pb-8 px-6 text-center max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight mb-3 flex items-center justify-center gap-3" style={{ color: "hsl(43, 70%, 72%)" }}>
-              Beat <Sparkles className="w-8 h-8" style={{ color: "hsl(330, 40%, 70%)" }} />
-            </h1>
-            <p className="text-base md:text-lg font-light tracking-wide mb-6 text-white/60">
-              Iconic artistry. Live on your face.
-            </p>
-            <Link href="/match">
-              <motion.div
-                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-2.5 bg-primary text-primary-foreground px-6 py-3 rounded-full text-sm font-semibold shadow-lg shadow-primary/20 cursor-pointer hover:bg-primary/90 transition-colors"
-              >
-                <ScanFace className="w-4 h-4" />
-                Find My Perfect Look
-                <span className="text-xs bg-primary-foreground/20 rounded-full px-2 py-0.5 font-normal">AI</span>
-              </motion.div>
-            </Link>
+        <header className="pt-5 pb-6 px-5 max-w-3xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-foreground/50">Beat</p>
+                <h1 className="font-serif text-3xl md:text-4xl font-bold leading-tight text-foreground mt-0.5">
+                  {greeting}
+                  <Sparkles className="inline-block w-5 h-5 ml-1.5 text-primary" />
+                </h1>
+              </div>
+              <StreakBadge current={streak.current} triedToday={streak.triedToday} />
+            </div>
+
+            <MoodRail active={activeMood?.label ?? null} onSelect={handleMoodSelect} />
+
+            <div className="mt-4 flex items-center gap-2">
+              <Link href="/match">
+                <Button variant="ghost" size="sm" className="rounded-full gap-1.5 text-xs">
+                  <ScanFace className="w-3.5 h-3.5" />
+                  Find my perfect look
+                  <span className="text-[10px] bg-primary/15 text-primary rounded-full px-1.5 py-px font-bold">AI</span>
+                </Button>
+              </Link>
+              {activeMood && (
+                <button
+                  onClick={() => handleMoodSelect(null)}
+                  className="ml-auto text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                >
+                  Clear mood <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </motion.div>
         </header>
 
         <VanityBulbs count={14} />
       </div>
 
-      {/* Daily Beat card */}
-      <div className="mt-8">
+      {/* Daily Beat card — variable reward (changes daily) */}
+      <div className="mt-6">
         <DailyBeatCard />
       </div>
 
@@ -565,7 +613,7 @@ export default function Home() {
       <SectionShortcuts />
 
       {/* Main Tabs */}
-      <main className="max-w-6xl mx-auto px-6">
+      <main id="looks-grid" className="max-w-6xl mx-auto px-6 scroll-mt-4">
         <Tabs defaultValue="looks" className="w-full">
 
           <div className="flex justify-center mb-8 overflow-x-auto pb-2">

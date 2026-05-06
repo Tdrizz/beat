@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks } from "../lib/looks";
 import { useCamera } from "../hooks/useCamera";
 import { useAITryOn } from "../hooks/useAITryOn";
+import { useStreak } from "../hooks/useStreak";
 import { AITryOnModal } from "../components/AITryOnModal";
 import { VoiceGuide } from "../components/VoiceGuide";
 import { AvatarSelector, AvatarFace, type Avatar } from "../components/AvatarSelector";
@@ -222,6 +223,14 @@ export default function TryOn() {
   const baseLook = ALL_LOOKS.find((l) => l.id === lookId);
 
   const { videoRef, isReady, error } = useCamera();
+
+  // Mark today's streak the moment the user opens any try-on. Visiting the
+  // try-on page is the "daily action" we want to anchor the habit on; doing
+  // it here (not on AI render) means even guided/manual flows count.
+  // recordToday is wrapped in useCallback with no deps → stable identity,
+  // and is itself idempotent (early-returns if today already recorded).
+  const { recordToday } = useStreak();
+  useEffect(() => { recordToday(); }, [recordToday]);
 
   // Guided walkthrough (step-by-step text + voice)
   const [guidedMode, setGuidedMode] = useState(false);

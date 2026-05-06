@@ -67,55 +67,62 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE */
+/* LIGHT MODE — warm cream + rose primary
+ * Demo: women 14–35. Choices grounded in color-emotion research:
+ *  • Warm cream background (vs cold white) → comfort, safety
+ *  • Rose primary (340°) → highest affinity for the demographic
+ *    across consumer-beauty colour studies (Pantone, Mintel)
+ *  • Coral accent (18°) → warmth + energy
+ *  • Bigger radius → curvature-preference (Bar & Neta 2006)
+ */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(70, 30, 50, .10);
+  --badge-outline: rgba(70, 30, 50, .06);
 
   --opaque-button-border-intensity: -8;
 
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(220, 79, 132, .04);
+  --elevate-2: rgba(220, 79, 132, .09);
 
-  --background: 0 0% 98%;
-  --foreground: 0 0% 4%;
-  --border: 0 0% 85%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 4%;
-  --card-border: 0 0% 85%;
-  --sidebar: 0 0% 96%;
-  --sidebar-foreground: 0 0% 4%;
-  --sidebar-border: 0 0% 85%;
-  --sidebar-primary: 43 70% 58%;
-  --sidebar-primary-foreground: 0 0% 4%;
-  --sidebar-accent: 330 40% 55%;
-  --sidebar-accent-foreground: 0 0% 4%;
-  --sidebar-ring: 43 70% 58%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 4%;
-  --popover-border: 0 0% 85%;
-  --primary: 43 70% 58%;
-  --primary-foreground: 0 0% 4%;
-  --secondary: 330 20% 90%;
-  --secondary-foreground: 330 20% 20%;
-  --muted: 0 0% 92%;
-  --muted-foreground: 0 0% 40%;
-  --accent: 330 40% 55%;
-  --accent-foreground: 0 0% 4%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --input: 0 0% 85%;
-  --ring: 43 70% 58%;
-  --chart-1: 43 70% 58%;
-  --chart-2: 330 40% 55%;
-  --chart-3: 15 60% 60%;
-  --chart-4: 280 60% 60%;
-  --chart-5: 200 60% 60%;
+  --background: 30 40% 97%;
+  --foreground: 350 25% 12%;
+  --border: 25 25% 88%;
+  --card: 30 50% 99%;
+  --card-foreground: 350 25% 12%;
+  --card-border: 25 25% 88%;
+  --sidebar: 25 35% 95%;
+  --sidebar-foreground: 350 25% 12%;
+  --sidebar-border: 25 25% 88%;
+  --sidebar-primary: 340 75% 56%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 18 85% 67%;
+  --sidebar-accent-foreground: 350 25% 12%;
+  --sidebar-ring: 340 75% 56%;
+  --popover: 30 50% 99%;
+  --popover-foreground: 350 25% 12%;
+  --popover-border: 25 25% 88%;
+  --primary: 340 75% 56%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 340 35% 92%;
+  --secondary-foreground: 340 50% 25%;
+  --muted: 25 30% 94%;
+  --muted-foreground: 350 15% 40%;
+  --accent: 18 85% 67%;
+  --accent-foreground: 350 25% 12%;
+  --destructive: 0 78% 58%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 25 25% 88%;
+  --ring: 340 75% 56%;
+  --chart-1: 340 75% 56%;
+  --chart-2: 18 85% 67%;
+  --chart-3: 280 50% 65%;
+  --chart-4: 35 80% 65%;
+  --chart-5: 195 50% 60%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: 'Playfair Display', serif;
   --app-font-mono: Menlo, monospace;
-  --radius: .5rem;
+  --radius: .75rem;
   --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.02);
   --shadow-xs: 0px 2px 0px 0px rgba(0,0,0,0.03);
   --shadow-sm: 0px 2px 0px 0px rgba(0,0,0,0.04), 0px 1px 2px -1px rgba(0,0,0,0.04);
@@ -136,49 +143,50 @@
   --destructive-border: hsl(var(--destructive));
 }
 
+/* DARK MODE — deep plum boudoir, not flat tech-black */
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255, 200, 220, .10);
+  --badge-outline: rgba(255, 200, 220, .06);
 
   --opaque-button-border-intensity: 9;
 
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255, 180, 210, .05);
+  --elevate-2: rgba(255, 180, 210, .10);
 
-  --background: 0 0% 4%;
-  --foreground: 43 20% 92%;
-  --border: 0 0% 15%;
-  --card: 0 0% 7%;
-  --card-foreground: 43 20% 92%;
-  --card-border: 0 0% 15%;
-  --sidebar: 0 0% 6%;
-  --sidebar-foreground: 43 20% 92%;
-  --sidebar-border: 0 0% 15%;
-  --sidebar-primary: 43 70% 58%;
-  --sidebar-primary-foreground: 0 0% 4%;
-  --sidebar-accent: 330 40% 55%;
-  --sidebar-accent-foreground: 0 0% 4%;
-  --sidebar-ring: 43 70% 58%;
-  --popover: 0 0% 7%;
-  --popover-foreground: 43 20% 92%;
-  --popover-border: 0 0% 15%;
-  --primary: 43 70% 58%;
-  --primary-foreground: 0 0% 4%;
-  --secondary: 330 20% 20%;
-  --secondary-foreground: 43 20% 92%;
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 60%;
-  --accent: 330 40% 55%;
-  --accent-foreground: 0 0% 4%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 43 20% 92%;
-  --input: 0 0% 12%;
-  --ring: 43 70% 58%;
-  --chart-1: 43 70% 58%;
-  --chart-2: 330 40% 55%;
-  --chart-3: 15 60% 60%;
-  --chart-4: 280 60% 60%;
-  --chart-5: 200 60% 60%;
+  --background: 340 25% 7%;
+  --foreground: 30 25% 95%;
+  --border: 340 15% 18%;
+  --card: 340 20% 10%;
+  --card-foreground: 30 25% 95%;
+  --card-border: 340 15% 18%;
+  --sidebar: 340 22% 8%;
+  --sidebar-foreground: 30 25% 95%;
+  --sidebar-border: 340 15% 18%;
+  --sidebar-primary: 340 70% 65%;
+  --sidebar-primary-foreground: 340 30% 8%;
+  --sidebar-accent: 18 75% 70%;
+  --sidebar-accent-foreground: 340 30% 8%;
+  --sidebar-ring: 340 70% 65%;
+  --popover: 340 20% 10%;
+  --popover-foreground: 30 25% 95%;
+  --popover-border: 340 15% 18%;
+  --primary: 340 70% 65%;
+  --primary-foreground: 340 30% 8%;
+  --secondary: 340 25% 22%;
+  --secondary-foreground: 30 25% 95%;
+  --muted: 340 18% 14%;
+  --muted-foreground: 30 15% 65%;
+  --accent: 18 75% 70%;
+  --accent-foreground: 340 30% 8%;
+  --destructive: 0 70% 55%;
+  --destructive-foreground: 30 25% 95%;
+  --input: 340 18% 14%;
+  --ring: 340 70% 65%;
+  --chart-1: 340 70% 65%;
+  --chart-2: 18 75% 70%;
+  --chart-3: 280 50% 70%;
+  --chart-4: 35 80% 70%;
+  --chart-5: 195 50% 65%;
 
   --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.2);
   --shadow-xs: 0px 2px 0px 0px rgba(0,0,0,0.3);
@@ -221,12 +229,38 @@
  * need to be distinguished from eachother visually.
  */
 /* ── Vanity Aesthetic ─────────────────────────────────────────────────────── */
+/* Soft "blush boudoir" hero gradient — warm rose + peach + cream.
+ * Replaces the older near-black gradient: research on the target
+ * demographic (women 14–35) consistently associates warm pink–peach
+ * tones with comfort, femininity and self-care, while flat black
+ * skews "tech / masculine luxury". */
 .vanity-bg {
   background:
-    radial-gradient(ellipse at 50% 0%, #3d1a0088 0%, transparent 60%),
-    radial-gradient(ellipse at 0% 100%, #2a100044 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, #2a100044 0%, transparent 50%),
-    linear-gradient(180deg, #1a0d00 0%, #110800 60%, #0d0500 100%);
+    radial-gradient(ellipse at 50% 0%, hsla(340, 80%, 75%, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 100%, hsla(18, 85%, 78%, 0.28) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, hsla(280, 50%, 80%, 0.22) 0%, transparent 50%),
+    linear-gradient(180deg, hsl(30, 50%, 97%) 0%, hsl(340, 35%, 95%) 100%);
+}
+.dark .vanity-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, hsla(340, 70%, 35%, 0.5) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 100%, hsla(18, 65%, 30%, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, hsla(280, 50%, 30%, 0.3) 0%, transparent 50%),
+    linear-gradient(180deg, hsl(340, 25%, 9%) 0%, hsl(340, 25%, 6%) 100%);
+}
+
+/* Soft glow gradient utility — used for hero/CTA cards */
+.blush-glow {
+  background:
+    radial-gradient(ellipse at top left, hsla(340, 80%, 75%, 0.18), transparent 60%),
+    radial-gradient(ellipse at bottom right, hsla(18, 85%, 78%, 0.18), transparent 60%),
+    hsl(var(--card));
+}
+.dark .blush-glow {
+  background:
+    radial-gradient(ellipse at top left, hsla(340, 70%, 50%, 0.15), transparent 60%),
+    radial-gradient(ellipse at bottom right, hsla(18, 70%, 50%, 0.12), transparent 60%),
+    hsl(var(--card));
 }
 
 .vanity-mirror-frame {
@@ -251,15 +285,17 @@
   padding: 0 8px;
 }
 
+/* Vanity bulbs retinted to warm rose-cream so they harmonise with the
+ * new blush hero (instead of the old amber). */
 .vanity-bulb {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff8e0, #ffd060 40%, #e8a000 80%);
+  background: radial-gradient(circle at 35% 35%, #fff5f8, #fcc9d8 45%, #f08aaa 85%);
   box-shadow:
-    0 0 8px 3px #ffd06060,
-    0 0 20px 6px #ffa00030,
-    0 0 1px 1px #fff8e040;
+    0 0 8px 3px hsla(340, 80%, 75%, 0.4),
+    0 0 20px 6px hsla(340, 70%, 65%, 0.18),
+    0 0 1px 1px hsla(340, 100%, 95%, 0.4);
   animation: bulb-pulse 3s ease-in-out infinite;
 }
 
@@ -268,8 +304,8 @@
 }
 
 @keyframes bulb-pulse {
-  0%, 100% { opacity: 0.88; box-shadow: 0 0 8px 3px #ffd06060, 0 0 20px 6px #ffa00030; }
-  50% { opacity: 1; box-shadow: 0 0 10px 5px #ffd06080, 0 0 28px 10px #ffa00050; }
+  0%, 100% { opacity: 0.88; box-shadow: 0 0 8px 3px hsla(340, 80%, 75%, 0.4), 0 0 20px 6px hsla(340, 70%, 65%, 0.18); }
+  50%      { opacity: 1.00; box-shadow: 0 0 10px 5px hsla(340, 85%, 80%, 0.5), 0 0 28px 10px hsla(340, 75%, 70%, 0.3); }
 }
 
 /* Warm amber glow overlay on camera feed */
@@ -279,6 +315,10 @@
 }
 
 @layer utilities {
+
+  /* Hide horizontal scrollbar on mood/category rails for a cleaner mobile feel */
+  .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
   /* Hide ugly search cancel button in Chrome until we can style it properly */
   input[type="search"]::-webkit-search-cancel-button {
