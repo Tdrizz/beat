@@ -205,6 +205,26 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    /* Chic ambient background — soft blush + cream + mauve radial wash,
+     * fixed so it stays put while the page scrolls (parallax-lite). A
+     * delicate noise/dot pattern adds tactile "couture paper" texture
+     * without competing with content. */
+    background-image:
+      radial-gradient(ellipse 70% 45% at 8% 0%, hsla(340, 70%, 86%, 0.45), transparent 60%),
+      radial-gradient(ellipse 65% 55% at 95% 18%, hsla(18, 80%, 88%, 0.38), transparent 65%),
+      radial-gradient(ellipse 55% 45% at 50% 95%, hsla(280, 45%, 88%, 0.30), transparent 65%),
+      radial-gradient(ellipse 40% 30% at 80% 65%, hsla(35, 80%, 90%, 0.28), transparent 70%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><circle cx='1' cy='1' r='0.6' fill='%23a04060' opacity='0.06'/></svg>");
+    background-attachment: fixed, fixed, fixed, fixed, fixed;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+    background-size: auto, auto, auto, auto, 180px 180px;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 70% 45% at 8% 0%, hsla(340, 60%, 30%, 0.55), transparent 60%),
+      radial-gradient(ellipse 65% 55% at 95% 18%, hsla(18, 60%, 25%, 0.40), transparent 65%),
+      radial-gradient(ellipse 55% 45% at 50% 95%, hsla(280, 45%, 28%, 0.35), transparent 65%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><circle cx='1' cy='1' r='0.6' fill='%23ffffff' opacity='0.04'/></svg>");
   }
 }
 

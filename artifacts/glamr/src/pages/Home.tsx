@@ -16,6 +16,8 @@ import { StreakBadge } from "../components/StreakBadge";
 import { MoodRail, type MoodOption } from "../components/MoodRail";
 import { ArchetypeCallout } from "../components/ArchetypeCallout";
 import { BrandLogo } from "../components/BrandLogo";
+import { BrandImage } from "../components/BrandImage";
+import { brandGradient } from "../lib/brandImages";
 import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -266,6 +268,21 @@ function BrandCard({ brand, index }: { brand: Brand; index: number }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.4) }}>
       <Card className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all duration-300 h-full flex flex-col">
+        <BrandImage
+          imageKey={`brand-${brand.id}`}
+          alt={`${brand.name} aesthetic`}
+          fallbackGradient={brandGradient(brand.palette)}
+          height="h-36"
+        >
+          <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between gap-2">
+            <span className="font-serif text-white text-lg leading-tight drop-shadow-md tracking-wide">
+              {brand.name}
+            </span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full backdrop-blur-sm bg-white/85 text-foreground/80 shadow-sm`}>
+              {brand.tier}
+            </span>
+          </div>
+        </BrandImage>
         <div className="h-3 w-full flex">
           {brand.palette.map((c, i) => <div key={i} className="flex-1" style={{ backgroundColor: c }} />)}
         </div>
@@ -329,6 +346,21 @@ function PaletteCard({ palette, index }: { palette: Palette; index: number }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.4) }}>
       <Card className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all duration-300 h-full flex flex-col">
+        <BrandImage
+          imageKey={`palette-${palette.id}`}
+          alt={`${palette.brand} ${palette.name}`}
+          fallbackGradient={brandGradient(palette.colors)}
+          height="h-28"
+        >
+          <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between gap-2">
+            <span className="font-serif text-white text-sm leading-tight drop-shadow-md tracking-wide">
+              {palette.brand}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full backdrop-blur-sm bg-white/85 text-foreground/80 shadow-sm">
+              {palette.shades} shades
+            </span>
+          </div>
+        </BrandImage>
         <div className="w-full p-3 bg-zinc-900/5 dark:bg-zinc-100/5">
           <div className="space-y-1">
             {rows.map((row, ri) => (
