@@ -155,6 +155,21 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   MessageThread, Brands, UserProfile, AffiliateStats. `TopNav` is the shared
   shell.
 
+## Navigation
+
+- **Desktop** (`≥sm`): `<TopNav />` shows the Beat wordmark + 6 primary
+  pills (Home, Feed, Iola, Share, DMs, Shop) + bell + avatar. Secondary
+  destinations (Look match, Skincare, Diary, Specials, Creator stats)
+  live in the hamburger Sheet so they're one tap away without crowding.
+- **Mobile** (`<sm`): `TopNav` collapses to hamburger + wordmark + bell.
+  The hamburger opens a left-side `Sheet` drawer with all primary +
+  secondary links (auth-gated items hidden when signed-out). A global
+  `<MobileTabBar />` (mounted in `App.tsx`, hidden on `/sign-in`,
+  `/sign-up`, `/onboarding`) renders a fixed 5-slot bottom bar with a
+  raised primary "Share" FAB in the centre. `body` gets
+  `padding-bottom: calc(3.5rem + env(safe-area-inset-bottom))` on phones
+  via `index.css` so the bar never covers content.
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
