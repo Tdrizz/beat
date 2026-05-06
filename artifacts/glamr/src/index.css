@@ -205,27 +205,41 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    /* Chic ambient background — soft blush + cream + mauve radial wash,
-     * fixed so it stays put while the page scrolls (parallax-lite). A
-     * delicate noise/dot pattern adds tactile "couture paper" texture
-     * without competing with content. */
+    /* Chic ambient background — soft blush + cream + mauve radial wash
+     * topped with a couture floral & butterfly motif. The motif is a
+     * single tileable SVG (320×320) of camellia-style flowers, leaf
+     * sprigs and butterfly silhouettes drawn in rose ink at low
+     * opacity so it reads as a printed pattern, not decoration that
+     * competes with content. */
     background-image:
       radial-gradient(ellipse 70% 45% at 8% 0%, hsla(340, 70%, 86%, 0.45), transparent 60%),
       radial-gradient(ellipse 65% 55% at 95% 18%, hsla(18, 80%, 88%, 0.38), transparent 65%),
       radial-gradient(ellipse 55% 45% at 50% 95%, hsla(280, 45%, 88%, 0.30), transparent 65%),
       radial-gradient(ellipse 40% 30% at 80% 65%, hsla(35, 80%, 90%, 0.28), transparent 70%),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><circle cx='1' cy='1' r='0.6' fill='%23a04060' opacity='0.06'/></svg>");
+      var(--floral-motif);
     background-attachment: fixed, fixed, fixed, fixed, fixed;
     background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
-    background-size: auto, auto, auto, auto, 180px 180px;
+    background-size: auto, auto, auto, auto, 320px 320px;
   }
   .dark body {
     background-image:
       radial-gradient(ellipse 70% 45% at 8% 0%, hsla(340, 60%, 30%, 0.55), transparent 60%),
       radial-gradient(ellipse 65% 55% at 95% 18%, hsla(18, 60%, 25%, 0.40), transparent 65%),
       radial-gradient(ellipse 55% 45% at 50% 95%, hsla(280, 45%, 28%, 0.35), transparent 65%),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><circle cx='1' cy='1' r='0.6' fill='%23ffffff' opacity='0.04'/></svg>");
+      var(--floral-motif-dark);
   }
+}
+
+/* Floral & butterfly tile — defined once so light & dark themes share
+ * the same geometry but tint the ink differently. The SVG is a 320×320
+ * tile with: two camellia blossoms (top-left / bottom-right), two leaf
+ * sprigs (top-right / bottom-left) and two delicate butterflies
+ * (centre + offset). Coordinates were laid out so the pattern tiles
+ * seamlessly without obvious seams. */
+:root {
+  --floral-ink: 200 60 100;     /* deep rose-mauve, used as rgb() ink */
+  --floral-motif: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320' width='320' height='320'><g fill='none' stroke='rgb(160%2C60%2C95)' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' opacity='0.32'><g transform='translate(40 50)'><circle cx='0' cy='0' r='3' fill='rgb(200%2C90%2C120)' stroke='none' opacity='0.55'/><path d='M0 0 C-6 -10 -16 -10 -14 -2 C-22 -4 -22 8 -12 8 C-16 16 -4 20 0 12 C4 20 16 16 12 8 C22 8 22 -4 14 -2 C16 -10 6 -10 0 0 Z'/></g><g transform='translate(250 230)'><circle cx='0' cy='0' r='3' fill='rgb(200%2C90%2C120)' stroke='none' opacity='0.55'/><path d='M0 0 C-7 -12 -18 -10 -15 -2 C-24 -4 -24 9 -13 9 C-17 18 -4 22 0 13 C4 22 17 18 13 9 C24 9 24 -4 15 -2 C18 -10 7 -12 0 0 Z'/></g><g transform='translate(220 60)'><path d='M0 0 C8 -6 18 -4 22 4 M0 0 C4 6 12 8 18 4 M0 0 C-2 8 2 14 10 14'/><path d='M22 4 C28 0 32 -8 30 -14 M18 4 C24 8 28 14 26 20 M10 14 C14 18 22 18 26 14' opacity='0.6'/></g><g transform='translate(60 240)'><path d='M0 0 C-8 -6 -18 -4 -22 4 M0 0 C-4 6 -12 8 -18 4 M0 0 C2 8 -2 14 -10 14'/><path d='M-22 4 C-28 0 -32 -8 -30 -14 M-18 4 C-24 8 -28 14 -26 20 M-10 14 C-14 18 -22 18 -26 14' opacity='0.6'/></g><g transform='translate(160 130)'><path d='M0 0 L0 -6 M0 0 L-2 6 M0 0 L2 6'/><path d='M0 -2 C-12 -14 -22 -10 -18 -2 C-24 -4 -22 6 -14 6 C-10 4 -4 4 0 -2 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.45'/><path d='M0 -2 C12 -14 22 -10 18 -2 C24 -4 22 6 14 6 C10 4 4 4 0 -2 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.45'/><path d='M0 0 C-8 -2 -14 6 -10 12 C-14 14 -8 22 -2 18 C-2 14 -2 8 0 4 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.4'/><path d='M0 0 C8 -2 14 6 10 12 C14 14 8 22 2 18 C2 14 2 8 0 4 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.4'/><path d='M-2 -8 C-6 -12 -2 -14 0 -12 M2 -8 C6 -12 2 -14 0 -12'/></g><g transform='translate(40 200) rotate(-20)'><path d='M0 0 L0 -5 M0 0 L-1.5 5 M0 0 L1.5 5'/><path d='M0 -1 C-8 -10 -16 -7 -13 -1 C-17 -3 -16 4 -10 4 C-7 3 -3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.4'/><path d='M0 -1 C8 -10 16 -7 13 -1 C17 -3 16 4 10 4 C7 3 3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.4'/><path d='M0 0 C-5 -1 -10 4 -7 9 C-10 10 -5 16 -1 13 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.35'/><path d='M0 0 C5 -1 10 4 7 9 C10 10 5 16 1 13 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.35'/></g><g transform='translate(280 140) rotate(15)'><path d='M0 0 L0 -5 M0 0 L-1.5 5 M0 0 L1.5 5'/><path d='M0 -1 C-8 -10 -16 -7 -13 -1 C-17 -3 -16 4 -10 4 C-7 3 -3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.4'/><path d='M0 -1 C8 -10 16 -7 13 -1 C17 -3 16 4 10 4 C7 3 3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(160%2C60%2C95)' opacity='0.4'/></g></g></svg>");
+  --floral-motif-dark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320' width='320' height='320'><g fill='none' stroke='rgb(255%2C200%2C220)' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' opacity='0.20'><g transform='translate(40 50)'><circle cx='0' cy='0' r='3' fill='rgb(255%2C200%2C220)' stroke='none' opacity='0.55'/><path d='M0 0 C-6 -10 -16 -10 -14 -2 C-22 -4 -22 8 -12 8 C-16 16 -4 20 0 12 C4 20 16 16 12 8 C22 8 22 -4 14 -2 C16 -10 6 -10 0 0 Z'/></g><g transform='translate(250 230)'><circle cx='0' cy='0' r='3' fill='rgb(255%2C200%2C220)' stroke='none' opacity='0.55'/><path d='M0 0 C-7 -12 -18 -10 -15 -2 C-24 -4 -24 9 -13 9 C-17 18 -4 22 0 13 C4 22 17 18 13 9 C24 9 24 -4 15 -2 C18 -10 7 -12 0 0 Z'/></g><g transform='translate(220 60)'><path d='M0 0 C8 -6 18 -4 22 4 M0 0 C4 6 12 8 18 4 M0 0 C-2 8 2 14 10 14'/><path d='M22 4 C28 0 32 -8 30 -14 M18 4 C24 8 28 14 26 20 M10 14 C14 18 22 18 26 14' opacity='0.6'/></g><g transform='translate(60 240)'><path d='M0 0 C-8 -6 -18 -4 -22 4 M0 0 C-4 6 -12 8 -18 4 M0 0 C2 8 -2 14 -10 14'/><path d='M-22 4 C-28 0 -32 -8 -30 -14 M-18 4 C-24 8 -28 14 -26 20 M-10 14 C-14 18 -22 18 -26 14' opacity='0.6'/></g><g transform='translate(160 130)'><path d='M0 0 L0 -6 M0 0 L-2 6 M0 0 L2 6'/><path d='M0 -2 C-12 -14 -22 -10 -18 -2 C-24 -4 -22 6 -14 6 C-10 4 -4 4 0 -2 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.45'/><path d='M0 -2 C12 -14 22 -10 18 -2 C24 -4 22 6 14 6 C10 4 4 4 0 -2 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.45'/><path d='M0 0 C-8 -2 -14 6 -10 12 C-14 14 -8 22 -2 18 C-2 14 -2 8 0 4 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.4'/><path d='M0 0 C8 -2 14 6 10 12 C14 14 8 22 2 18 C2 14 2 8 0 4 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.4'/><path d='M-2 -8 C-6 -12 -2 -14 0 -12 M2 -8 C6 -12 2 -14 0 -12'/></g><g transform='translate(40 200) rotate(-20)'><path d='M0 0 L0 -5 M0 0 L-1.5 5 M0 0 L1.5 5'/><path d='M0 -1 C-8 -10 -16 -7 -13 -1 C-17 -3 -16 4 -10 4 C-7 3 -3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.4'/><path d='M0 -1 C8 -10 16 -7 13 -1 C17 -3 16 4 10 4 C7 3 3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.4'/><path d='M0 0 C-5 -1 -10 4 -7 9 C-10 10 -5 16 -1 13 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.35'/><path d='M0 0 C5 -1 10 4 7 9 C10 10 5 16 1 13 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.35'/></g><g transform='translate(280 140) rotate(15)'><path d='M0 0 L0 -5 M0 0 L-1.5 5 M0 0 L1.5 5'/><path d='M0 -1 C-8 -10 -16 -7 -13 -1 C-17 -3 -16 4 -10 4 C-7 3 -3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.4'/><path d='M0 -1 C8 -10 16 -7 13 -1 C17 -3 16 4 10 4 C7 3 3 3 0 -1 Z' fill='rgb(220%2C140%2C160)' stroke='rgb(255%2C200%2C220)' opacity='0.4'/></g></g></svg>");
 }
 
 /**
