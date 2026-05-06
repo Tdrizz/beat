@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
-  Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, Brush, Apple, Link2,
+  Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, Brush, Apple, Link2, Users,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
@@ -18,6 +18,7 @@ const PRIMARY = [
   { href: "/archetype", label: "Iola",   icon: Wand2 },
   { href: "/upload",    label: "Share",  icon: UploadIcon },
   { href: "/messages",  label: "DMs",    icon: MessageCircle },
+  { href: "/friends",   label: "Friends", icon: Users },
   { href: "/brands",    label: "Shop",   icon: Store },
 ] as const;
 

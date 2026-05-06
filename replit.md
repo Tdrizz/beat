@@ -29,7 +29,8 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 
 - **Design System**: `artifacts/glamr/src/index.css` (theme), `src/index.css` (comments for key decisions)
 - **Database Schema**: `lib/db/src/schema/{profiles,posts,messages,affiliate}.ts`
-- **API Routes**: `artifacts/api-server/src/routes/{profiles,posts,social,messages,brands,affiliate,storage}.ts`
+- **API Routes**: `artifacts/api-server/src/routes/{profiles,posts,social,messages,brands,affiliate,storage}.ts` (`social.ts` includes `/profiles/me/friends`, `/profiles/featured`, `/profiles/search`, `/follows/status` — must mount **before** `profilesRouter`)
+- **Friends page**: `artifacts/glamr/src/pages/Friends.tsx`
 - **Archetype Definitions**: `lib/archetypes.ts`, `lib/archetypeQuiz.ts`
 - **Notification Helpers**: `lib/db/src/schema/notifications.ts`, `artifacts/api-server/src/lib/notify.ts`
 - **Social Links Metadata**: `lib/socialLinks.ts`

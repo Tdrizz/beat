@@ -15,9 +15,13 @@ const router: IRouter = Router();
 router.use(healthRouter);
 router.use(aiTryonRouter);
 router.use(storageRouter);
+// socialRouter must be mounted *before* profilesRouter because the latter
+// has a catch-all `/profiles/:handle` route that would otherwise swallow
+// the new specific paths `/profiles/featured`, `/profiles/search`, and
+// `/profiles/me/friends` (treating "featured" / "search" / "me" as handles).
+router.use(socialRouter);
 router.use(profilesRouter);
 router.use(postsRouter);
-router.use(socialRouter);
 router.use(messagesRouter);
 router.use(brandsRouter);
 router.use(affiliateRouter);

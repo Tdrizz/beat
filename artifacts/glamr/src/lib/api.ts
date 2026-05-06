@@ -121,6 +121,13 @@ export interface RemixStats {
   recent: Post[];
 }
 
+/* Profile + aggregate follower count, returned by Friends / Discover /
+ * Featured endpoints. `followedAt` is only present on the friends list. */
+export interface ProfileWithFollowers extends Profile {
+  followerCount: number;
+  followedAt?: string;
+}
+
 export interface AffiliateStatsResponse {
   totalClicks: number;
   totalEstCents: number;

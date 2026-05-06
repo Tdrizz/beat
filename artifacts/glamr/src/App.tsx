@@ -27,6 +27,7 @@ import Archetype from "@/pages/Archetype";
 import Tools from "@/pages/Tools";
 import Nutrition from "@/pages/Nutrition";
 import SocialLinksSettings from "@/pages/SocialLinksSettings";
+import Friends from "@/pages/Friends";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ function Router() {
       <Route path="/messages/:handle"><AuthedRoute><MessageThread /></AuthedRoute></Route>
       <Route path="/brands"><AuthedRoute><Brands /></AuthedRoute></Route>
       <Route path="/u/:handle"><AuthedRoute><UserProfile /></AuthedRoute></Route>
+      <Route path="/friends"><AuthedRoute><Friends /></AuthedRoute></Route>
       <Route path="/affiliate"><AuthedRoute><AffiliateStats /></AuthedRoute></Route>
 
       <Route component={NotFound} />
