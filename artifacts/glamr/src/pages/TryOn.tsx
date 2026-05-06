@@ -6,6 +6,7 @@ import { useCamera } from "../hooks/useCamera";
 import { useAITryOn } from "../hooks/useAITryOn";
 import { useStreak } from "../hooks/useStreak";
 import { AITryOnModal } from "../components/AITryOnModal";
+import { AffiliateProductsForLook } from "../components/AffiliateProductsForLook";
 import { VoiceGuide } from "../components/VoiceGuide";
 import { AvatarSelector, AvatarFace, type Avatar } from "../components/AvatarSelector";
 import {
@@ -536,6 +537,8 @@ export default function TryOn() {
               </div>
             );
           })}
+
+          <AffiliateProductsForLook lookId={baseLook.id} />
 
           {/* Footer CTA reinforcing AI try-on */}
           <div className="pt-2 mt-2 border-t border-border/60">

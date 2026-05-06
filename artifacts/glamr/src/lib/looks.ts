@@ -6,6 +6,18 @@ export interface LookStep {
   colorName?: string;
 }
 
+export type Season = "spring" | "summer" | "fall" | "winter" | "allyear";
+
+// Pretty labels for display only; the wire/storage value is always the
+// lowercase Season above (matches DB schema and Zod insert validation).
+export const SEASON_LABELS: Record<Season, string> = {
+  spring: "Spring",
+  summer: "Summer",
+  fall: "Fall",
+  winter: "Winter",
+  allyear: "All Year",
+};
+
 export interface Look {
   id: string;
   name: string;
@@ -15,6 +27,7 @@ export interface Look {
   celebrity?: string;
   description: string;
   timeEstimate: string;
+  season?: Season;
   steps: {
     base: LookStep;
     eyes: LookStep;
@@ -1439,7 +1452,312 @@ export const moreLipLooks: Look[] = [
   },
 ];
 
-export const allLooks = [...byEraLooks, ...celebrityLooks];
-export const allCompleteLooks = [...byEraLooks, ...celebrityLooks, ...trendLooks];
+// New 2026 seasonal capsule — extends the catalogue with on-trend looks
+// across spring/summer/fall/winter. Each look uses the standard Look shape so
+// they flow through the existing search/filter/Try-On pipeline unchanged.
+export const seasonalCapsule2026: Look[] = [
+  {
+    id: "cherry-blossom-flush", name: "Cherry Blossom Flush", mood: "Romantic", difficulty: "Beginner",
+    description: "Petal-soft pinks and a dewy glow inspired by hanami season — fresh, feminine, weightless.",
+    timeEstimate: "10 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Sheer dewy tint, leave skin breathing.", color: "#f6e2d8", colorName: "Sheer Petal" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Wash a soft pink shimmer across the lid.", color: "#f3b9c4", colorName: "Blossom Pink" },
+      brows: { id: "brows", name: "Brows", instruction: "Soft brushed-up natural brows.", color: "#5a3d2a", colorName: "Soft Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Glossy MLBB rose tint.", color: "#d57a8a", colorName: "Rose Tint" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Pink cream blush draped high.", color: "#ec9bb1", colorName: "Cherry Blossom" },
+    },
+    palette: ["#f3b9c4", "#ec9bb1", "#d57a8a"],
+  },
+  {
+    id: "iced-matcha", name: "Iced Matcha", mood: "Fresh", difficulty: "Intermediate",
+    description: "Spring's it-girl green: matcha-tinted shadow paired with creamy peach skin and a glossy nude lip.",
+    timeEstimate: "15 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Light luminous foundation with peach undertone.", color: "#f4d6bf", colorName: "Peach Glow" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Sage green smoked along the lash line, blended out softly.", color: "#9bb083", colorName: "Matcha Sage" },
+      brows: { id: "brows", name: "Brows", instruction: "Laminated, brushed straight up.", color: "#3a2818", colorName: "Espresso" },
+      lips: { id: "lips", name: "Lips", instruction: "Glossy nude with a hint of pink.", color: "#d4a890", colorName: "Almond Gloss" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Apricot cream blush.", color: "#ec9d72", colorName: "Apricot" },
+    },
+    palette: ["#9bb083", "#ec9d72", "#d4a890"],
+  },
+  {
+    id: "mediterranean-bronze", name: "Mediterranean Bronze", mood: "Sun-Kissed", difficulty: "Beginner",
+    description: "Sunset-on-the-Amalfi-coast bronze: warm shimmer eyes, sculpted glow, juicy terracotta lips.",
+    timeEstimate: "12 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Skin tint plus liquid bronzer driven into the high points.", color: "#cc8d5a", colorName: "Liquid Bronze" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Copper shimmer all over the lid, smudged into the lower lash line.", color: "#b16838", colorName: "Sunset Copper" },
+      brows: { id: "brows", name: "Brows", instruction: "Fluffy natural brows brushed up.", color: "#3d2515", colorName: "Espresso" },
+      lips: { id: "lips", name: "Lips", instruction: "Terracotta gloss layered over a brown lip liner.", color: "#bb5a3f", colorName: "Terracotta" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Bronzer high on the cheekbones.", color: "#a36848", colorName: "Bronze Heat" },
+    },
+    palette: ["#b16838", "#cc8d5a", "#bb5a3f"],
+  },
+  {
+    id: "pool-party-aqua", name: "Pool Party Aqua", mood: "Playful", difficulty: "Intermediate",
+    description: "Aqua liner pop with a high-shine glossy lid and barely-there base — instant summer party energy.",
+    timeEstimate: "15 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Dewy skin tint, barely there.", color: "#e8c8a8", colorName: "Bare Glow" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Aqua liner along the lower lash line, glossy clear lid on top.", color: "#3fb8c4", colorName: "Pool Aqua" },
+      brows: { id: "brows", name: "Brows", instruction: "Bleached look or soft blonde brows.", color: "#c4a880", colorName: "Pale Blonde" },
+      lips: { id: "lips", name: "Lips", instruction: "Clear gloss only.", color: "#e6b6a8", colorName: "Clear Gloss" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Coral cream blush blended outward.", color: "#f08868", colorName: "Coral Pop" },
+    },
+    palette: ["#3fb8c4", "#f08868", "#e6b6a8"],
+  },
+  {
+    id: "neon-festival", name: "Neon Festival", mood: "Bold", difficulty: "Advanced",
+    description: "Full festival mode: graphic neon liner, holographic highlight, gem accents at the inner corner.",
+    timeEstimate: "30 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Skin prepped, set lightly so glitter sticks.", color: "#e0bfa0", colorName: "Set Skin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Neon pink graphic wing extended into a floating crease.", color: "#ff2e9a", colorName: "Neon Pink" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up, set hard.", color: "#3a2818", colorName: "Set Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Holographic gloss over a nude lip.", color: "#e8b4c0", colorName: "Holo Gloss" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Holographic highlight on the high points.", color: "#f8d4e8", colorName: "Hologram" },
+    },
+    palette: ["#ff2e9a", "#f8d4e8", "#e8b4c0"],
+  },
+  {
+    id: "mocha-mousse", name: "Mocha Mousse", mood: "Cozy", difficulty: "Beginner",
+    description: "Warm mocha shadow + brown mascara + brown nude lip — the soft fall uniform of 2026.",
+    timeEstimate: "10 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Satin medium-coverage foundation.", color: "#e6c4a4", colorName: "Satin Beige" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Mocha shadow blended through the crease, warm bronze on the lid.", color: "#7a4a30", colorName: "Mocha Mousse" },
+      brows: { id: "brows", name: "Brows", instruction: "Defined natural arch.", color: "#3a2818", colorName: "Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Brown nude lip liner blurred with brown gloss.", color: "#a06a55", colorName: "Brown Nude" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm rosewood blush.", color: "#b06a5a", colorName: "Rosewood" },
+    },
+    palette: ["#7a4a30", "#a06a55", "#b06a5a"],
+  },
+  {
+    id: "burgundy-bombshell", name: "Burgundy Bombshell", mood: "Sultry", difficulty: "Intermediate",
+    description: "Burgundy smoke and a wine-stained lip — the autumn equivalent of a slow-burning candle.",
+    timeEstimate: "20 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Full coverage matte with warm bronzer.", color: "#dcb088", colorName: "Warm Matte" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Burgundy smoke pulled out into a soft cat eye.", color: "#5a1a28", colorName: "Burgundy" },
+      brows: { id: "brows", name: "Brows", instruction: "Sharp defined arch.", color: "#2a1810", colorName: "Dark" },
+      lips: { id: "lips", name: "Lips", instruction: "Wine-stained matte lip.", color: "#7a1a2e", colorName: "Wine Stain" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Plum cream blush sculpted under the cheekbone.", color: "#9a4a5a", colorName: "Plum Sculpt" },
+    },
+    palette: ["#5a1a28", "#7a1a2e", "#9a4a5a"],
+  },
+  {
+    id: "cinnamon-spice", name: "Cinnamon Spice", mood: "Warm", difficulty: "Beginner",
+    description: "Cinnamon shadow + spiced terracotta lip — perfect for sweater weather and pumpkin patches.",
+    timeEstimate: "12 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Warm satin foundation.", color: "#e0b48a", colorName: "Warm Satin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Cinnamon shadow swept across the lid and into the crease.", color: "#9a4a20", colorName: "Cinnamon" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up natural.", color: "#4a2a18", colorName: "Auburn" },
+      lips: { id: "lips", name: "Lips", instruction: "Spiced terracotta matte.", color: "#a85030", colorName: "Spice" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm peach blush.", color: "#d87a5a", colorName: "Peach Spice" },
+    },
+    palette: ["#9a4a20", "#a85030", "#d87a5a"],
+  },
+  {
+    id: "frosted-icicle", name: "Frosted Icicle", mood: "Ethereal", difficulty: "Intermediate",
+    description: "Icy silver shimmer, frosted lashes, and a glassy lip — winter solstice ethereality.",
+    timeEstimate: "20 min", season: "winter",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Luminous porcelain base with strobe cream on the high points.", color: "#f0e0d0", colorName: "Porcelain Glow" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Iridescent silver pressed onto the lid with a fingertip.", color: "#d8e8f0", colorName: "Icicle" },
+      brows: { id: "brows", name: "Brows", instruction: "Soft cool-toned arch.", color: "#604a3a", colorName: "Cool Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Glassy clear gloss.", color: "#e6c8c0", colorName: "Glass" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool mauve cream blush + silver highlight.", color: "#c898a8", colorName: "Frost Mauve" },
+    },
+    palette: ["#d8e8f0", "#e6c8c0", "#c898a8"],
+  },
+  {
+    id: "midnight-velvet", name: "Midnight Velvet", mood: "Dramatic", difficulty: "Advanced",
+    description: "Velvety black smoke, satin skin, and a deep-plum lip for holiday parties and NYE countdowns.",
+    timeEstimate: "30 min", season: "winter",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Full coverage satin foundation.", color: "#dcb088", colorName: "Satin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Black velvet smoke smudged round the eye, no liner.", color: "#1a1a1a", colorName: "Velvet Black" },
+      brows: { id: "brows", name: "Brows", instruction: "Sculpted, dark, defined.", color: "#1a1008", colorName: "Sculpted" },
+      lips: { id: "lips", name: "Lips", instruction: "Deep plum satin lip.", color: "#3a1a2a", colorName: "Plum Velvet" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Sculpted plum contour.", color: "#5a3040", colorName: "Plum Sculpt" },
+    },
+    palette: ["#1a1a1a", "#3a1a2a", "#5a3040"],
+  },
+  {
+    id: "snow-fairy", name: "Snow Fairy", mood: "Whimsical", difficulty: "Intermediate",
+    description: "Pearly white shimmer + iridescent freckles + sugary pink lip — winter wonderland fantasy.",
+    timeEstimate: "25 min", season: "winter",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Sheer porcelain with pearl highlight.", color: "#f4e8dc", colorName: "Pearl" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "White pearl shimmer all over the lid + iridescent inner corner.", color: "#f8f0e8", colorName: "Snow Pearl" },
+      brows: { id: "brows", name: "Brows", instruction: "Pale brushed-up brows.", color: "#a0805a", colorName: "Pale Blonde" },
+      lips: { id: "lips", name: "Lips", instruction: "Sugary pink sheer gloss.", color: "#f0a8c0", colorName: "Sugar Pink" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool pink draped blush + iridescent freckles.", color: "#f0a0b8", colorName: "Frost Pink" },
+    },
+    palette: ["#f8f0e8", "#f0a8c0", "#f0a0b8"],
+  },
+  {
+    id: "cyber-chrome", name: "Cyber Chrome", mood: "Futuristic", difficulty: "Advanced",
+    description: "Liquid chrome lid, sharp graphic liner, and a chrome-stained lip — Y3K runway energy.",
+    timeEstimate: "30 min", season: "allyear",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Glass skin: heavy moisturiser + skin tint + strobe.", color: "#e8c8a8", colorName: "Glass" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Liquid chrome lid + razor-sharp graphic black liner.", color: "#a8b8c8", colorName: "Chrome" },
+      brows: { id: "brows", name: "Brows", instruction: "Bleached or feather-light.", color: "#bca080", colorName: "Bleach" },
+      lips: { id: "lips", name: "Lips", instruction: "Chrome silver gloss over nude.", color: "#c8c8d0", colorName: "Chrome Lip" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool mauve sculpt + chrome highlight.", color: "#b89098", colorName: "Cool Sculpt" },
+    },
+    palette: ["#a8b8c8", "#c8c8d0", "#b89098"],
+  },
+  {
+    id: "soft-girl-2026", name: "Soft Girl 2026", mood: "Sweet", difficulty: "Beginner",
+    description: "TikTok soft-girl uniform: pink-flushed cheeks, fluttery lashes, glossy MLBB lip.",
+    timeEstimate: "10 min", season: "allyear",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Sheer dewy tint, freckles peeking through.", color: "#ecccaa", colorName: "Sheer Dew" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Soft brown wash, fluttery individual lashes.", color: "#7a4a30", colorName: "Soft Brown" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up, soft.", color: "#5a3818", colorName: "Soft Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Glossy MLBB pink.", color: "#d8888a", colorName: "MLBB Pink" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Pink cream blush draped high on the cheekbones.", color: "#f0909a", colorName: "Soft Pink" },
+    },
+    palette: ["#7a4a30", "#f0909a", "#d8888a"],
+  },
+  {
+    id: "clean-girl-glow", name: "Clean Girl Glow", mood: "Effortless", difficulty: "Beginner",
+    description: "The viral 'clean girl' uniform: slicked brows, bronzed skin, dewy nude lip. Five products, max.",
+    timeEstimate: "8 min", season: "allyear",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Skin tint + cream bronzer.", color: "#d8a878", colorName: "Skin Tint" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Cream bronzer smudged on the lid.", color: "#a8704a", colorName: "Bronze" },
+      brows: { id: "brows", name: "Brows", instruction: "Slicked up with brow gel.", color: "#3a2818", colorName: "Slicked" },
+      lips: { id: "lips", name: "Lips", instruction: "Brown lip liner + clear gloss.", color: "#9a6a55", colorName: "Brown Nude" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cream blush blended into bronzer.", color: "#d4806a", colorName: "Sun Blush" },
+    },
+    palette: ["#d8a878", "#d4806a", "#9a6a55"],
+  },
+  {
+    id: "ballet-core", name: "Balletcore", mood: "Romantic", difficulty: "Beginner",
+    description: "Pink-on-pink ballet aesthetic: rose lid, blush-flushed cheeks, satin pink lip.",
+    timeEstimate: "12 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Soft satin base.", color: "#f0d4c0", colorName: "Satin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Rose pink shimmer all over the lid.", color: "#e09098", colorName: "Rose Pink" },
+      brows: { id: "brows", name: "Brows", instruction: "Soft natural arch.", color: "#5a3818", colorName: "Soft" },
+      lips: { id: "lips", name: "Lips", instruction: "Satin pink lipstick.", color: "#e08a96", colorName: "Ballet Pink" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Heavy pink draped blush from cheek to temple.", color: "#f0a0a8", colorName: "Ballet Flush" },
+    },
+    palette: ["#e09098", "#f0a0a8", "#e08a96"],
+  },
+  {
+    id: "espresso-eyes", name: "Espresso Eyes", mood: "Cozy", difficulty: "Beginner",
+    description: "Soft espresso brown smoke + warm caramel skin + brown nude lip. The everyday 2026 staple.",
+    timeEstimate: "10 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Caramel-warm satin base.", color: "#c89070", colorName: "Caramel" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Espresso brown smoke around the eye.", color: "#3a2010", colorName: "Espresso" },
+      brows: { id: "brows", name: "Brows", instruction: "Defined arch.", color: "#2a1808", colorName: "Defined" },
+      lips: { id: "lips", name: "Lips", instruction: "Brown nude liner + clear gloss.", color: "#8a5a45", colorName: "Cocoa Nude" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm caramel sculpt under the cheekbone.", color: "#a06848", colorName: "Caramel Sculpt" },
+    },
+    palette: ["#3a2010", "#8a5a45", "#a06848"],
+  },
+  {
+    id: "blueberry-eyeliner", name: "Blueberry Liner", mood: "Playful", difficulty: "Intermediate",
+    description: "Pop of unexpected blueberry liner along the lower lash line — TikTok's micro-trend that won't quit.",
+    timeEstimate: "12 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Sheer satin base.", color: "#e6c8a8", colorName: "Sheer" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Blueberry liner along the lower waterline + a soft taupe lid.", color: "#4a4ab0", colorName: "Blueberry" },
+      brows: { id: "brows", name: "Brows", instruction: "Soft natural.", color: "#5a3818", colorName: "Soft" },
+      lips: { id: "lips", name: "Lips", instruction: "Cool pink balm.", color: "#d49096", colorName: "Cool Pink" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool mauve cream blush.", color: "#c898a8", colorName: "Mauve" },
+    },
+    palette: ["#4a4ab0", "#d49096", "#c898a8"],
+  },
+  {
+    id: "honey-glow-summer", name: "Honey Glow", mood: "Sun-Kissed", difficulty: "Beginner",
+    description: "Golden honey shadow, bronzed skin, glossy honey-tinted lip. Beach-girl summer in five steps.",
+    timeEstimate: "10 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Liquid bronzer over a sheer skin tint.", color: "#d09060", colorName: "Honey Bronze" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Honey gold shimmer all over the lid.", color: "#d8a050", colorName: "Honey Gold" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up.", color: "#5a3818", colorName: "Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Honey-tinted gloss.", color: "#c89060", colorName: "Honey Gloss" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Bronzer pulled across the cheekbones + nose.", color: "#b07050", colorName: "Sun Bronze" },
+    },
+    palette: ["#d8a050", "#c89060", "#b07050"],
+  },
+  {
+    id: "graphic-cherry-liner", name: "Cherry Graphic Liner", mood: "Bold", difficulty: "Advanced",
+    description: "Fire-engine red graphic liner extended out past the corner of the eye. Statement-making.",
+    timeEstimate: "25 min", season: "allyear",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Matte porcelain base.", color: "#e8d0b8", colorName: "Matte Porcelain" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Cherry red liquid liner in a sharp graphic shape.", color: "#cc1020", colorName: "Cherry Red" },
+      brows: { id: "brows", name: "Brows", instruction: "Sharp arch.", color: "#1a1008", colorName: "Sharp Dark" },
+      lips: { id: "lips", name: "Lips", instruction: "Nude matte lip.", color: "#b08070", colorName: "Nude Matte" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool sculpted cheek.", color: "#9a6878", colorName: "Cool Sculpt" },
+    },
+    palette: ["#cc1020", "#b08070", "#9a6878"],
+  },
+  {
+    id: "tropical-monoi", name: "Tropical Monoi", mood: "Sun-Kissed", difficulty: "Beginner",
+    description: "Coconut-glow skin + bronze lid + tropical coral lip. Made for a beach golden hour.",
+    timeEstimate: "10 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Body oil glow + skin tint.", color: "#c88858", colorName: "Tropical" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Bronze shimmer lid.", color: "#a06030", colorName: "Bronze" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up natural.", color: "#3a2818", colorName: "Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Coral gloss.", color: "#e07050", colorName: "Coral Gloss" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Coral cream blush blended out into bronzer.", color: "#e88068", colorName: "Coral Sun" },
+    },
+    palette: ["#a06030", "#e07050", "#e88068"],
+  },
+];
+
+// Default season tag for any look not explicitly tagged. Used by the home
+// season filter — keeps untagged content visible regardless of season.
+const DEFAULT_SEASON: Season = "allyear";
+
+// Map of look id → season for the original (pre-2026 capsule) catalogue.
+// Centralised here so we don't have to mutate the original arrays in place.
+export const seasonByLookId: Record<string, Season> = {
+  "1920s-flapper": "winter",
+  "1940s-pinup": "allyear",
+  "1960s-mod": "spring",
+  "1970s-disco": "summer",
+  "1980s-glam": "winter",
+  "1990s-grunge": "fall",
+  "2000s-y2k": "summer",
+  "2010s-instagram": "allyear",
+  "rihanna-fenty": "summer",
+  "zendaya-met": "fall",
+  "hailey-bieber": "spring",
+  "bella-hadid": "winter",
+};
+
+export function getLookSeason(look: Look): Season {
+  return look.season ?? seasonByLookId[look.id] ?? DEFAULT_SEASON;
+}
+
+export const SEASONS: Season[] = ["spring", "summer", "fall", "winter", "allyear"];
+
+export const allLooks = [...byEraLooks, ...celebrityLooks, ...seasonalCapsule2026];
+export const allCompleteLooks = [...byEraLooks, ...celebrityLooks, ...trendLooks, ...seasonalCapsule2026];
 export const allEyeLooks = [...eyeLooks, ...moreEyeLooks];
 export const allLipLooks = [...lipLooks, ...moreLipLooks];
+
+// Master flat list — used by Feed/search to scan the entire catalogue.
+export const ALL_LOOKS_FLAT: Look[] = [
+  ...byEraLooks,
+  ...celebrityLooks,
+  ...eyeLooks,
+  ...lipLooks,
+  ...trendLooks,
+  ...moreEyeLooks,
+  ...moreLipLooks,
+  ...seasonalCapsule2026,
+];

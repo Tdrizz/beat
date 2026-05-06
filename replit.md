@@ -33,6 +33,41 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   try-on flow. `useFaceAnalysis` is still used by `LookMatch.tsx` for face/skin
   scanning to recommend looks — that's a separate feature.
 
+## Social ecosystem
+
+`artifacts/glamr` has been extended into a TikTok-style social platform.
+
+- **Auth**: `@clerk/react` (v6) wraps the whole app in `main.tsx`. Clerk publishable
+  key comes from `VITE_CLERK_PUBLISHABLE_KEY`. The API uses `@clerk/express`
+  middleware (`artifacts/api-server/src/app.ts`) plus a Clerk frontend-API
+  proxy. `requireAuth` / `optionalAuth` middlewares populate `req.userId`
+  (augmented in `src/types/express.d.ts`).
+- **Mandatory profile**: every signed-in user must create a `@handle` profile
+  before accessing the feed/upload/messages. `AuthedRoute` redirects to
+  `/sign-in` (no session) or `/onboarding` (no profile row).
+- **DB**: profiles, posts, post_likes, post_comments, follows, conversations,
+  messages, brands, products, look_products, affiliate_clicks. Schema in
+  `lib/db/src/schema/{profiles,posts,messages,affiliate}.ts`.
+- **API routes** live in `artifacts/api-server/src/routes/{profiles,posts,
+  social,messages,brands,affiliate,storage}.ts`. Storage is the only group
+  defined in OpenAPI; the social/DM/affiliate endpoints intentionally bypass
+  codegen and are typed via the frontend `lib/api.ts` fetch wrapper.
+- **Object storage**: app-storage bucket via `objectStorage.ts` +
+  `lib/object-storage-web` `<ObjectUploader>` (Uppy-based). User uploads go
+  through a presigned PUT (`POST /api/storage/uploads/request-url`) and are
+  served back via `/api/storage/objects/...`.
+- **Affiliate**: brands seeded on first boot (`lib/seedBrands.ts`).
+  `AffiliateProductsForLook` widget renders on `LookDetail` and inside `TryOn`
+  side-panel; clicks go through `GET /api/affiliate/click/:productId?creator=`
+  which records the click and 302s to the brand URL. Creators see aggregated
+  stats at `/affiliate`.
+- **Catalogue**: `lib/looks.ts` adds a `season?: Season` field plus the
+  `seasonalCapsule2026` set (Spring/Summer/Fall/Winter/All-Year). Helpers:
+  `SEASONS`, `seasonByLookId`, `getLookSeason`, `ALL_LOOKS_FLAT`.
+- **Pages**: SignIn, SignUp, ProfileSetup, Feed, Upload, Messages,
+  MessageThread, Brands, UserProfile, AffiliateStats. `TopNav` is the shared
+  shell.
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces

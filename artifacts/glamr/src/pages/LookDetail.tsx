@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Camera, Clock, Star, Sparkles } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { AffiliateProductsForLook } from "@/components/AffiliateProductsForLook";
 
 export default function LookDetail() {
   const { lookId } = useParams();
@@ -115,6 +116,8 @@ export default function LookDetail() {
               </div>
             </div>
           </div>
+
+          <AffiliateProductsForLook lookId={look.id} />
         </motion.div>
       </main>
     </div>
