@@ -357,15 +357,23 @@ export default function TryOn() {
   const handleResetShades = () => { setSkinProfile(null); setMatchedLook(null); };
 
   const captureScreenshot = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const overlay = canvasRef.current;
+    if (!video || !overlay) return;
+    if (!video.videoWidth || !video.videoHeight) return;
     const merged = document.createElement("canvas");
-    merged.width  = videoRef.current.videoWidth;
-    merged.height = videoRef.current.videoHeight;
+    merged.width = video.videoWidth;
+    merged.height = video.videoHeight;
     const ctx = merged.getContext("2d");
     if (!ctx) return;
-    ctx.translate(merged.width, 0); ctx.scale(-1, 1);
-    ctx.drawImage(videoRef.current, 0, 0, merged.width, merged.height);
-    ctx.drawImage(canvasRef.current, 0, 0, merged.width, merged.height);
+    // Mirror BOTH layers so the screenshot matches what the user sees on screen
+    // (the live preview applies CSS scaleX(-1) to both the video and overlay canvas).
+    ctx.save();
+    ctx.translate(merged.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, merged.width, merged.height);
+    ctx.drawImage(overlay, 0, 0, merged.width, merged.height);
+    ctx.restore();
     const a = document.createElement("a");
     a.href = merged.toDataURL("image/jpeg", 0.92);
     a.download = `beat-${activeLook?.id || "look"}-${Date.now()}.jpg`;

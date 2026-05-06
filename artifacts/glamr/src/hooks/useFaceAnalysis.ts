@@ -276,12 +276,41 @@ export function useFaceAnalysis() {
   useEffect(() => {
     let active = true;
     let lastTs = 0;
+    let activeStream: MediaStream | null = null;
+
+    function describeCameraError(err: any): string {
+      const name = err?.name || "";
+      if (!navigator.mediaDevices?.getUserMedia) {
+        return "Your browser doesn't support camera access. Try Chrome, Safari, or Firefox.";
+      }
+      if (window.isSecureContext === false) {
+        return "Camera requires a secure (HTTPS) connection.";
+      }
+      switch (name) {
+        case "NotAllowedError":
+        case "PermissionDeniedError":
+          return "Camera access was denied. Please allow camera access in your browser and reload.";
+        case "NotFoundError":
+        case "DevicesNotFoundError":
+          return "No camera was found on this device.";
+        case "NotReadableError":
+        case "TrackStartError":
+          return "Your camera is being used by another app. Close it and try again.";
+        case "OverconstrainedError":
+          return "No camera matches the requested resolution.";
+        case "AbortError":
+          return "Camera initialization was interrupted. Please retry.";
+        default:
+          return "Could not start the camera. " + (err?.message || "");
+      }
+    }
 
     async function init() {
       try {
         const filesetResolver = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
+        if (!active) return;
         const landmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
           baseOptions: {
             modelAssetPath:
@@ -295,14 +324,22 @@ export function useFaceAnalysis() {
         if (!active) { landmarker.close(); return; }
         landmarkerRef.current = landmarker;
 
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw Object.assign(new Error("getUserMedia unsupported"), { name: "NotSupportedError" });
+        }
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: 1280, height: 720 },
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false,
         });
         if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
+        activeStream = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+          try {
+            await videoRef.current.play();
+          } catch (err) {
+            console.warn("video.play() rejected", err);
+          }
         }
         if (active) setState("ready");
 
@@ -326,11 +363,7 @@ export function useFaceAnalysis() {
         detectLoopRef.current = requestAnimationFrame(detectLoop);
       } catch (err: any) {
         if (!active) return;
-        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-          setError("Camera access was denied. Please allow camera access and try again.");
-        } else {
-          setError("Could not start the camera. " + (err.message || ""));
-        }
+        setError(describeCameraError(err));
         setState("error");
       }
     }
@@ -340,10 +373,17 @@ export function useFaceAnalysis() {
     return () => {
       active = false;
       cancelAnimationFrame(detectLoopRef.current);
-      if (videoRef.current?.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+      const v = videoRef.current;
+      if (v?.srcObject) {
+        (v.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+        v.srcObject = null;
+      }
+      if (activeStream) {
+        activeStream.getTracks().forEach(t => t.stop());
+        activeStream = null;
       }
       landmarkerRef.current?.close();
+      landmarkerRef.current = null;
     };
   }, []);
 

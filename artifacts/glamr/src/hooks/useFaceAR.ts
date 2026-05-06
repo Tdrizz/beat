@@ -18,12 +18,70 @@ export function useFaceAR(
 
   useEffect(() => {
     let active = true;
+    let activeStream: MediaStream | null = null;
+
+    function describeCameraError(err: any): string {
+      const name = err?.name || "";
+      if (!navigator.mediaDevices?.getUserMedia) {
+        return "Your browser doesn't support camera access. Try Chrome, Safari, or Firefox.";
+      }
+      if (window.isSecureContext === false) {
+        return "Camera requires a secure (HTTPS) connection.";
+      }
+      switch (name) {
+        case "NotAllowedError":
+        case "PermissionDeniedError":
+          return "Camera permission was blocked. Please allow camera access in your browser and reload.";
+        case "NotFoundError":
+        case "DevicesNotFoundError":
+          return "No camera was found on this device.";
+        case "NotReadableError":
+        case "TrackStartError":
+          return "Your camera is being used by another app. Close it and try again.";
+        case "OverconstrainedError":
+          return "No camera matches the requested resolution.";
+        case "AbortError":
+          return "Camera initialization was interrupted. Please retry.";
+        default:
+          return "Camera access failed. " + (err?.message || "");
+      }
+    }
+
+    async function attachStream(stream: MediaStream) {
+      const video = videoRef.current;
+      if (!video) return;
+      video.srcObject = stream;
+      try {
+        await video.play();
+      } catch (err) {
+        // iOS/Safari may reject autoplay; user gesture required is rare for muted video, but log just in case
+        console.warn("video.play() rejected", err);
+      }
+
+      const onReady = () => {
+        if (!active) return;
+        const canvas = canvasRef.current;
+        if (canvas && video.videoWidth > 0) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          setIsReady(true);
+        }
+      };
+
+      // If metadata already loaded (HMR / reattach), fire immediately; otherwise wait
+      if (video.readyState >= 1 && video.videoWidth > 0) {
+        onReady();
+      } else {
+        video.addEventListener("loadedmetadata", onReady, { once: true });
+      }
+    }
 
     async function init() {
       try {
         const filesetResolver = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
+        if (!active) return;
         const faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
           baseOptions: {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
@@ -33,37 +91,34 @@ export function useFaceAR(
           numFaces: 1,
           outputFaceBlendshapes: false
         });
-
-        if (active) {
-          landmarkerRef.current = faceLandmarker;
-          startCamera();
-        }
+        if (!active) { faceLandmarker.close(); return; }
+        landmarkerRef.current = faceLandmarker;
+        await startCamera();
       } catch (err: any) {
         console.error("Failed to init MediaPipe", err);
-        if (active) setError("Failed to load AR model.");
+        if (active) setError("Failed to load the AR engine. Check your network and reload.");
       }
     }
 
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: 1280, height: 720 },
-          audio: false
-        });
-        if (videoRef.current && active) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
-          videoRef.current.onloadedmetadata = () => {
-            if (canvasRef.current && videoRef.current) {
-              canvasRef.current.width = videoRef.current.videoWidth;
-              canvasRef.current.height = videoRef.current.videoHeight;
-              setIsReady(true);
-            }
-          };
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw Object.assign(new Error("getUserMedia unsupported"), { name: "NotSupportedError" });
         }
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        // If we were unmounted while awaiting permission, clean up the stream.
+        if (!active) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        activeStream = stream;
+        await attachStream(stream);
       } catch (err: any) {
         console.error("Camera error", err);
-        if (active) setError("Camera access denied.");
+        if (active) setError(describeCameraError(err));
       }
     }
 
@@ -72,10 +127,19 @@ export function useFaceAR(
     return () => {
       active = false;
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (videoRef.current && videoRef.current.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+      const v = videoRef.current;
+      if (v && v.srcObject) {
+        (v.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
+        v.srcObject = null;
       }
-      if (landmarkerRef.current) landmarkerRef.current.close();
+      if (activeStream) {
+        activeStream.getTracks().forEach((t) => t.stop());
+        activeStream = null;
+      }
+      if (landmarkerRef.current) {
+        landmarkerRef.current.close();
+        landmarkerRef.current = null;
+      }
     };
   }, []);
 
@@ -98,10 +162,12 @@ export function useFaceAR(
             const results = landmarkerRef.current!.detectForVideo(video, startTimeMs);
             ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (results.faceLandmarks && results.faceLandmarks.length > 0 && currentLook) {
+            if (results.faceLandmarks && results.faceLandmarks.length > 0) {
               const landmarks = results.faceLandmarks[0];
               latestLandmarksRef.current = landmarks;
-              drawMakeup(ctx!, landmarks, canvas.width, canvas.height, activeSteps, currentLook);
+              if (currentLook) {
+                drawMakeup(ctx!, landmarks, canvas.width, canvas.height, activeSteps, currentLook);
+              }
             } else {
               latestLandmarksRef.current = null;
             }
