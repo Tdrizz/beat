@@ -22,9 +22,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import {
   Sparkles, Camera, Eye, Smile, Layers, Search, X,
-  Heart, TrendingUp, ScanFace, Clock, ChevronRight, CalendarDays,
+  Heart, TrendingUp, ScanFace, Clock, ChevronRight, ChevronLeft, CalendarDays,
   Crown, Palette as PaletteIcon, ExternalLink, Globe, Leaf,
-  BookOpen, FlaskConical, Apple, Brush
+  BookOpen, FlaskConical, Apple, Brush, Star
 } from "lucide-react";
 
 type Difficulty = "All" | "Beginner" | "Intermediate" | "Advanced";
@@ -505,6 +505,7 @@ export default function Home() {
   const [countryRegion, setCountryRegion] = useState("All");
   const [countryQuery, setCountryQuery] = useState("");
   const [activeMood, setActiveMood] = useState<MoodOption | null>(null);
+  const [lookCategory, setLookCategory] = useState<string | null>(null);
   const { favorites, toggle, isFavorite } = useFavorites();
   const streak = useStreak();
   const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
@@ -561,13 +562,20 @@ export default function Home() {
   }, [paletteQuery]);
 
   const lookTabs = [
-    { id: "all",       label: "All",       icon: <Layers className="w-3.5 h-3.5" />,     title: "Complete Makeup Styles", looks: filtered.all },
-    { id: "trending",  label: "Trending",  icon: <TrendingUp className="w-3.5 h-3.5" />, title: "Trending Styles",        looks: filtered.trending },
-    { id: "era",       label: "By Era",    icon: null,                                    title: "By Era",                 looks: filtered.era },
-    { id: "celebrity", label: "Celebrity", icon: null,                                    title: "Celebrity Icons",        looks: filtered.celebrity },
-    { id: "eyes",      label: "Eyes",      icon: <Eye className="w-3.5 h-3.5" />,        title: "Eye Styles",             looks: filtered.eyes },
-    { id: "lips",      label: "Lips",      icon: <Smile className="w-3.5 h-3.5" />,      title: "Lip Styles",             looks: filtered.lips },
-    { id: "saved",     label: "Saved",     icon: <Heart className="w-3.5 h-3.5" />,      title: "Saved Looks",            looks: filtered.saved },
+    { id: "all",       label: "All",       icon: <Layers className="w-3.5 h-3.5" />,       title: "Complete Makeup Styles", looks: filtered.all,
+      blurb: "Every look in the catalogue.", gradient: "from-rose-200 via-pink-200 to-orange-100" },
+    { id: "trending",  label: "Trending",  icon: <TrendingUp className="w-3.5 h-3.5" />,   title: "Trending Styles",        looks: filtered.trending,
+      blurb: "What's hot right now on the FYP.", gradient: "from-pink-300 via-fuchsia-200 to-violet-200" },
+    { id: "era",       label: "By Era",    icon: <CalendarDays className="w-3.5 h-3.5" />, title: "By Era",                 looks: filtered.era,
+      blurb: "1920s flapper to Y2K — pick your decade.", gradient: "from-amber-200 via-rose-200 to-purple-200" },
+    { id: "celebrity", label: "Celebrity", icon: <Star className="w-3.5 h-3.5" />,         title: "Celebrity Icons",        looks: filtered.celebrity,
+      blurb: "Recreate looks from your favourite stars.", gradient: "from-yellow-200 via-amber-200 to-rose-200" },
+    { id: "eyes",      label: "Eyes",      icon: <Eye className="w-3.5 h-3.5" />,          title: "Eye Styles",             looks: filtered.eyes,
+      blurb: "Liners, smokes, graphics & shimmers.", gradient: "from-sky-200 via-violet-200 to-pink-200" },
+    { id: "lips",      label: "Lips",      icon: <Smile className="w-3.5 h-3.5" />,        title: "Lip Styles",             looks: filtered.lips,
+      blurb: "Glosses, ombres, bitten reds and beyond.", gradient: "from-rose-300 via-red-200 to-orange-200" },
+    { id: "saved",     label: "Saved",     icon: <Heart className="w-3.5 h-3.5" />,        title: "Saved Looks",            looks: filtered.saved,
+      blurb: "Looks you've hearted to come back to.", gradient: "from-rose-200 via-pink-100 to-rose-200" },
   ];
 
   return (
@@ -674,31 +682,78 @@ export default function Home() {
               </div>
             </div>
 
-            <Tabs defaultValue="all" className="w-full">
-              <div className="flex justify-start mb-6 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
-                <TabsList className="bg-muted/60 flex-shrink-0 h-auto p-1 gap-0.5">
-                  {lookTabs.map(t => (
-                    <TabsTrigger key={t.id} value={t.id}
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5 px-3 py-1.5 text-xs whitespace-nowrap">
-                      {t.icon}{t.label}
-                      {t.id === "saved" && favorites.size > 0 && (
-                        <span className="ml-0.5 text-xs bg-rose-500 text-white rounded-full px-1.5 py-px leading-none">{favorites.size}</span>
-                      )}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-              {lookTabs.map(t => (
-                <TabsContent key={t.id} value={t.id} className="mt-0">
+            {/* Category landing → click a card to open that category's looks.
+                State-driven (no inner Tabs) so the back button can return to
+                the category grid and the card animations feel intentional. */}
+            {lookCategory === null ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.25 }}
+              >
+                <SectionHeader
+                  icon={<Layers className="w-5 h-5" />}
+                  title="Browse by category"
+                  count={lookTabs.length}
+                />
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                  {lookTabs.map((t, i) => {
+                    const count = t.id === "saved" ? favorites.size : t.looks.length;
+                    return (
+                      <motion.button
+                        key={t.id}
+                        onClick={() => setLookCategory(t.id)}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04, duration: 0.3 }}
+                        whileHover={{ y: -3 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="group relative text-left rounded-2xl overflow-hidden border border-border bg-card hover:border-primary/40 transition-all shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        <div className={`h-20 sm:h-24 bg-gradient-to-br ${t.gradient} relative`}>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                          <div className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] font-bold text-foreground/80">
+                            {count} {count === 1 ? "look" : "looks"}
+                          </div>
+                          <div className="absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-foreground shadow-sm">
+                            {t.icon ?? <Sparkles className="w-4 h-4" />}
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <h3 className="font-serif font-bold text-sm sm:text-base leading-tight">{t.label}</h3>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                          </div>
+                          <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug line-clamp-2">{t.blurb}</p>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ) : (() => {
+              const t = lookTabs.find(x => x.id === lookCategory)!;
+              return (
+                <motion.div
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <button
+                    onClick={() => setLookCategory(null)}
+                    className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 -ml-1"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back to categories
+                  </button>
                   <SectionHeader icon={t.icon ?? <Sparkles className="w-5 h-5" />} title={t.title} count={t.looks.length} />
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {t.id === "saved" && favorites.size === 0
                       ? <EmptyFavorites />
                       : <LookGrid looks={t.looks} isFav={isFavorite} onToggleFav={toggle} emptyMsg="No looks match your search." />}
                   </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+                </motion.div>
+              );
+            })()}
           </TabsContent>
 
           {/* ── BY COUNTRY TAB ──────────────────────────────────────────────── */}
