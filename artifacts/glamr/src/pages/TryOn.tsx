@@ -244,13 +244,14 @@ export default function TryOn() {
   // AI photoreal try-on
   const aiTryon = useAITryOn();
   const [aiTryonOpen, setAiTryonOpen] = useState(false);
+  const [aiIntensity, setAiIntensity] = useState(60);
   const lastResultUrl = useRef<string | null>(null);
   if (aiTryon.result?.imageUrl) lastResultUrl.current = aiTryon.result.imageUrl;
 
   const runAITryon = () => {
     if (!baseLook) return;
     setAiTryonOpen(true);
-    aiTryon.run({ video: videoRef.current, look: baseLook });
+    aiTryon.run({ video: videoRef.current, look: baseLook, intensity: aiIntensity });
   };
 
   // Auto-fire AI try-on as soon as the camera is ready. We only auto-fire
@@ -264,7 +265,7 @@ export default function TryOn() {
     autoFiredForLook.current = baseLook.id;
     const t = window.setTimeout(() => {
       setAiTryonOpen(true);
-      aiTryon.run({ video: videoRef.current, look: baseLook });
+      aiTryon.run({ video: videoRef.current, look: baseLook, intensity: aiIntensity });
     }, 900);
     return () => window.clearTimeout(t);
     // aiTryon / videoRef are stable enough; we deliberately key off camera
@@ -442,6 +443,8 @@ export default function TryOn() {
           imageUrl={aiTryon.result?.imageUrl ?? lastResultUrl.current ?? null}
           error={aiTryon.error}
           lookName={baseLook.name}
+          intensity={aiIntensity}
+          onIntensityChange={setAiIntensity}
           onClose={closeAITryon}
           onRetry={runAITryon}
         />

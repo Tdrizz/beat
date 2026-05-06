@@ -4,6 +4,8 @@ import type { Look } from "../lib/looks";
 interface RunArgs {
   video: HTMLVideoElement | null;
   look: Look;
+  /** 0–100 — controls how strongly the model paints the look. Default 60. */
+  intensity?: number;
 }
 
 interface Result {
@@ -34,7 +36,7 @@ export function useAITryOn() {
   // launching overlapping requests that would race on setState.
   const inFlight = useRef(false);
 
-  const run = useCallback(async ({ video, look }: RunArgs) => {
+  const run = useCallback(async ({ video, look, intensity = 60 }: RunArgs) => {
     if (inFlight.current) return;
     if (!video || !video.videoWidth || !video.videoHeight) {
       setError("Camera not ready yet — try again in a moment.");
@@ -89,6 +91,7 @@ export function useAITryOn() {
           mimeType: "image/jpeg",
           lookName: look.name,
           lookDescription: look.description,
+          intensity,
           steps,
         }),
       });

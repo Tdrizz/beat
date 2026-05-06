@@ -15,6 +15,10 @@ const TryonBody = z.object({
   mimeType: z.string().default("image/jpeg"),
   lookName: z.string().min(1).max(120),
   lookDescription: z.string().max(800).optional(),
+  // 0–100. The client sends a percentage; 50 = "as written", <50 softens
+  // pigment / coverage, >50 amplifies them. Default mirrors the slider's
+  // initial position.
+  intensity: z.number().min(0).max(100).default(60),
   steps: z
     .array(
       z.object({
@@ -28,6 +32,16 @@ const TryonBody = z.object({
     .max(10),
 });
 
+// Translate a 0–100 intensity into a short natural-language descriptor that
+// the image model interprets reliably. Numbers alone tend to be ignored.
+function intensityDescriptor(i: number): { label: string; guidance: string } {
+  if (i <= 15)  return { label: "barely-there",  guidance: "Apply each product as a whisper — sheer wash of colour, almost no-makeup-makeup. Pigment ~15% of full strength." };
+  if (i <= 35)  return { label: "soft / natural", guidance: "Apply each product softly and naturally — diffused, low-pigment, daytime intensity. Pigment ~35% of full strength." };
+  if (i <= 60)  return { label: "balanced",      guidance: "Apply each product at standard editorial intensity — pigments clearly visible but blended and skin-like." };
+  if (i <= 85)  return { label: "bold",          guidance: "Apply each product with bold saturation — rich pigment payoff, opaque coverage, strong but still photoreal." };
+  return        { label: "full glam",            guidance: "Apply each product at maximum runway intensity — fully opaque, highly saturated pigment, dramatic high-impact finish." };
+}
+
 const STEP_LABELS: Record<string, string> = {
   base:   "Foundation / complexion",
   eyes:   "Eyeshadow & eyeliner",
@@ -38,12 +52,15 @@ const STEP_LABELS: Record<string, string> = {
 
 function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   const lines: string[] = [];
+  const intensity = intensityDescriptor(parsed.intensity);
   lines.push(
     `You are a professional makeup artist. Edit this photograph to apply a complete makeup look called "${parsed.lookName}" to the person in the image.`,
   );
   if (parsed.lookDescription) {
     lines.push(`LOOK STORY: ${parsed.lookDescription}`);
   }
+  lines.push("");
+  lines.push(`INTENSITY: ${intensity.label}. ${intensity.guidance}`);
   lines.push("");
   lines.push("APPLY THESE PRODUCTS, in order, with photoreal pigment:");
   for (const s of parsed.steps) {
