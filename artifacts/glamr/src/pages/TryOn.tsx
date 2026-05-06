@@ -252,17 +252,21 @@ export default function TryOn() {
   const [panelCollapsed, setPanelCollapsed] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
   );
-  // Track the last successful image as state (not a render-phase ref mutation
-  // — that was a React anti-pattern that could lead to inconsistent renders).
-  const [lastResultUrl, setLastResultUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (aiTryon.result?.imageUrl) setLastResultUrl(aiTryon.result.imageUrl);
-  }, [aiTryon.result?.imageUrl]);
+  // Most recent generated image (NOT the currently-selected angle), used
+  // for the top-bar thumbnail / FAB label so users can tell at a glance
+  // whether they've already generated something for this look — the
+  // indicator shouldn't regress when they swipe back through old angles.
+  const lastResultUrl = aiTryon.lastGenerated?.imageUrl ?? null;
 
-  const runAITryon = () => {
+  const runAITryon = (angleLabel?: string) => {
     if (!baseLook) return;
     setAiTryonOpen(true);
-    aiTryon.run({ video: videoRef.current, look: baseLook, intensity: aiIntensity });
+    aiTryon.run({
+      video: videoRef.current,
+      look: baseLook,
+      intensity: aiIntensity,
+      angleLabel,
+    });
   };
 
   // Auto-fire AI try-on as soon as the camera is ready. We only auto-fire
@@ -283,7 +287,7 @@ export default function TryOn() {
         return;
       }
       setAiTryonOpen(true);
-      aiTryon.run({ video: v, look: baseLook, intensity: aiIntensity });
+      aiTryon.run({ video: v, look: baseLook, intensity: aiIntensity, angleLabel: "Front" });
     }, 900);
     return () => window.clearTimeout(t);
     // aiTryon / videoRef are stable enough; we deliberately key off camera
@@ -432,7 +436,7 @@ export default function TryOn() {
         {!guidedMode && (
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5">
             <Button
-              onClick={runAITryon}
+              onClick={() => runAITryon()}
               disabled={!isReady || isGenerating}
               className="rounded-full gap-2 px-7 py-7 text-base font-bold shadow-2xl bg-gradient-to-r from-primary via-accent to-primary text-primary-foreground hover:opacity-95 disabled:opacity-60"
               title="Generate a photoreal AI try-on"
@@ -458,13 +462,16 @@ export default function TryOn() {
         <AITryOnModal
           open={aiTryonOpen}
           state={aiTryon.state}
-          imageUrl={aiTryon.result?.imageUrl ?? lastResultUrl ?? null}
+          gallery={aiTryon.gallery}
+          currentIndex={aiTryon.currentIndex}
+          onSelectIndex={aiTryon.setCurrentIndex}
           error={aiTryon.error}
           lookName={baseLook.name}
           intensity={aiIntensity}
           onIntensityChange={setAiIntensity}
           onClose={closeAITryon}
-          onRetry={runAITryon}
+          onCaptureAngle={(label) => runAITryon(label)}
+          videoRef={videoRef}
         />
 
         <AnimatePresence>
@@ -596,7 +603,7 @@ export default function TryOn() {
           {/* Footer CTA reinforcing AI try-on */}
           <div className="pt-2 mt-2 border-t border-border/60">
             <Button
-              onClick={runAITryon}
+              onClick={() => runAITryon()}
               disabled={!isReady || isGenerating}
               className="w-full rounded-full gap-2 bg-gradient-to-r from-primary via-accent to-primary text-primary-foreground"
             >

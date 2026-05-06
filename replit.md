@@ -36,6 +36,12 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Collapsible side panel**: `TryOn.tsx` ships a `panelCollapsed` toggle
   (defaults collapsed on mobile via `matchMedia`). Collapsed → camera fills
   the viewport and a floating "Look details" pill restores the panel.
+- **Multi-angle gallery**: `useAITryOn` now exposes `gallery: AngleResult[]`
+  + `currentIndex` instead of a single `result`. Each `run({ angleLabel })`
+  appends a generated image. `AITryOnModal` shows a live mirrored PiP of the
+  parent camera stream, suggests the next un-captured angle (Front, Slight
+  left/right, Chin up/down), and renders thumbnails + prev/next chevrons +
+  arrow-key nav so the user can swipe through every captured angle.
 - The previous canvas-based AR overlay engine (MediaPipe FaceLandmarker +
   `makeupRenderer` + `shadeMatch` + `useFaceAR`) has been removed from the
   try-on flow. `useFaceAnalysis` is still used by `LookMatch.tsx` for face/skin

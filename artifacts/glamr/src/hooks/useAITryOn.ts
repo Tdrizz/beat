@@ -6,35 +6,38 @@ interface RunArgs {
   look: Look;
   /** 0–100 — controls how strongly the model paints the look. Default 60. */
   intensity?: number;
+  /** Optional label for this capture, e.g. "Front", "Left ¾". */
+  angleLabel?: string;
 }
 
-interface Result {
+export interface AngleResult {
+  id: string;
   imageUrl: string;
   mimeType: string;
+  angleLabel: string;
+  createdAt: number;
 }
+
+type SkinCategory = "Fair" | "Light" | "Medium Light" | "Medium" | "Tan" | "Deep";
+type SkinUndertone = "Warm" | "Cool" | "Neutral";
 
 /**
  * Sample average skin colour from the central face region of an already-
  * captured frame. We avoid MediaPipe here to keep the try-on flow self-
- * contained; instead we sample two patches likely to land on cheek skin
- * (left and right of centre, slightly below the vertical midpoint), then
- * filter out non-skin-ish pixels by HSL bounds before averaging.
+ * contained; instead we sample three patches likely to land on skin (cheeks
+ * and bridge of nose), then filter out non-skin pixels by RGB heuristics.
  *
- * Returns `null` if the captured frame is too dark / too small / not
+ * Returns `null` if the captured frame is too small / too dark / not
  * skin-shaped enough to trust.
  */
-type SkinCategory = "Fair" | "Light" | "Medium Light" | "Medium" | "Tan" | "Deep";
-type SkinUndertone = "Warm" | "Cool" | "Neutral";
-
 function sampleSkinTone(
   ctx: CanvasRenderingContext2D, w: number, h: number,
 ): { hex: string; category: SkinCategory; undertone: SkinUndertone } | null {
-  // Guard against tiny / unusable frames where sampling would just be noise.
   if (w < 160 || h < 160) return null;
   const patches = [
-    { cx: w * 0.35, cy: h * 0.55 }, // left cheek-ish
-    { cx: w * 0.65, cy: h * 0.55 }, // right cheek-ish
-    { cx: w * 0.50, cy: h * 0.45 }, // bridge of nose / mid-face
+    { cx: w * 0.35, cy: h * 0.55 },
+    { cx: w * 0.65, cy: h * 0.55 },
+    { cx: w * 0.50, cy: h * 0.45 },
   ];
   const radius = Math.max(8, Math.floor(Math.min(w, h) * 0.04));
   let r = 0, g = 0, b = 0, n = 0;
@@ -47,7 +50,6 @@ function sampleSkinTone(
     const d = img.data;
     for (let i = 0; i < d.length; i += 4) {
       const pr = d[i], pg = d[i + 1], pb = d[i + 2];
-      // crude skin-ish gate: red dominant, not pure black/white, not blue
       if (pr < 30 && pg < 30 && pb < 30) continue;
       if (pr > 245 && pg > 245 && pb > 245) continue;
       if (pr <= pb) continue;
@@ -57,7 +59,6 @@ function sampleSkinTone(
   if (n < 100) return null;
   const ar = Math.round(r / n), ag = Math.round(g / n), ab = Math.round(b / n);
   const hex = "#" + [ar, ag, ab].map(v => v.toString(16).padStart(2, "0")).join("");
-  // crude lightness for category
   const max = Math.max(ar, ag, ab), min = Math.min(ar, ag, ab);
   const l = ((max + min) / 2) / 255 * 100;
   let category: SkinCategory = "Medium";
@@ -73,21 +74,26 @@ function sampleSkinTone(
 }
 
 /**
- * Captures the current camera frame, sends it to the AI try-on endpoint along
- * with a structured description of the chosen look, and returns a photoreal
- * generated image of the user wearing the makeup.
+ * AI try-on hook with multi-angle gallery. Each call to `run()` captures
+ * the current camera frame, sends it to gemini-2.5-flash-image, and
+ * appends the generated image to a gallery the user can swipe through.
  *
- * Uses gemini-2.5-flash-image (nano banana) on the backend — billed via
- * Replit AI integrations, no API key required from the user.
+ * This is how we deliver the "see the look from every angle" UX without
+ * doing real-time video diffusion (which is neither fast nor cheap):
+ * the user turns their head, taps "capture this angle", and the gallery
+ * grows. Skin-tone is re-sampled each capture so lighting changes are
+ * still respected.
  */
 export function useAITryOn() {
   const [state, setState] = useState<"idle" | "capturing" | "generating" | "done" | "error">("idle");
-  const [result, setResult] = useState<Result | null>(null);
+  const [gallery, setGallery] = useState<AngleResult[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const reset = useCallback(() => {
     setState("idle");
-    setResult(null);
+    setGallery([]);
+    setCurrentIndex(0);
     setError(null);
   }, []);
 
@@ -95,7 +101,7 @@ export function useAITryOn() {
   // launching overlapping requests that would race on setState.
   const inFlight = useRef(false);
 
-  const run = useCallback(async ({ video, look, intensity = 60 }: RunArgs) => {
+  const run = useCallback(async ({ video, look, intensity = 60, angleLabel }: RunArgs) => {
     if (inFlight.current) return;
     if (!video || !video.videoWidth || !video.videoHeight) {
       setError("Camera not ready yet — try again in a moment.");
@@ -106,7 +112,6 @@ export function useAITryOn() {
     inFlight.current = true;
     setState("capturing");
     setError(null);
-    setResult(null);
 
     try {
       // 1. Capture the current camera frame, mirrored to match the on-screen preview.
@@ -125,12 +130,8 @@ export function useAITryOn() {
       const imageBase64 = dataUrl.split(",")[1];
       if (!imageBase64) throw new Error("Failed to encode frame");
 
-      // 1b. Sample skin tone from the captured frame so the model can
-      //     adapt foundation match, blush undertone, and lipstick translucency
-      //     to the actual user instead of painting a generic shade.
       const skinTone = sampleSkinTone(ctx, w, h);
 
-      // 2. Build the look payload — only steps that have a real shade.
       const stepKeys = ["base", "brows", "eyes", "cheeks", "lips"] as const;
       const steps = stepKeys
         .map((k) => {
@@ -145,7 +146,6 @@ export function useAITryOn() {
         })
         .filter(Boolean) as Array<{ step: string; name: string; color: string; instruction?: string }>;
 
-      // 3. Call the backend.
       setState("generating");
       const resp = await fetch("/api/ai-tryon", {
         method: "POST",
@@ -171,9 +171,26 @@ export function useAITryOn() {
       }
 
       const data = (await resp.json()) as { imageBase64: string; mimeType: string };
-      setResult({
-        imageUrl: `data:${data.mimeType};base64,${data.imageBase64}`,
-        mimeType: data.mimeType,
+      // Append + jump to it. Use functional setState so we always pick up
+      // the latest gallery, even if multiple captures land near the same
+      // tick — and so the default "Angle N" label sequences correctly
+      // (the closure-captured `gallery` would always be stale here).
+      setGallery((g) => {
+        const next: AngleResult = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          imageUrl: `data:${data.mimeType};base64,${data.imageBase64}`,
+          mimeType: data.mimeType,
+          angleLabel: angleLabel ?? `Angle ${g.length + 1}`,
+          createdAt: Date.now(),
+        };
+        // Cap the gallery so heavy users don't blow up browser memory with
+        // accumulating ~1MB base64 data URLs. 12 angles is more than enough
+        // and we always preserve the latest captures.
+        const MAX_GALLERY = 12;
+        const trimmed = g.length >= MAX_GALLERY ? g.slice(g.length - MAX_GALLERY + 1) : g;
+        const updated = [...trimmed, next];
+        setCurrentIndex(updated.length - 1);
+        return updated;
       });
       setState("done");
     } catch (e) {
@@ -183,7 +200,29 @@ export function useAITryOn() {
     } finally {
       inFlight.current = false;
     }
+    // We intentionally don't list `gallery` in deps — we read it via the
+    // functional setter above, and we want `run`'s identity stable so the
+    // auto-fire effect in TryOn.tsx isn't re-triggered on every capture.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { state, result, error, run, reset };
+  // The currently-displayed angle (driven by `currentIndex`).
+  const current: AngleResult | null = gallery[currentIndex] ?? null;
+  // The most recently-generated angle, regardless of which one the user is
+  // currently swiped to. Callers like the FAB / top-bar thumbnail want this
+  // (so navigating to an older angle doesn't make the indicator regress).
+  const lastGenerated: AngleResult | null =
+    gallery.length > 0 ? gallery[gallery.length - 1] : null;
+
+  return {
+    state,
+    error,
+    run,
+    reset,
+    gallery,
+    currentIndex,
+    setCurrentIndex,
+    current,
+    lastGenerated,
+  };
 }
