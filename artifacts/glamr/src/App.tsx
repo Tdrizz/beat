@@ -7,6 +7,9 @@ import Home from "@/pages/Home";
 import LookDetail from "@/pages/LookDetail";
 import TryOn from "@/pages/TryOn";
 import LookMatch from "@/pages/LookMatch";
+import Skincare from "@/pages/Skincare";
+import SkinDiary from "@/pages/SkinDiary";
+import SpecialProducts from "@/pages/SpecialProducts";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +20,9 @@ function Router() {
       <Route path="/match" component={LookMatch} />
       <Route path="/looks/:lookId" component={LookDetail} />
       <Route path="/try-on/:lookId" component={TryOn} />
+      <Route path="/skincare" component={Skincare} />
+      <Route path="/diary" component={SkinDiary} />
+      <Route path="/special-products" component={SpecialProducts} />
       <Route component={NotFound} />
     </Switch>
   );

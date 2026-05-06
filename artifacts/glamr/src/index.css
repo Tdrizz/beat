@@ -220,6 +220,64 @@
  * Even without handling focused or not, this is six possible combinations that
  * need to be distinguished from eachother visually.
  */
+/* ── Vanity Aesthetic ─────────────────────────────────────────────────────── */
+.vanity-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, #3d1a0088 0%, transparent 60%),
+    radial-gradient(ellipse at 0% 100%, #2a100044 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, #2a100044 0%, transparent 50%),
+    linear-gradient(180deg, #1a0d00 0%, #110800 60%, #0d0500 100%);
+}
+
+.vanity-mirror-frame {
+  position: relative;
+}
+
+.vanity-mirror-frame::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #b8901840, #f0c03040, #b8901840, #7a500820);
+  z-index: -1;
+  filter: blur(1px);
+}
+
+/* Hollywood bulb lights row */
+.vanity-bulbs {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.vanity-bulb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff8e0, #ffd060 40%, #e8a000 80%);
+  box-shadow:
+    0 0 8px 3px #ffd06060,
+    0 0 20px 6px #ffa00030,
+    0 0 1px 1px #fff8e040;
+  animation: bulb-pulse 3s ease-in-out infinite;
+}
+
+.vanity-bulb:nth-child(even) {
+  animation-delay: 1.5s;
+}
+
+@keyframes bulb-pulse {
+  0%, 100% { opacity: 0.88; box-shadow: 0 0 8px 3px #ffd06060, 0 0 20px 6px #ffa00030; }
+  50% { opacity: 1; box-shadow: 0 0 10px 5px #ffd06080, 0 0 28px 10px #ffa00050; }
+}
+
+/* Warm amber glow overlay on camera feed */
+.vanity-camera-glow {
+  background: radial-gradient(ellipse at 50% 100%, #ff980008 0%, transparent 70%);
+  pointer-events: none;
+}
+
 @layer utilities {
 
   /* Hide ugly search cancel button in Chrome until we can style it properly */
