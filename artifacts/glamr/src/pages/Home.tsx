@@ -5,6 +5,7 @@ import {
   byEraLooks, celebrityLooks, trendLooks,
   allEyeLooks, allLipLooks, allCompleteLooks, Look
 } from "../lib/looks";
+import { getLookImage } from "../lib/lookImages";
 import { countryLooks, REGIONS, type CountryLook } from "../lib/countryLooks";
 import { brands, Brand } from "../lib/brands";
 import { palettes, Palette } from "../lib/palettes";
@@ -109,14 +110,24 @@ function LookCard({ look, index, isFav, onToggleFav }: {
   look: Look; index: number; isFav: boolean; onToggleFav: (id: string) => void;
 }) {
   const gradStyle = { background: `linear-gradient(135deg, ${look.palette[0]} 0%, ${look.palette[1]} 50%, ${look.palette[2]} 100%)` };
+  const imgSrc = getLookImage(look.id);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.035, 0.35) }} layout
     >
       <Card className="overflow-hidden bg-card border-border hover:border-primary/50 transition-all duration-300 group cursor-pointer h-full flex flex-col">
-        <div className="h-32 w-full relative" style={gradStyle}>
-          <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all duration-500" />
+        <div className="h-44 w-full relative overflow-hidden" style={gradStyle}>
+          {imgSrc && (
+            <img
+              src={imgSrc}
+              alt={`${look.name} makeup look`}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
           <button
             onClick={e => { e.preventDefault(); onToggleFav(look.id); }}
             className="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60"
@@ -155,15 +166,26 @@ function LookCard({ look, index, isFav, onToggleFav }: {
 function CountryLookCard({ look, index }: { look: CountryLook; index: number }) {
   const [open, setOpen] = useState(false);
   const gradStyle = { background: `linear-gradient(135deg, ${look.palette[0]} 0%, ${look.palette[1]} 50%, ${look.palette[2]} 100%)` };
+  const imgSrc = getLookImage(look.id);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.5) }}
     >
-      <Card className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all duration-300 h-full flex flex-col">
-        <div className="h-24 w-full relative" style={gradStyle}>
-          <div className="absolute top-2 left-2">
+      <Card className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all duration-300 h-full flex flex-col group">
+        <div className="h-40 w-full relative overflow-hidden" style={gradStyle}>
+          {imgSrc && (
+            <img
+              src={imgSrc}
+              alt={`${look.country} ${look.name} makeup look`}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <div className="absolute top-2 left-2 z-10 drop-shadow-lg">
             <span className="text-3xl">{look.flag}</span>
           </div>
           <div className="absolute bottom-2 left-2 flex gap-1.5">
