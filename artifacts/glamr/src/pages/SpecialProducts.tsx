@@ -135,7 +135,7 @@ export default function SpecialProducts() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-14 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex items-center gap-3">
         <Link href="/">
           <Button variant="ghost" size="icon" className="rounded-full shrink-0">
             <ArrowLeft className="w-5 h-5" />

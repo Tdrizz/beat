@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { TopNav } from "@/components/TopNav";
 import { AuthedRoute } from "@/components/AuthedRoute";
 import { api, type AffiliateStatsResponse } from "@/lib/api";
 import { TrendingUp } from "lucide-react";
@@ -35,7 +34,6 @@ function StatsInner() {
   });
   return (
     <div className="min-h-screen vanity-bg">
-      <TopNav />
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         <h1 className="font-serif text-3xl">Affiliate dashboard</h1>
         {isLoading ? (

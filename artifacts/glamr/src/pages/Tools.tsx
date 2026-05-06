@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { ImageOff } from "lucide-react";
-import { TopNav } from "@/components/TopNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ExternalLink, Search, Brush } from "lucide-react";
@@ -63,7 +62,6 @@ export default function Tools() {
 
   return (
     <div className="min-h-screen vanity-bg">
-      <TopNav />
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-5">
         <header className="space-y-1">
           <div className="flex items-center gap-2">

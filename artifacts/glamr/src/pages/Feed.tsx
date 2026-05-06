@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Heart, MessageCircle, Plus, Filter, Flame, Users, Wand2 } from "lucide-react";
 import { api, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { TopNav } from "@/components/TopNav";
 import { ShareToDmButton } from "@/components/ShareToDmButton";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { WeeklyChallenge } from "@/components/WeeklyChallenge";
@@ -102,7 +101,6 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen vanity-bg">
-      <TopNav />
       <main className="max-w-xl mx-auto px-4 py-6 space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="font-serif text-3xl">Feed</h1>

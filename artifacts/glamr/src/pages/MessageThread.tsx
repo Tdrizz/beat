@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { TopNav } from "@/components/TopNav";
 import { AuthedRoute } from "@/components/AuthedRoute";
 import { api, type Profile, type Message } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -53,7 +52,6 @@ function ThreadInner() {
 
   return (
     <div className="min-h-screen vanity-bg flex flex-col">
-      <TopNav />
       <div className="max-w-xl w-full mx-auto px-4 py-3 flex items-center gap-2 border-b border-border/50">
         <Button size="sm" variant="ghost" onClick={() => navigate("/messages")} className="rounded-full">
           <ArrowLeft className="w-4 h-4" />

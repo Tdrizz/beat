@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { TopNav } from "@/components/TopNav";
 import { api, type Brand, type Product } from "@/lib/api";
 import { ExternalLink, Sparkles } from "lucide-react";
 import { useArchetype } from "@/hooks/useArchetype";
@@ -61,7 +60,6 @@ export default function Brands() {
 
   return (
     <div className="min-h-screen vanity-bg">
-      <TopNav />
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div>
           <h1 className="font-serif text-3xl">Shop the looks</h1>

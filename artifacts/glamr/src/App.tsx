@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthedRoute } from "@/components/AuthedRoute";
 import { MobileTabBar } from "@/components/MobileTabBar";
+import { TopNav } from "@/components/TopNav";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import LookDetail from "@/pages/LookDetail";
@@ -68,6 +69,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          {/* Global chrome: TopNav (sticky, with hamburger on mobile and
+              primary pills on desktop) renders above every route, so the
+              menu is always one tap away. The component self-hides on
+              the auth + onboarding routes. */}
+          <TopNav />
           <Router />
           <MobileTabBar />
         </WouterRouter>

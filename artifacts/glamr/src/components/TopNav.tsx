@@ -39,9 +39,13 @@ const SECONDARY: NavItem[] = [
   { href: "/affiliate", label: "Creator stats", icon: BarChart3, authed: true },
 ];
 
+// Routes that should render fully-chromeless — no global header.
+const HIDE_ON = ["/sign-in", "/sign-up", "/onboarding"];
+
 export function TopNav() {
   const [loc] = useLocation();
   const { isSignedIn } = useAuth();
+  if (HIDE_ON.some((p) => loc.startsWith(p))) return null;
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string) => (href === "/" ? loc === "/" : loc.startsWith(href));

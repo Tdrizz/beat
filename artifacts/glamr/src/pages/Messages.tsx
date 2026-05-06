@@ -1,6 +1,5 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { TopNav } from "@/components/TopNav";
 import { AuthedRoute } from "@/components/AuthedRoute";
 import { api, type Conversation } from "@/lib/api";
 import { MessageCircle } from "lucide-react";
@@ -14,7 +13,6 @@ function MessagesInner() {
 
   return (
     <div className="min-h-screen vanity-bg">
-      <TopNav />
       <main className="max-w-xl mx-auto px-4 py-6">
         <h1 className="font-serif text-3xl mb-4">Messages</h1>
         {isLoading ? (

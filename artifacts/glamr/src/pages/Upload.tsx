@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ObjectUploader } from "@workspace/object-storage-web";
-import { TopNav } from "@/components/TopNav";
 import { AuthedRoute } from "@/components/AuthedRoute";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,7 +125,6 @@ function UploadInner() {
 
   return (
     <div className="min-h-screen vanity-bg">
-      <TopNav />
       <main className="max-w-xl mx-auto px-4 py-6 space-y-4">
         <h1 className="font-serif text-3xl">Share a look</h1>
         <div className="aspect-square w-full border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center overflow-hidden bg-muted/30 relative">

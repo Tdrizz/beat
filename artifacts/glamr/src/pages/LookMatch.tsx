@@ -211,7 +211,7 @@ export default function LookMatch() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
       {/* Top bar */}
-      <div className="sticky top-0 z-50 flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-xl border-b border-border">
+      <div className="sticky top-14 z-30 flex items-center gap-3 px-4 py-3 bg-background/80 backdrop-blur-xl border-b border-border">
         <Link href="/">
           <Button variant="ghost" size="icon" className="rounded-full">
             <ArrowLeft className="w-5 h-5" />

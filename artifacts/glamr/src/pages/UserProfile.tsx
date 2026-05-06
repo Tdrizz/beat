@@ -1,6 +1,5 @@
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { TopNav } from "@/components/TopNav";
 import { api, type Profile, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Sparkles } from "lucide-react";
@@ -20,7 +19,6 @@ export default function UserProfile() {
 
   return (
     <div className="min-h-screen vanity-bg">
-      <TopNav />
       <main className="max-w-2xl mx-auto px-4 py-6">
         {isLoading ? (
           <p className="text-center text-muted-foreground py-12">Loading…</p>
