@@ -77,7 +77,11 @@ export function AITryOnModal({ open, state, imageUrl, error, lookName, onClose, 
                 </div>
               )}
 
-              {state === "done" && imageUrl && (
+              {/* Render the image whenever we have one — covers both the
+                  "done" state and the case where the user re-opens the modal
+                  from the top-bar button to view a previously-generated result
+                  (state may have been reset to idle by then). */}
+              {state !== "capturing" && state !== "generating" && state !== "error" && imageUrl && (
                 <img
                   src={imageUrl}
                   alt={`AI rendering of you wearing ${lookName}`}
@@ -96,7 +100,7 @@ export function AITryOnModal({ open, state, imageUrl, error, lookName, onClose, 
 
             {/* Footer actions */}
             <div className="px-5 py-4 flex items-center gap-2">
-              {state === "done" && (
+              {state !== "capturing" && state !== "generating" && state !== "error" && imageUrl && (
                 <>
                   <Button variant="outline" className="rounded-full gap-1.5" onClick={onRetry}>
                     <RefreshCw className="w-3.5 h-3.5" />

@@ -6,9 +6,14 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ## AI
 
-- Gemini AI integration (Replit-managed, no key required) used for photoreal AI try-on
-  in `artifacts/glamr`. Endpoint: `POST /api/ai-tryon`. Frontend: `useAITryOn` hook +
-  `AITryOnModal`. Model: `gemini-2.5-flash-image` (nano banana).
+- Gemini AI integration (Replit-managed, no key required) is the **only** try-on
+  mechanism in `artifacts/glamr`. Endpoint: `POST /api/ai-tryon`. Frontend:
+  `useCamera` (live preview) + `useAITryOn` hook + `AITryOnModal`. Model:
+  `gemini-2.5-flash-image` (nano banana).
+- The previous canvas-based AR overlay engine (MediaPipe FaceLandmarker +
+  `makeupRenderer` + `shadeMatch` + `useFaceAR`) has been removed from the
+  try-on flow. `useFaceAnalysis` is still used by `LookMatch.tsx` for face/skin
+  scanning to recommend looks — that's a separate feature.
 
 ## Stack
 
