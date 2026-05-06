@@ -15,6 +15,7 @@ import { useStreak } from "../hooks/useStreak";
 import { StreakBadge } from "../components/StreakBadge";
 import { MoodRail, type MoodOption } from "../components/MoodRail";
 import { ArchetypeCallout } from "../components/ArchetypeCallout";
+import { BrandLogo } from "../components/BrandLogo";
 import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -269,14 +270,17 @@ function BrandCard({ brand, index }: { brand: Brand; index: number }) {
           {brand.palette.map((c, i) => <div key={i} className="flex-1" style={{ backgroundColor: c }} />)}
         </div>
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tier.bg} ${tier.text}`}>{brand.tier}</span>
-                <span className="text-xs text-muted-foreground">{brand.heritage} · {brand.founded}</span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <BrandLogo name={brand.name} size={48} />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tier.bg} ${tier.text}`}>{brand.tier}</span>
+                  <span className="text-xs text-muted-foreground">{brand.heritage} · {brand.founded}</span>
+                </div>
+                <CardTitle className="font-serif text-xl">{brand.name}</CardTitle>
+                <p className="text-sm text-muted-foreground italic mt-0.5">{brand.tagline}</p>
               </div>
-              <CardTitle className="font-serif text-xl">{brand.name}</CardTitle>
-              <p className="text-sm text-muted-foreground italic mt-0.5">{brand.tagline}</p>
             </div>
           </div>
         </CardHeader>
@@ -335,10 +339,13 @@ function PaletteCard({ palette, index }: { palette: Palette; index: number }) {
           </div>
         </div>
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{palette.brand}</p>
-              <CardTitle className="font-serif text-lg leading-snug">{palette.name}</CardTitle>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <BrandLogo name={palette.brand} size={36} />
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">{palette.brand}</p>
+                <CardTitle className="font-serif text-lg leading-snug">{palette.name}</CardTitle>
+              </div>
             </div>
             <div className="text-right shrink-0">
               <p className="text-base font-bold text-primary">{palette.price}</p>
