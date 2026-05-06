@@ -1806,6 +1806,222 @@ export const seasonalCapsule2026: Look[] = [
     },
     palette: ["#a06030", "#e07050", "#e88068"],
   },
+
+  // ── SPRING ────────────────────────────────────────────────────────────
+  {
+    id: "lavender-haze", name: "Lavender Haze", mood: "Dreamy", difficulty: "Intermediate",
+    description: "Soft lilac wash blended with rosy cheeks — that hazy in-love feeling Taylor sang about.",
+    timeEstimate: "15 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Luminous skin tint with cool undertone.", color: "#eecfb8", colorName: "Cool Glow" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Lilac shimmer all over the lid, smudged into a soft halo.", color: "#b89cd0", colorName: "Lilac Haze" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up, slightly cool toned.", color: "#5a3a28", colorName: "Cool Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Rosy mauve sheer lipstick.", color: "#c87890", colorName: "Mauve Rose" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool pink cream blush draped high.", color: "#e0a0b8", colorName: "Lilac Flush" },
+    },
+    palette: ["#b89cd0", "#e0a0b8", "#c87890"],
+  },
+  {
+    id: "daffodil-dazzle", name: "Daffodil Dazzle", mood: "Playful", difficulty: "Intermediate",
+    description: "Buttery yellow lid + warm peach cheek — spring's brightest, most optimistic moment.",
+    timeEstimate: "15 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Warm skin tint with subtle gold strobe.", color: "#eccaa0", colorName: "Warm Glow" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Soft buttery yellow shadow across the lid, copper in the outer corner.", color: "#f0d260", colorName: "Daffodil" },
+      brows: { id: "brows", name: "Brows", instruction: "Fluffy, warm-toned.", color: "#5a3818", colorName: "Warm Brown" },
+      lips: { id: "lips", name: "Lips", instruction: "Glossy peach with a hint of gold.", color: "#e8a078", colorName: "Peach Gold" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Peach cream blush + golden highlight.", color: "#f0a878", colorName: "Sunny Peach" },
+    },
+    palette: ["#f0d260", "#e8a078", "#f0a878"],
+  },
+  {
+    id: "wisteria-dreams", name: "Wisteria Dreams", mood: "Romantic", difficulty: "Advanced",
+    description: "Layered violet-to-blue gradient eye with a soft mauve lip — an editorial floral moment.",
+    timeEstimate: "25 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Dewy medium-coverage foundation.", color: "#e6c4a0", colorName: "Dewy Beige" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Violet on the inner lid, periwinkle blue blended into the outer corner.", color: "#7058b0", colorName: "Wisteria" },
+      brows: { id: "brows", name: "Brows", instruction: "Sleek, sharply defined.", color: "#3a2818", colorName: "Sleek Dark" },
+      lips: { id: "lips", name: "Lips", instruction: "Mauve satin lip with a glossy centre.", color: "#b06078", colorName: "Mauve Satin" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool pink-mauve sculpt.", color: "#c08098", colorName: "Cool Mauve" },
+    },
+    palette: ["#7058b0", "#b06078", "#c08098"],
+  },
+  {
+    id: "strawberry-milkshake", name: "Strawberry Milkshake", mood: "Sweet", difficulty: "Beginner",
+    description: "Pink-flushed everything: blurred strawberry lip, soft pink lid, candy-floss cheeks.",
+    timeEstimate: "10 min", season: "spring",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Sheer dewy tint, freckles peeking through.", color: "#f0d4be", colorName: "Sheer Dew" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Soft pink wash + brown mascara only.", color: "#e8a8b8", colorName: "Pink Wash" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up natural.", color: "#5a3818", colorName: "Soft" },
+      lips: { id: "lips", name: "Lips", instruction: "Strawberry red liner blurred out with clear gloss.", color: "#dc4858", colorName: "Strawberry" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Candy-floss pink draped high.", color: "#f08a9c", colorName: "Candy Pink" },
+    },
+    palette: ["#e8a8b8", "#dc4858", "#f08a9c"],
+  },
+
+  // ── SUMMER ────────────────────────────────────────────────────────────
+  {
+    id: "sunset-citrus", name: "Sunset Citrus", mood: "Bold", difficulty: "Intermediate",
+    description: "Orange-to-pink ombre lid + clear gloss + bronzed glow — sunset over a tropical horizon.",
+    timeEstimate: "18 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Liquid bronzer over a sheer skin tint.", color: "#cc8c5a", colorName: "Bronze" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Orange on the inner lid blending into hot pink at the outer corner.", color: "#f06030", colorName: "Citrus Sunset" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up, warm-toned.", color: "#3a2010", colorName: "Warm Dark" },
+      lips: { id: "lips", name: "Lips", instruction: "High-shine clear gloss.", color: "#d8806a", colorName: "Clear Gloss" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Coral cream blush + bronzer.", color: "#e87858", colorName: "Sunset Coral" },
+    },
+    palette: ["#f06030", "#e87858", "#d8806a"],
+  },
+  {
+    id: "mermaid-glow", name: "Mermaid Glow", mood: "Ethereal", difficulty: "Advanced",
+    description: "Teal shimmer lid, pearl-iridescent inner corner, and aqua-tinted lip — straight from the sea foam.",
+    timeEstimate: "25 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Glass-skin glow with strobe cream on the high points.", color: "#e8c8a8", colorName: "Glass Glow" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Teal shimmer all over the lid, pearl in the inner corner.", color: "#3a98a4", colorName: "Mermaid Teal" },
+      brows: { id: "brows", name: "Brows", instruction: "Soft cool-toned arch.", color: "#604a3a", colorName: "Cool Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Aqua-tinted iridescent gloss.", color: "#d8c0c8", colorName: "Pearl Aqua" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool pink cream + aqua iridescent highlight.", color: "#d8a8b8", colorName: "Sea Foam" },
+    },
+    palette: ["#3a98a4", "#d8c0c8", "#d8a8b8"],
+  },
+  {
+    id: "watermelon-sugar", name: "Watermelon Sugar", mood: "Playful", difficulty: "Beginner",
+    description: "Juicy pink lip, watermelon-flush cheeks, and a tiny pop of green liner. Pure summer in a tube.",
+    timeEstimate: "10 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Dewy skin tint.", color: "#ecc8a8", colorName: "Dewy Tint" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Soft pink wash with a thin lime-green liner along the lower lash line.", color: "#9cc060", colorName: "Lime Pop" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up.", color: "#5a3818", colorName: "Soft" },
+      lips: { id: "lips", name: "Lips", instruction: "Juicy watermelon pink gloss.", color: "#e85878", colorName: "Watermelon" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Watermelon pink cream blush, blended high.", color: "#f06888", colorName: "Watermelon Flush" },
+    },
+    palette: ["#9cc060", "#e85878", "#f06888"],
+  },
+  {
+    id: "golden-hour-bronze", name: "Golden Hour Bronze", mood: "Sun-Kissed", difficulty: "Beginner",
+    description: "Full bronze head-to-toe: bronzed skin, gold lid, glossy bronze lip. The 6pm beach moment.",
+    timeEstimate: "12 min", season: "summer",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Liquid bronzer driven into every high point.", color: "#bc7848", colorName: "Bronze" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Liquid gold pressed onto the lid with a fingertip.", color: "#d8a050", colorName: "Liquid Gold" },
+      brows: { id: "brows", name: "Brows", instruction: "Fluffy, warm-toned.", color: "#3a2010", colorName: "Warm Dark" },
+      lips: { id: "lips", name: "Lips", instruction: "Glossy bronze tint.", color: "#a86848", colorName: "Bronze Gloss" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Bronzer + gold highlight on top.", color: "#a86840", colorName: "Sun Bronze" },
+    },
+    palette: ["#d8a050", "#a86848", "#a86840"],
+  },
+
+  // ── FALL ──────────────────────────────────────────────────────────────
+  {
+    id: "pumpkin-spice-latte", name: "Pumpkin Spice Latte", mood: "Cozy", difficulty: "Beginner",
+    description: "Warm pumpkin shadow + caramel lip + cinnamon cheeks. The fall coffee order in look form.",
+    timeEstimate: "12 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Warm satin foundation.", color: "#dca888", colorName: "Caramel Satin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Pumpkin orange shadow across the lid + cinnamon brown in the crease.", color: "#c06430", colorName: "Pumpkin" },
+      brows: { id: "brows", name: "Brows", instruction: "Defined warm arch.", color: "#3a1f0c", colorName: "Auburn" },
+      lips: { id: "lips", name: "Lips", instruction: "Caramel-brown matte lip.", color: "#9a5a38", colorName: "Caramel" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm cinnamon blush.", color: "#c87850", colorName: "Cinnamon" },
+    },
+    palette: ["#c06430", "#9a5a38", "#c87850"],
+  },
+  {
+    id: "maple-smoke", name: "Maple Smoke", mood: "Sultry", difficulty: "Intermediate",
+    description: "Burnt-sienna smoked eye + nude liner + glossy mahogany lip — a deeper, warmer fall smoulder.",
+    timeEstimate: "20 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Full coverage matte with warm bronzer.", color: "#d4a070", colorName: "Warm Matte" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Burnt sienna smoked all around the eye, deepened in the outer V.", color: "#7a3a20", colorName: "Burnt Sienna" },
+      brows: { id: "brows", name: "Brows", instruction: "Defined, warm.", color: "#2a1808", colorName: "Dark Auburn" },
+      lips: { id: "lips", name: "Lips", instruction: "Mahogany liner blurred with a warm gloss.", color: "#702a20", colorName: "Mahogany" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm rust sculpt under the cheekbone.", color: "#a8553a", colorName: "Rust" },
+    },
+    palette: ["#7a3a20", "#702a20", "#a8553a"],
+  },
+  {
+    id: "auburn-fox", name: "Auburn Fox", mood: "Bold", difficulty: "Advanced",
+    description: "Russet foxy liner that lifts the eye + russet mascara — vintage 70s fox energy.",
+    timeEstimate: "25 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Warm satin foundation.", color: "#dca888", colorName: "Warm Satin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Russet liquid liner in a sharp foxy upward wing, lifting the outer eye.", color: "#9a3a1c", colorName: "Russet" },
+      brows: { id: "brows", name: "Brows", instruction: "Sleek, lifted at the tail.", color: "#3a1f0c", colorName: "Sleek Auburn" },
+      lips: { id: "lips", name: "Lips", instruction: "Warm nude lip.", color: "#c08068", colorName: "Warm Nude" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Burnt orange sculpted high.", color: "#bc6a4a", colorName: "Burnt Orange" },
+    },
+    palette: ["#9a3a1c", "#c08068", "#bc6a4a"],
+  },
+  {
+    id: "cashmere-nude", name: "Cashmere Nude", mood: "Effortless", difficulty: "Beginner",
+    description: "Soft taupe lid + brushed brows + creamy beige lip. The everyday-luxury fall basic.",
+    timeEstimate: "8 min", season: "fall",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Satin natural-finish foundation.", color: "#e0bc98", colorName: "Satin Beige" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Soft taupe wash all over the lid, single coat of brown mascara.", color: "#9a7858", colorName: "Cashmere Taupe" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up, soft.", color: "#5a3a20", colorName: "Brushed" },
+      lips: { id: "lips", name: "Lips", instruction: "Creamy beige nude.", color: "#b08878", colorName: "Beige Nude" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm peachy nude blush.", color: "#c89880", colorName: "Peach Nude" },
+    },
+    palette: ["#9a7858", "#b08878", "#c89880"],
+  },
+
+  // ── WINTER ────────────────────────────────────────────────────────────
+  {
+    id: "champagne-toast", name: "Champagne Toast", mood: "Glam", difficulty: "Intermediate",
+    description: "Champagne sparkle lid, bronzed cheek, glossy nude lip — built for cocktail hour.",
+    timeEstimate: "18 min", season: "winter",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Luminous full-coverage base + strobe.", color: "#e8c4a0", colorName: "Luminous" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Champagne glitter pressed onto the lid + soft brown smoke in the crease.", color: "#e8c878", colorName: "Champagne Sparkle" },
+      brows: { id: "brows", name: "Brows", instruction: "Defined, polished arch.", color: "#3a2818", colorName: "Polished" },
+      lips: { id: "lips", name: "Lips", instruction: "Glossy nude with a hint of gold shimmer.", color: "#c89888", colorName: "Champagne Nude" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm bronzer + champagne highlight.", color: "#b88860", colorName: "Bronze Glow" },
+    },
+    palette: ["#e8c878", "#c89888", "#b88860"],
+  },
+  {
+    id: "cranberry-crush", name: "Cranberry Crush", mood: "Romantic", difficulty: "Beginner",
+    description: "Deep cranberry stained lip + soft warm taupe eye + flushed cold-girl cheeks.",
+    timeEstimate: "10 min", season: "winter",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Satin medium-coverage foundation.", color: "#e6c4a0", colorName: "Satin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Soft warm taupe blended through the crease, brown mascara.", color: "#8a6048", colorName: "Warm Taupe" },
+      brows: { id: "brows", name: "Brows", instruction: "Brushed up, soft.", color: "#3a2818", colorName: "Soft" },
+      lips: { id: "lips", name: "Lips", instruction: "Cranberry liner blurred with matching balm — looks bitten.", color: "#8a1a2a", colorName: "Cranberry" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool berry blush high on the cheekbones.", color: "#c84860", colorName: "Cold-Girl Berry" },
+    },
+    palette: ["#8a6048", "#8a1a2a", "#c84860"],
+  },
+  {
+    id: "northern-lights", name: "Northern Lights", mood: "Ethereal", difficulty: "Advanced",
+    description: "Emerald-to-violet duochrome lid with a frosted lip — aurora borealis on the eyelid.",
+    timeEstimate: "30 min", season: "winter",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Luminous porcelain base.", color: "#f0e0d0", colorName: "Porcelain Glow" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Emerald shimmer on the inner half, violet duochrome on the outer half.", color: "#3a8060", colorName: "Aurora Green" },
+      brows: { id: "brows", name: "Brows", instruction: "Soft cool-toned arch.", color: "#604a3a", colorName: "Cool Brunette" },
+      lips: { id: "lips", name: "Lips", instruction: "Frosted lavender-pink gloss.", color: "#d4b8c8", colorName: "Frost Lavender" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Cool pink cream + iridescent highlight.", color: "#d8a8b8", colorName: "Aurora Pink" },
+    },
+    palette: ["#3a8060", "#d4b8c8", "#d8a8b8"],
+  },
+  {
+    id: "hot-cocoa", name: "Hot Cocoa", mood: "Cozy", difficulty: "Beginner",
+    description: "Rich chocolate brown smoke + creamy satin skin + warm cocoa lip. The fireside cuddle uniform.",
+    timeEstimate: "12 min", season: "winter",
+    steps: {
+      base: { id: "base", name: "Base", instruction: "Creamy satin foundation.", color: "#dcb088", colorName: "Cream Satin" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Rich chocolate brown smoke smudged around the eye.", color: "#3a2010", colorName: "Hot Cocoa" },
+      brows: { id: "brows", name: "Brows", instruction: "Defined, warm-toned.", color: "#2a1808", colorName: "Defined" },
+      lips: { id: "lips", name: "Lips", instruction: "Warm cocoa-brown lip with a creamy finish.", color: "#7a4a30", colorName: "Cocoa" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Warm caramel sculpt under the cheekbone.", color: "#a86848", colorName: "Caramel Sculpt" },
+    },
+    palette: ["#3a2010", "#7a4a30", "#a86848"],
+  },
 ];
 
 // Default season tag for any look not explicitly tagged. Used by the home

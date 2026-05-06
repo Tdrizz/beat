@@ -140,7 +140,7 @@ function ScanningOverlay() {
       >
         Analysing your features…
       </motion.p>
-      <p className="text-white/60 text-sm mt-1">Detecting skin tone, eye shape, face structure</p>
+      <p className="text-white/60 text-sm mt-1">Matching foundation to your neck · eye shape · face structure</p>
     </motion.div>
   );
 }
@@ -276,8 +276,8 @@ export default function LookMatch() {
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                   {faceDetected
-                    ? "We'll analyse your skin tone, eye shape, and face structure to find your perfect looks."
-                    : "Make sure your face is centred in the frame and well-lit."}
+                    ? "We'll match your foundation to your neck (not your face) so the jawline blends seamlessly — plus eye and face shape for the perfect look."
+                    : "Centre your face and include your neck in the frame, with even, natural lighting."}
                 </p>
                 <Button
                   size="lg"
@@ -315,9 +315,9 @@ export default function LookMatch() {
             </motion.h2>
             <div className="flex gap-3 flex-wrap">
               <FeatureCard
-                label="Skin Tone"
+                label="Foundation Match"
                 value={analysis.skinTone.category}
-                sub={`${analysis.skinTone.undertone} undertone · ${analysis.skinTone.description}`}
+                sub={`${analysis.skinTone.undertone} undertone · sampled from your neck for a seamless jawline`}
                 icon={<Layers className="w-4 h-4" />}
                 color={analysis.skinTone.hex}
                 delay={0.1}

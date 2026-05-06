@@ -637,7 +637,7 @@ export default function Home() {
       <main id="looks-grid" className="max-w-6xl mx-auto px-6 scroll-mt-4">
         <Tabs defaultValue="looks" className="w-full">
 
-          <div className="flex justify-center mb-8 overflow-x-auto pb-2">
+          <div className="flex justify-start sm:justify-center mb-8 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
             <TabsList className="bg-card border border-border flex-shrink-0 h-auto p-1 gap-0.5">
               <TabsTrigger value="looks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-1.5 px-4 py-2 text-sm whitespace-nowrap">
                 <Layers className="w-3.5 h-3.5" />Looks
@@ -675,7 +675,7 @@ export default function Home() {
             </div>
 
             <Tabs defaultValue="all" className="w-full">
-              <div className="flex justify-start mb-6 overflow-x-auto pb-2">
+              <div className="flex justify-start mb-6 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
                 <TabsList className="bg-muted/60 flex-shrink-0 h-auto p-1 gap-0.5">
                   {lookTabs.map(t => (
                     <TabsTrigger key={t.id} value={t.id}
@@ -726,7 +726,14 @@ export default function Home() {
               {filteredCountryLooks.length === 0 ? (
                 <div className="col-span-3 flex flex-col items-center py-24 text-center">
                   <Globe className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                  <p className="text-lg font-serif">No country looks found.</p>
+                  <p className="text-lg font-serif mb-1">No looks match those filters.</p>
+                  <p className="text-sm text-muted-foreground mb-5">Try a different region or clear your search.</p>
+                  <button
+                    onClick={() => { setCountryRegion("All"); setCountryQuery(""); }}
+                    className="px-4 py-2 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition"
+                  >
+                    Show all countries
+                  </button>
                 </div>
               ) : filteredCountryLooks.map((look, i) => (
                 <CountryLookCard key={look.id} look={look} index={i} />

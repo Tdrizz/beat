@@ -245,14 +245,57 @@ function analyzeFrame(
   const w = offscreen.width;
   const h = offscreen.height;
 
-  // Sample from both cheeks and average
-  const [r1, g1, b1] = samplePixels(ctx, landmarks[LM.LEFT_CHEEK], w, h, 10);
-  const [r2, g2, b2] = samplePixels(ctx, landmarks[LM.RIGHT_CHEEK], w, h, 10);
-  const [r3, g3, b3] = samplePixels(ctx, landmarks[LM.LEFT_CHEEK_B], w, h, 8);
-  const [r4, g4, b4] = samplePixels(ctx, landmarks[LM.RIGHT_CHEEK_B], w, h, 8);
-  const avgR = Math.round((r1 + r2 + r3 + r4) / 4);
-  const avgG = Math.round((g1 + g2 + g3 + g4) / 4);
-  const avgB = Math.round((b1 + b2 + b3 + b4) / 4);
+  // ── Foundation match: sample the NECK, not the face ─────────────────
+  // The face often carries makeup, redness, blush, or sun exposure that
+  // throws off true skin tone. Foundation should match the neck so the
+  // jawline transition is invisible. We synthesise neck sample points
+  // by extrapolating ~25–45% of the face length downward from the chin
+  // and along the lower jawline. Falls back to cheek samples if the
+  // neck pixels are obviously out-of-frame or background-coloured.
+  const chin = landmarks[LM.CHIN];
+  const forehead = landmarks[LM.FOREHEAD];
+  const leftJaw = landmarks[LM.LEFT_JAW];
+  const rightJaw = landmarks[LM.RIGHT_JAW];
+  const faceLen = Math.abs(chin.y - forehead.y);
+
+  // Three points down the centre of the neck + two along the upper neck/jaw.
+  // Use a minimal {x, y} shape — samplePixels only reads x/y. We also drop
+  // any point that would land in the bottom 5% of the frame (likely off-frame
+  // background, not skin) so we don't sample garbage and pass the lum check.
+  const rawNeckPoints: { x: number; y: number }[] = [
+    { x: chin.x,                       y: chin.y    + faceLen * 0.18 },
+    { x: chin.x,                       y: chin.y    + faceLen * 0.30 },
+    { x: (chin.x + leftJaw.x)  / 2,    y: leftJaw.y  + faceLen * 0.18 },
+    { x: (chin.x + rightJaw.x) / 2,    y: rightJaw.y + faceLen * 0.18 },
+  ];
+  const neckPoints = rawNeckPoints.filter(
+    p => p.y > 0 && p.y < 0.95 && p.x > 0.02 && p.x < 0.98,
+  );
+
+  const neckSamples = neckPoints.map(p => samplePixels(ctx, p as NormalizedLandmark, w, h, 9));
+
+  // Cheek fallbacks (used if neck is occluded by clothing / off-frame)
+  const cheekSamples = [
+    samplePixels(ctx, landmarks[LM.LEFT_CHEEK],   w, h, 10),
+    samplePixels(ctx, landmarks[LM.RIGHT_CHEEK],  w, h, 10),
+    samplePixels(ctx, landmarks[LM.LEFT_CHEEK_B], w, h, 8),
+    samplePixels(ctx, landmarks[LM.RIGHT_CHEEK_B], w, h, 8),
+  ];
+
+  // Reject neck samples that look like clothing or shadow (very low
+  // saturation + extreme luminance, or wildly different from cheeks).
+  const cheekAvgL = cheekSamples.reduce((s, [r, g, b]) => s + (r + g + b) / 3, 0) / cheekSamples.length;
+  const validNeck = neckSamples.filter(([r, g, b]) => {
+    const lum = (r + g + b) / 3;
+    if (lum < 30 || lum > 240) return false;          // pure shadow / blowout
+    if (Math.abs(lum - cheekAvgL) > 70) return false; // likely fabric / background
+    return true;
+  });
+
+  const samples = validNeck.length >= 2 ? validNeck : cheekSamples;
+  const avgR = Math.round(samples.reduce((s, [r]) => s + r, 0) / samples.length);
+  const avgG = Math.round(samples.reduce((s, [, g]) => s + g, 0) / samples.length);
+  const avgB = Math.round(samples.reduce((s, [, , b]) => s + b, 0) / samples.length);
 
   return {
     skinTone: classifySkinTone(avgR, avgG, avgB),

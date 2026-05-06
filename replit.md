@@ -43,6 +43,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Always-visible CTAs**: `LookCard` actions are always visible, improving touch usability and discoverability.
 - **On-device Archetype Quiz**: The "Iola test" is fully client-side and stores results locally, with best-effort server syncing.
 - **Gemini AI Integration**: The only try-on mechanism is via Gemini AI, with skin-tone adaptation integrated directly into the prompt generation.
+- **Foundation matched to NECK, not face**: `useFaceAnalysis` extrapolates sample points below the chin/jawline because face pixels are contaminated by makeup, redness, and sun. Cheek samples are kept only as a fallback when the neck is occluded.
 - **In-memory Rate Limiting**: Token-bucket middleware is used for rate limiting, keyed by Clerk userId, but is single-instance only (no Redis for horizontal scaling).
 
 ## Product
