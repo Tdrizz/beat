@@ -152,6 +152,10 @@ export function useFaceAR(
     if (!ctx) return;
 
     let lastVideoTime = -1;
+    // Smoothed landmark buffer — EMA filter to remove single-frame jitter.
+    // Without this, the overlay vibrates frame-to-frame and reads as an AR decal.
+    let smoothed: { x: number; y: number; z: number }[] | null = null;
+    const SMOOTH_ALPHA = 0.55; // higher = smoother but laggier; 0.55 is a good balance
 
     function renderLoop() {
       if (video.readyState === 4) {
@@ -163,13 +167,33 @@ export function useFaceAR(
             ctx!.clearRect(0, 0, canvas.width, canvas.height);
 
             if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-              const landmarks = results.faceLandmarks[0];
-              latestLandmarksRef.current = landmarks;
+              const raw = results.faceLandmarks[0];
+
+              // EMA smooth: out = prev*α + cur*(1-α)
+              if (!smoothed || smoothed.length !== raw.length) {
+                smoothed = raw.map(p => ({ x: p.x, y: p.y, z: p.z ?? 0 }));
+              } else {
+                const a = SMOOTH_ALPHA;
+                for (let i = 0; i < raw.length; i++) {
+                  smoothed[i].x = smoothed[i].x * a + raw[i].x * (1 - a);
+                  smoothed[i].y = smoothed[i].y * a + raw[i].y * (1 - a);
+                  smoothed[i].z = smoothed[i].z * a + (raw[i].z ?? 0) * (1 - a);
+                }
+              }
+
+              // Build a NormalizedLandmark-shaped array for downstream consumers
+              const out = smoothed.map((p, i) => ({
+                x: p.x, y: p.y, z: p.z,
+                visibility: raw[i].visibility,
+              })) as any;
+
+              latestLandmarksRef.current = out;
               if (currentLook) {
-                drawMakeup(ctx!, landmarks, canvas.width, canvas.height, activeSteps, currentLook);
+                drawMakeup(ctx!, out, canvas.width, canvas.height, activeSteps, currentLook);
               }
             } else {
               latestLandmarksRef.current = null;
+              smoothed = null;
             }
           } catch (e) {
             console.error(e);
