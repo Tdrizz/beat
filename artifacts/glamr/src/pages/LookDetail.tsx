@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Camera, Clock, Star, Sparkles } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { AffiliateProductsForLook } from "@/components/AffiliateProductsForLook";
+import { RemixCount } from "@/components/RemixCount";
+import { ShareToDmButton } from "@/components/ShareToDmButton";
 
 export default function LookDetail() {
   const { lookId } = useParams();
@@ -63,12 +65,21 @@ export default function LookDetail() {
               {look.description}
             </p>
 
-            <Link href={`/try-on/${look.id}`}>
-              <Button size="lg" className="w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-8 h-14">
-                <Camera className="w-5 h-5 mr-2" />
-                Start Try-On Experience
-              </Button>
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href={`/try-on/${look.id}`}>
+                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-8 h-14">
+                  <Camera className="w-5 h-5 mr-2" />
+                  Start Try-On Experience
+                </Button>
+              </Link>
+              <ShareToDmButton
+                shareBody={`Try the "${look.name}" look on Beat: ${typeof window !== "undefined" ? window.location.origin : ""}/try-on/${look.id}`}
+              >
+                <Button size="lg" variant="outline" className="h-14 px-6 rounded-full">
+                  Send to friend
+                </Button>
+              </ShareToDmButton>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
@@ -116,6 +127,8 @@ export default function LookDetail() {
               </div>
             </div>
           </div>
+
+          <RemixCount lookId={look.id} />
 
           <AffiliateProductsForLook lookId={look.id} />
         </motion.div>

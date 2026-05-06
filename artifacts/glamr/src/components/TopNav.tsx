@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { UserButton, useAuth } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 import { Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon, Store, BarChart3 } from "lucide-react";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const links = [
   { href: "/", label: "Home", icon: HomeIcon },
@@ -40,6 +41,7 @@ export function TopNav() {
         <div className="flex items-center gap-2">
           {isSignedIn ? (
             <>
+              <NotificationsBell />
               <Link href="/affiliate">
                 <Button variant="ghost" size="sm" className="rounded-full">
                   <BarChart3 className="w-3.5 h-3.5" />

@@ -97,3 +97,30 @@ export interface Message {
   body: string;
   createdAt: string;
 }
+
+export interface Notification {
+  id: string;
+  recipientId: string;
+  actorId: string | null;
+  kind: "like" | "comment" | "follow" | "message" | "system";
+  postId: string | null;
+  conversationId: string | null;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+  actor: Profile | null;
+}
+
+export interface RemixStats {
+  count: number;
+  recent: Post[];
+}
+
+export interface AffiliateStatsResponse {
+  totalClicks: number;
+  totalEstCents: number;
+  byProduct: Array<{ productId: string; c: number; product: Product | null; estCommissionCents: number }>;
+  series: Array<{ day: string; c: number }>;
+  days: number;
+  estConversionRate: number;
+}

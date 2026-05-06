@@ -15,7 +15,8 @@ router.get("/me", requireAuth, async (req, res) => {
   res.json(rows[0]);
 });
 
-router.post("/profiles", requireAuth, async (req, res) => {
+import { rateLimit } from "../middlewares/rateLimit";
+router.post("/profiles", requireAuth, rateLimit({ scope: "profile-create", max: 5, windowMs: 60_000 }), async (req, res) => {
   const parsed = insertProfileSchema.omit({ userId: true }).safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid", details: parsed.error.flatten() });

@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Plus, Filter } from "lucide-react";
+import { Heart, MessageCircle, Plus, Filter, Flame, Users } from "lucide-react";
 import { api, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { TopNav } from "@/components/TopNav";
-import { SEASONS, SEASON_LABELS } from "@/lib/looks";
+import { ShareToDmButton } from "@/components/ShareToDmButton";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { SEASONS, SEASON_LABELS, type Season } from "@/lib/looks";
 
 function PostCard({ post }: { post: Post }) {
   const qc = useQueryClient();
@@ -15,6 +17,9 @@ function PostCard({ post }: { post: Post }) {
       post.likedByMe ? api.del(`/posts/${post.id}/like`) : api.post(`/posts/${post.id}/like`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["feed"] }),
   });
+  const shareBody = post.lookId
+    ? `Try this look on Beat: ${window.location.origin}/try-on/${post.lookId}`
+    : `Check this Beat post: ${window.location.origin}/posts/${post.id}`;
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl overflow-hidden">
       <div className="flex items-center gap-2 p-3">
@@ -31,7 +36,11 @@ function PostCard({ post }: { post: Post }) {
               <p className="text-sm font-semibold hover:underline cursor-pointer">@{post.author.handle}</p>
             </Link>
           )}
-          {post.season && <p className="text-xs text-muted-foreground">{post.season}</p>}
+          {post.season && (
+            <p className="text-xs text-muted-foreground">
+              {SEASON_LABELS[post.season as Season] ?? post.season}
+            </p>
+          )}
         </div>
         {post.author && (
           <Link href={`/messages/${post.author.handle}`}>
@@ -51,6 +60,9 @@ function PostCard({ post }: { post: Post }) {
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <MessageCircle className="w-4 h-4" /> {post.commentCount}
           </span>
+          <div className="ml-auto">
+            <ShareToDmButton shareBody={shareBody} />
+          </div>
         </div>
         {post.caption && <p className="text-sm whitespace-pre-wrap">{post.caption}</p>}
         {post.lookId && (
@@ -63,12 +75,20 @@ function PostCard({ post }: { post: Post }) {
   );
 }
 
+type Scope = "foryou" | "following";
+
 export default function Feed() {
   const [season, setSeason] = useState<string | null>(null);
-  const { data: posts, isLoading } = useQuery({
-    queryKey: ["feed", season],
-    queryFn: () => api.get<Post[]>(`/feed${season ? `?season=${encodeURIComponent(season)}` : ""}`),
+  const [scope, setScope] = useState<Scope>("foryou");
+  const { data, isLoading } = useQuery({
+    queryKey: ["feed", scope, season],
+    queryFn: () => {
+      const params = new URLSearchParams({ scope });
+      if (season) params.set("season", season);
+      return api.get<{ posts: Post[]; nextCursor: string | null }>(`/feed?${params.toString()}`);
+    },
   });
+  const posts = data?.posts;
 
   return (
     <div className="min-h-screen vanity-bg">
@@ -80,6 +100,26 @@ export default function Feed() {
             <Button size="sm" className="rounded-full gap-1.5"><Plus className="w-4 h-4" /> Share</Button>
           </Link>
         </div>
+
+        <div className="flex bg-muted/40 rounded-full p-1 gap-1">
+          <Button
+            size="sm"
+            variant={scope === "foryou" ? "default" : "ghost"}
+            className="rounded-full flex-1 gap-1.5"
+            onClick={() => setScope("foryou")}
+          >
+            <Flame className="w-3.5 h-3.5" /> For you
+          </Button>
+          <Button
+            size="sm"
+            variant={scope === "following" ? "default" : "ghost"}
+            className="rounded-full flex-1 gap-1.5"
+            onClick={() => setScope("following")}
+          >
+            <Users className="w-3.5 h-3.5" /> Following
+          </Button>
+        </div>
+
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <Button size="sm" variant={season === null ? "default" : "outline"} className="rounded-full text-xs" onClick={() => setSeason(null)}>All</Button>
@@ -87,15 +127,26 @@ export default function Feed() {
             <Button key={s} size="sm" variant={season === s ? "default" : "outline"} className="rounded-full text-xs whitespace-nowrap" onClick={() => setSeason(s)}>{SEASON_LABELS[s]}</Button>
           ))}
         </div>
+
         {isLoading ? (
           <p className="text-center text-muted-foreground py-12">Loading feed…</p>
         ) : !posts || posts.length === 0 ? (
-          <div className="text-center py-12 space-y-3">
-            <p className="text-muted-foreground">No posts yet. Be the first!</p>
-            <Link href="/upload"><Button className="rounded-full">Share a look</Button></Link>
+          <div className="space-y-4">
+            <OnboardingChecklist />
+            <div className="text-center py-8 space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {scope === "following"
+                  ? "Posts from people you follow will show here."
+                  : "No posts yet. Be the first!"}
+              </p>
+              <Link href="/upload"><Button className="rounded-full">Share a look</Button></Link>
+            </div>
           </div>
         ) : (
-          posts.map((p) => <PostCard key={p.id} post={p} />)
+          <>
+            <OnboardingChecklist />
+            {posts.map((p) => <PostCard key={p.id} post={p} />)}
+          </>
         )}
       </main>
     </div>

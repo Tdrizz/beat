@@ -33,6 +33,39 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   try-on flow. `useFaceAnalysis` is still used by `LookMatch.tsx` for face/skin
   scanning to recommend looks — that's a separate feature.
 
+## Notifications, ranking & rate limiting
+
+- **Notifications**: `notifications` table (`lib/db/src/schema/notifications.ts`),
+  `notify()` helper (`artifacts/api-server/src/lib/notify.ts`) called from
+  like/comment/follow/message inserts (best-effort, swallows errors, skips
+  self-notify). Routes: `GET /api/notifications`, `GET /unread-count`,
+  `POST /mark-all-read`. UI: `<NotificationsBell />` in `TopNav` with 30s poll.
+- **Rate limiting**: in-memory token-bucket middleware
+  (`middlewares/rateLimit.ts`), keyed by Clerk userId (falls back to IP).
+  Applied to post-create (10/min), like (60/min), comment (20/min), follow
+  (30/min), message (30/min), profile-create (5/min). Returns 429 + Retry-After.
+  Single-instance only — would need Redis for horizontal scale.
+- **Feed**: `GET /api/feed?scope=foryou|following&season=&cursor=&limit=`
+  returns `{ posts, nextCursor }`. For-You ranks by
+  `likeCount + 2*commentCount` decayed by hours since post (no cursor on
+  ranked page); subsequent paginated fetches fall back to recency. Following
+  scope requires auth. Response shape changed — frontend uses `data.posts`.
+- **Remix tree**: `GET /api/looks/:lookId/remix-stats` → `{ count, recent[] }`.
+  Surfaced via `<RemixCount lookId>` on `LookDetail`.
+- **Share to DM**: `<ShareToDmButton shareBody>` modal lists existing
+  conversations and posts the prefilled body. Mounted on every PostCard and
+  next to the Try-On CTA on `LookDetail`.
+- **Onboarding**: `<OnboardingChecklist />` (auth-guarded) in `Feed`'s empty
+  state — auto-ticks 3 steps from real DB data (5 follows / try a look /
+  share a post).
+- **Object storage cleanup**: `DELETE /api/posts/:id` now deletes the backing
+  storage object (best-effort, tolerates `ObjectNotFoundError`) plus
+  cascades likes/comments rows.
+- **Affiliate dashboard**: `GET /api/affiliate/me/stats?days=&limit=` returns
+  `{ totalClicks, totalEstCents, byProduct, series, days, estConversionRate }`.
+  `series` powers the daily-clicks sparkline; `estConversionRate` (5%) drives
+  the disclaimer copy on `AffiliateStats`.
+
 ## Social ecosystem
 
 `artifacts/glamr` has been extended into a TikTok-style social platform.

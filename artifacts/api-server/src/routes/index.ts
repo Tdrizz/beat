@@ -8,6 +8,7 @@ import socialRouter from "./social";
 import messagesRouter from "./messages";
 import brandsRouter from "./brands";
 import affiliateRouter from "./affiliate";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(socialRouter);
 router.use(messagesRouter);
 router.use(brandsRouter);
 router.use(affiliateRouter);
+router.use(notificationsRouter);
 
 export default router;

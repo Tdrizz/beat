@@ -26,24 +26,41 @@ router.get("/affiliate/click/:productId", optionalAuth, async (req, res) => {
 });
 
 router.get("/affiliate/me/stats", requireAuth, async (req, res) => {
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const days = Math.min(Math.max(parseInt(String(req.query.days ?? "30"), 10) || 30, 1), 90);
+  const limit = Math.min(parseInt(String(req.query.limit ?? "50"), 10) || 50, 200);
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   const clicks = await db
     .select({ productId: affiliateClicksTable.productId, c: sql<number>`count(*)::int` })
     .from(affiliateClicksTable)
     .where(and(eq(affiliateClicksTable.creatorId, req.userId!), gte(affiliateClicksTable.createdAt, since)))
     .groupBy(affiliateClicksTable.productId)
-    .orderBy(desc(sql`count(*)`));
+    .orderBy(desc(sql`count(*)`))
+    .limit(limit);
   const productIds = clicks.map((c) => c.productId);
   const products = productIds.length === 0 ? [] : await db.select().from(productsTable).where(inArray(productsTable.id, productIds));
+  // Estimated earnings model:
+  //   est_clicks_to_buyers = clicks * estConversionRate (5% industry baseline)
+  //   est_commission       = price * buyers * (bps / 10000)
+  const estConversionRate = 0.05;
   const enriched = clicks.map((row) => {
     const product = products.find((pr) => pr.id === row.productId);
     const bps = product?.commissionBps ?? 800;
-    const estCommissionCents = Math.round((product?.priceCents ?? 0) * (row.c * 0.05) * (bps / 10000));
+    const estCommissionCents = Math.round((product?.priceCents ?? 0) * (row.c * estConversionRate) * (bps / 10000));
     return { ...row, product: product ?? null, estCommissionCents };
   });
   const totalClicks = clicks.reduce((s, r) => s + r.c, 0);
   const totalEstCents = enriched.reduce((s, r) => s + r.estCommissionCents, 0);
-  res.json({ totalClicks, totalEstCents, byProduct: enriched });
+  // Daily click sparkline for the dashboard chart.
+  const series = await db
+    .select({
+      day: sql<string>`to_char(${affiliateClicksTable.createdAt}, 'YYYY-MM-DD')`,
+      c: sql<number>`count(*)::int`,
+    })
+    .from(affiliateClicksTable)
+    .where(and(eq(affiliateClicksTable.creatorId, req.userId!), gte(affiliateClicksTable.createdAt, since)))
+    .groupBy(sql`to_char(${affiliateClicksTable.createdAt}, 'YYYY-MM-DD')`)
+    .orderBy(sql`to_char(${affiliateClicksTable.createdAt}, 'YYYY-MM-DD')`);
+  res.json({ totalClicks, totalEstCents, byProduct: enriched, series, days, estConversionRate });
 });
 
 router.get("/affiliate/_status", async (_req, res) => {

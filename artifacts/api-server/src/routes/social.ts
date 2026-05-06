@@ -2,11 +2,13 @@ import { Router, type IRouter } from "express";
 import { db, followsTable, profilesTable } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
+import { rateLimit } from "../middlewares/rateLimit";
+import { notify } from "../lib/notify";
 import { p } from "../lib/params";
 
 const router: IRouter = Router();
 
-router.post("/follows/:userId", requireAuth, async (req, res) => {
+router.post("/follows/:userId", requireAuth, rateLimit({ scope: "follow", max: 30, windowMs: 60_000 }), async (req, res) => {
   const target = p(req.params.userId);
   if (target === req.userId) {
     res.status(400).json({ error: "Cannot follow yourself" });
@@ -18,10 +20,14 @@ router.post("/follows/:userId", requireAuth, async (req, res) => {
     .where(and(eq(followsTable.followerId, req.userId!), eq(followsTable.followeeId, target)))
     .limit(1);
   if (existing.length === 0) {
-    await db
+    const ins = await db
       .insert(followsTable)
       .values({ followerId: req.userId!, followeeId: target })
-      .onConflictDoNothing({ target: [followsTable.followerId, followsTable.followeeId] });
+      .onConflictDoNothing({ target: [followsTable.followerId, followsTable.followeeId] })
+      .returning();
+    if (ins.length > 0) {
+      await notify({ recipientId: target, actorId: req.userId!, kind: "follow" });
+    }
   }
   res.status(204).end();
 });
