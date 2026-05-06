@@ -150,10 +150,10 @@ export default function Tools() {
   );
 }
 
-// Card renders the real product photo on top with the gradient swatch
-// living *behind* it as a graceful fallback — if the image 404s or the
-// network blocks it, we hide the <img> and the swatch shows through with
-// an ImageOff hint, so the card never collapses.
+// Card renders the real product photo on a clean neutral background so
+// the brand colours show true. If the image 404s, we fall back to the
+// per-tool gradient swatch with an ImageOff hint so the card never
+// collapses.
 function ToolCard({ t }: { t: import("@/lib/tools").Tool }) {
   const [broken, setBroken] = useState(false);
   return (
@@ -164,7 +164,7 @@ function ToolCard({ t }: { t: import("@/lib/tools").Tool }) {
       aria-label={`Visit ${t.brand} — ${t.name}, ${formatPrice(t.priceCents, t.currency)}`}
       className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-sm transition-all group flex flex-col"
     >
-      <div className={`relative aspect-[4/3] w-full bg-gradient-to-br ${t.swatch} overflow-hidden`}>
+      <div className={`relative aspect-[4/3] w-full overflow-hidden ${broken ? `bg-gradient-to-br ${t.swatch}` : "bg-white"}`}>
         {!broken ? (
           <img
             src={t.image}
@@ -172,7 +172,7 @@ function ToolCard({ t }: { t: import("@/lib/tools").Tool }) {
             loading="lazy"
             decoding="async"
             onError={() => setBroken(true)}
-            className="absolute inset-0 w-full h-full object-contain p-4 mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+            className="absolute inset-0 w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-white/70">
