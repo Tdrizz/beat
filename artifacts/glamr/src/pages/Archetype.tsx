@@ -8,6 +8,7 @@ import {
   ARCHETYPES,
   type ArchetypeId,
   lookMatchesArchetype,
+  pickFg,
 } from "../lib/archetypes";
 import { useArchetype } from "../hooks/useArchetype";
 import { allCompleteLooks, allEyeLooks, allLipLooks } from "../lib/looks";
@@ -64,15 +65,18 @@ export default function ArchetypePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-3xl mx-auto px-5 sm:px-8 py-10">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <Link href="/" className="text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground transition-colors">
             ← Home
           </Link>
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-primary">
             <Sparkles className="w-3.5 h-3.5" />
-            Archetype
+            Iola
           </div>
         </div>
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight mb-6">
+          The Iola archetype test
+        </h1>
 
         {view === "quiz" && q && (
           <QuizView
@@ -233,34 +237,46 @@ function ResultView({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-border p-7 sm:p-10 mb-8"
-        style={{
-          background: `linear-gradient(135deg, ${arch.palette[0]} 0%, ${arch.palette[2]} 100%)`,
-        }}
-      >
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-30 blur-3xl"
-             style={{ background: arch.palette[3] }} />
-        <div className="relative z-10">
-          <div className="text-[10px] uppercase tracking-[0.22em] mb-2 text-black/60">
-            You are
+      {/* Hero — pick text colour from gradient luminance so dark
+          archetype palettes (Siren / Rebel / Muse) stay readable. */}
+      {(() => {
+        const fg = pickFg(arch.palette[1] ?? arch.palette[0]);
+        const isLight = fg === "light"; // light text on dark bg
+        const heading = isLight ? "text-white" : "text-black/90";
+        const sub = isLight ? "text-white/85" : "text-black/80";
+        const muted = isLight ? "text-white/70" : "text-black/75";
+        const eyebrow = isLight ? "text-white/65" : "text-black/60";
+        const pillBg = isLight ? "bg-white/15 text-white/90" : "bg-black/15 text-black/85";
+        return (
+          <div className="relative overflow-hidden rounded-3xl border border-border p-7 sm:p-10 mb-8"
+            style={{
+              background: `linear-gradient(135deg, ${arch.palette[0]} 0%, ${arch.palette[2]} 100%)`,
+            }}
+          >
+            <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-30 blur-3xl"
+                 style={{ background: arch.palette[3] }} />
+            <div className="relative z-10">
+              <div className={`text-[10px] uppercase tracking-[0.22em] mb-2 ${eyebrow}`}>
+                You are
+              </div>
+              <h2 className={`font-serif text-4xl sm:text-6xl font-bold leading-none mb-3 ${heading}`}>
+                {arch.name}
+              </h2>
+              <p className={`text-base sm:text-lg italic mb-5 ${sub}`}>{arch.tagline}</p>
+              <p className={`text-sm sm:text-base max-w-prose leading-relaxed ${muted}`}>
+                {arch.description}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {arch.vibes.map((v) => (
+                  <span key={v} className={`text-[11px] uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-sm ${pillBg}`}>
+                    {v}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-bold leading-none mb-3 text-black/90">
-            {arch.name}
-          </h1>
-          <p className="text-base sm:text-lg italic text-black/80 mb-5">{arch.tagline}</p>
-          <p className="text-sm sm:text-base text-black/75 max-w-prose leading-relaxed">
-            {arch.description}
-          </p>
-          <div className="flex flex-wrap gap-2 mt-5">
-            {arch.vibes.map((v) => (
-              <span key={v} className="text-[11px] uppercase tracking-wider px-3 py-1 rounded-full bg-black/15 text-black/85 backdrop-blur-sm">
-                {v}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Palette */}
       <section className="mb-10">

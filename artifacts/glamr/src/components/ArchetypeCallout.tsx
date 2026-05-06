@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { useArchetype } from "../hooks/useArchetype";
-import { ARCHETYPES } from "../lib/archetypes";
+import { ARCHETYPES, pickFg } from "../lib/archetypes";
 
 /**
  * Home-page entry point for the archetype quiz.
@@ -41,7 +41,7 @@ export function ArchetypeCallout() {
                   Personalise the app
                 </div>
                 <h3 className="font-serif text-xl sm:text-2xl font-bold leading-tight mb-1">
-                  Find your beauty archetype
+                  The Iola archetype test
                 </h3>
                 <p className="text-sm text-muted-foreground leading-snug">
                   5 quick questions. We'll tune your colours, tips and look
@@ -56,6 +56,10 @@ export function ArchetypeCallout() {
     );
   }
 
+  // Pick text colour by gradient luminance — dark archetypes (Siren /
+  // Rebel / Muse) need white text; light ones can stay on black.
+  const fg = pickFg(arch.palette[1] ?? arch.palette[0]);
+  const isLight = fg === "light";
   return (
     <div className="max-w-2xl mx-auto px-6 mb-8">
       <Link href="/archetype">
@@ -69,15 +73,17 @@ export function ArchetypeCallout() {
             background: `linear-gradient(135deg, ${arch.palette[0]} 0%, ${arch.palette[2]} 100%)`,
           }}
         >
-          <div className="p-5 sm:p-6 flex items-center gap-4">
-            <div className="flex-1 min-w-0 text-black/85">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-black/55 mb-1">
-                You are
+          <div className={`p-5 sm:p-6 flex items-center gap-4 ${isLight ? "text-white" : "text-black/85"}`}>
+            <div className="flex-1 min-w-0">
+              <div className={`text-[10px] uppercase tracking-[0.22em] mb-1 ${isLight ? "text-white/65" : "text-black/55"}`}>
+                Iola says you are
               </div>
               <h3 className="font-serif text-2xl sm:text-3xl font-bold leading-none mb-1">
                 {arch.name}
               </h3>
-              <p className="text-sm italic text-black/70 truncate">{arch.tagline}</p>
+              <p className={`text-sm italic truncate ${isLight ? "text-white/80" : "text-black/70"}`}>
+                {arch.tagline}
+              </p>
               <div className="flex gap-1.5 mt-3">
                 {arch.palette.map((hex) => (
                   <div key={hex} className="w-5 h-5 rounded-full ring-2 ring-white/40"
@@ -85,7 +91,7 @@ export function ArchetypeCallout() {
                 ))}
               </div>
             </div>
-            <ArrowRight className="w-5 h-5 text-black/70 shrink-0" />
+            <ArrowRight className={`w-5 h-5 shrink-0 ${isLight ? "text-white/80" : "text-black/70"}`} />
           </div>
         </motion.div>
       </Link>

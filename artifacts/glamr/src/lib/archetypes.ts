@@ -161,3 +161,22 @@ export function lookMatchesArchetype(look: { mood: string }, archetype: Archetyp
   const m = look.mood.toLowerCase();
   return archetype.moodMatchers.some((kw) => m.includes(kw));
 }
+
+/**
+ * Pick a readable foreground colour ("light" or "dark") for a given hex
+ * background. Uses the WCAG-style relative-luminance formula so dark
+ * archetype palettes (siren, rebel, muse) get white text and light ones
+ * (romantic, icon, naturalist) get black text. Without this, the result
+ * hero and home callout were nearly unreadable on the dark archetypes.
+ */
+export function pickFg(hex: string): "light" | "dark" {
+  const m = /^#?([0-9a-fA-F]{6})$/.exec(hex);
+  if (!m) return "dark";
+  const v = parseInt(m[1], 16);
+  const r = ((v >> 16) & 0xff) / 255;
+  const g = ((v >> 8) & 0xff) / 255;
+  const b = (v & 0xff) / 255;
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  return L > 0.5 ? "dark" : "light";
+}
