@@ -146,17 +146,20 @@ function DrawerItem({
   active: boolean;
   onClick: () => void;
 }) {
+  // Use wouter's navigate via useLocation rather than nesting <button>
+  // inside <Link> (which would render invalid <a><button> markup).
+  const [, navigate] = useLocation();
   return (
-    <Link href={href}>
-      <button
-        onClick={onClick}
-        className={`w-full px-5 py-3 flex items-center gap-3 text-sm transition-colors ${
-          active ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted/60"
-        }`}
-      >
-        <Icon className="w-4 h-4 shrink-0" />
-        {label}
-      </button>
-    </Link>
+    <button
+      type="button"
+      onClick={() => { onClick(); navigate(href); }}
+      aria-current={active ? "page" : undefined}
+      className={`w-full px-5 py-3 flex items-center gap-3 text-sm transition-colors ${
+        active ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted/60"
+      }`}
+    >
+      <Icon className="w-4 h-4 shrink-0" />
+      {label}
+    </button>
   );
 }

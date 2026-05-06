@@ -3,6 +3,12 @@ import { useAuth } from "@clerk/react";
 import { ARCHETYPES, type ArchetypeId } from "../lib/archetypes";
 import { api } from "../lib/api";
 
+// Module-level "last synced" marker, shared across every component that
+// calls useArchetype(). Without this, every mount (TopNav + Feed + Home +
+// Brands + …) would re-fire `PUT /profiles/me/archetype`, producing the
+// PUT-storm we saw in the logs on every page navigation.
+let moduleLastSynced: ArchetypeId | null = null;
+
 /**
  * localStorage-backed archetype state. We don't persist server-side yet —
  * the quiz is anonymous and instant, and the archetype is essentially a
@@ -58,22 +64,21 @@ export function useArchetype() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Best-effort sync to the server when authed. The server treats this as
-  // fire-and-forget (204 if no profile yet) so we swallow errors. We only
-  // sync once per archetype value to avoid a write storm on tab focus.
-  const lastSyncedRef = useState<{ value: ArchetypeId | null }>({ value: null })[0];
   useEffect(() => {
     if (!isSignedIn) return;
     const a = stored?.archetype ?? null;
-    if (a === lastSyncedRef.value) return;
     if (!a) return; // never push a null wipe — clear() is local-only
-    lastSyncedRef.value = a;
+    if (a === moduleLastSynced) return;
+    // Optimistically mark synced so concurrent hook instances (TopNav,
+    // Feed, Brands, etc. all mount at once) don't fire duplicate PUTs.
+    moduleLastSynced = a;
     api.put("/profiles/me/archetype", { archetype: a }).catch(() => {
-      // Server is the secondary store; localStorage is canonical until the
-      // user has a profile. Silently retry next render if state changes.
-      lastSyncedRef.value = null;
+      // Roll back so the next render can retry — but only if the value
+      // we tried to push is still the latest one (otherwise a newer
+      // attempt has already taken over).
+      if (moduleLastSynced === a) moduleLastSynced = null;
     });
-  }, [isSignedIn, stored?.archetype, lastSyncedRef]);
+  }, [isSignedIn, stored?.archetype]);
 
   const setArchetype = useCallback((archetype: ArchetypeId) => {
     const next: Stored = { archetype, takenAt: Date.now() };

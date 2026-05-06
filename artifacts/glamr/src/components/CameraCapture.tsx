@@ -43,6 +43,10 @@ export function CameraCapture({ onCapture, onCancel }: Props) {
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas unsupported");
+      // Reset any transform left from a previous snap — translate/scale
+      // is cumulative on the same context, so without this the canvas
+      // would double-flip on the second capture and so on.
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       // Mirror selfies on capture so the saved image matches what the
       // user sees in the preview (otherwise text/letters look reversed).
       if (mirror) {

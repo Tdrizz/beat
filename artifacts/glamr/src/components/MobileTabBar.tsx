@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { Home as HomeIcon, Sparkles, Plus, Wand2, MessageCircle } from "lucide-react";
 import { useAuth } from "@clerk/react";
 
@@ -26,7 +26,7 @@ const TABS: Tab[] = [
 ];
 
 export function MobileTabBar() {
-  const [loc] = useLocation();
+  const [loc, navigate] = useLocation();
   const { isSignedIn } = useAuth();
   if (HIDE_ON.some((p) => loc.startsWith(p))) return null;
   return (
@@ -41,32 +41,36 @@ export function MobileTabBar() {
           const active = href === "/" ? loc === "/" : loc.startsWith(href);
           // Routes that require auth bounce signed-out visitors to /sign-in.
           const target = authed && !isSignedIn ? "/sign-in" : href;
+          // We render plain <button>s and call wouter's `navigate()` on
+          // click rather than wrapping <button> inside <Link> (which would
+          // produce invalid <a><button> markup and break activation).
           if (primary) {
             return (
               <li key={href} className="flex items-end justify-center">
-                <Link href={target}>
-                  <button
-                    aria-label={label}
-                    className="-mt-5 mb-1 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-                  >
-                    <Icon className="w-5 h-5" />
-                  </button>
-                </Link>
+                <button
+                  type="button"
+                  onClick={() => navigate(target)}
+                  aria-label={label}
+                  className="-mt-5 mb-1 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+                >
+                  <Icon className="w-5 h-5" />
+                </button>
               </li>
             );
           }
           return (
             <li key={href} className="flex">
-              <Link href={target} className="flex-1">
-                <div
-                  className={`h-full w-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
-                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="leading-none">{label}</span>
-                </div>
-              </Link>
+              <button
+                type="button"
+                onClick={() => navigate(target)}
+                aria-current={active ? "page" : undefined}
+                className={`flex-1 h-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="leading-none">{label}</span>
+              </button>
             </li>
           );
         })}
