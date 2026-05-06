@@ -252,6 +252,25 @@ export default function TryOn() {
     setAiTryonOpen(true);
     aiTryon.run({ video: videoRef.current, look: baseLook });
   };
+
+  // Auto-fire AI try-on as soon as the camera is ready. We only auto-fire
+  // once per look (tracked via a ref so re-renders don't re-trigger). The
+  // user can still tap the FAB to regenerate. Short delay lets the camera
+  // settle so the captured frame isn't a black/auto-exposing first frame.
+  const autoFiredForLook = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isReady || !baseLook) return;
+    if (autoFiredForLook.current === baseLook.id) return;
+    autoFiredForLook.current = baseLook.id;
+    const t = window.setTimeout(() => {
+      setAiTryonOpen(true);
+      aiTryon.run({ video: videoRef.current, look: baseLook });
+    }, 900);
+    return () => window.clearTimeout(t);
+    // aiTryon / videoRef are stable enough; we deliberately key off camera
+    // readiness and the look id so navigating to a different look fires once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady, baseLook?.id]);
   const closeAITryon = () => {
     // Don't reset() — we keep the last result so the user can re-open it
     // via the image button in the top bar. A subsequent run() will overwrite
@@ -389,7 +408,8 @@ export default function TryOn() {
           </div>
         </div>
 
-        {/* Primary AI Try-On FAB */}
+        {/* AI Try-On FAB — fires automatically on camera-ready, but stays
+            available so the user can regenerate if they didn't love the result. */}
         {!guidedMode && (
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5">
             <Button
@@ -400,12 +420,18 @@ export default function TryOn() {
             >
               {isGenerating ? (
                 <><Loader2 className="w-5 h-5 animate-spin" />Painting your look…</>
+              ) : lastResultUrl.current ? (
+                <><Sparkles className="w-5 h-5" />Regenerate</>
               ) : (
                 <><Sparkles className="w-5 h-5" />Try this look with AI</>
               )}
             </Button>
             <p className="text-[11px] text-white/60 font-medium tracking-wide">
-              Hold still — we'll generate a photoreal preview
+              {isGenerating
+                ? "Hold still — generating your photoreal preview"
+                : lastResultUrl.current
+                  ? "Tap to generate a fresh take"
+                  : "Auto-generating as soon as the camera is ready…"}
             </p>
           </div>
         )}
