@@ -43,6 +43,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **The Teapot (Community Feed)**: `artifacts/glamr/src/pages/Teapot.tsx`
 - **Esthetician Hub (Premium)**: `artifacts/glamr/src/pages/EstheticianHub.tsx`
 - **Kindness Prompt**: `artifacts/glamr/src/components/KindnessPrompt.tsx`
+- **Period/Cycle Tracker**: `artifacts/glamr/src/pages/PeriodTracker.tsx`
 
 ## Architecture decisions
 
@@ -67,6 +68,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **The Teapot**: Public community feed where all users can post and interact.
 - **Esthetician Hub**: Premium directory for licensed estheticians to promote their services.
 - **Kindness Prompt**: Anti-bullying overlay triggered by derogatory language in posts/captions — shows "be kind" message for 5 seconds before allowing resume.
+- **Cycle Tracker**: On-device period tracker with phase detection (menstrual, follicular, ovulation, luteal), next-period prediction, and phase-specific skin/makeup/self-care tips. All data stored in localStorage.
 
 ## User preferences
 

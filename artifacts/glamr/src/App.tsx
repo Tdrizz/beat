@@ -32,6 +32,7 @@ import Juicing from "@/pages/Juicing";
 import SlayBible from "@/pages/SlayBible";
 import Teapot from "@/pages/Teapot";
 import EstheticianHub from "@/pages/EstheticianHub";
+import PeriodTracker from "@/pages/PeriodTracker";
 import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/slay-bible" component={SlayBible} />
       <Route path="/teapot" component={Teapot} />
       <Route path="/esthetician-hub" component={EstheticianHub} />
+      <Route path="/cycle" component={PeriodTracker} />
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>

@@ -762,7 +762,7 @@ export default function Home() {
     { id: "trending",   label: "Trending",   icon: <TrendingUp className="w-3.5 h-3.5" />,   title: "Trending Styles",        looks: filtered.trending,
       blurb: "What's hot right now on the FYP.", gradient: "from-pink-300 via-fuchsia-200 to-violet-200" },
     { id: "halloween",  label: "Halloween",  icon: <Ghost className="w-3.5 h-3.5" />,        title: "Halloween Looks",        looks: filtered.halloween,
-      blurb: "50 costumes — from glam witch to sugar skull.", gradient: "from-orange-400 via-purple-500 to-zinc-900" },
+      blurb: `${halloweenLooks.length} costumes — from glam witch to sugar skull.`, gradient: "from-orange-400 via-purple-500 to-zinc-900" },
     { id: "goth",       label: "Goth",       icon: <Skull className="w-3.5 h-3.5" />,        title: "Goth Styles",            looks: filtered.goth,
       blurb: "Trad, soft, pastel, e-girl, cyber & romantic.", gradient: "from-zinc-700 via-zinc-800 to-black" },
     { id: "pageant",    label: "Pageant",    icon: <Crown className="w-3.5 h-3.5" />,       title: "Beauty Pageant Looks",   looks: filtered.pageant,
