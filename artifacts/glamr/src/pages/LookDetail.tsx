@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { motion } from "framer-motion";
-import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks } from "../lib/looks";
+import { ALL_LOOKS_FLAT } from "../lib/looks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Camera, Clock, Star, Sparkles } from "lucide-react";
@@ -9,21 +9,10 @@ import { AffiliateProductsForLook } from "@/components/AffiliateProductsForLook"
 import { RemixCount } from "@/components/RemixCount";
 import { ShareToDmButton } from "@/components/ShareToDmButton";
 import { RecommendedLashes } from "@/components/RecommendedLashes";
-import { halloweenLooks } from "@/lib/halloween";
-import { gothLooks } from "@/lib/goth";
-import { styleExpansionLooks } from "@/lib/styleExpansion";
-import { pageantLooks } from "@/lib/pageantLooks";
-import { dragLooks } from "@/lib/dragLooks";
 
 export default function LookDetail() {
   const { lookId } = useParams();
-  const ALL_LOOKS = [
-    ...allLooks, ...eyeLooks, ...lipLooks, ...trendLooks,
-    ...moreEyeLooks, ...moreLipLooks,
-    ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
-    ...pageantLooks, ...dragLooks,
-  ];
-  const look = ALL_LOOKS.find((l) => l.id === lookId);
+  const look = ALL_LOOKS_FLAT.find((l) => l.id === lookId);
 
   if (!look) {
     return (

@@ -80,30 +80,7 @@
   "lip-warm-brown": "lip-warm-brown.jpg",
   "lip-cherry-bomb": "lip-cherry-bomb.jpg",
   "lip-orchid": "lip-orchid.jpg",
-  "lip-soap-brow-nude": "lip-soap-brow-nude.jpg",
-  "japan-jbeauty": "japan-jbeauty.jpg",
-  "korea-kbeauty": "korea-kbeauty.jpg",
-  "india-bollywood": "india-bollywood.jpg",
-  "nigeria-afrobeats": "nigeria-afrobeats.jpg",
-  "france-parisienne": "france-parisienne.jpg",
-  "brazil-carnaval": "brazil-carnaval.jpg",
-  "egypt-cleopatra": "egypt-cleopatra.jpg",
-  "mexico-frida": "mexico-frida.jpg",
-  "japan-gyaru": "japan-gyaru.jpg",
-  "uk-brit-punk": "uk-brit-punk.jpg",
-  "usa-hollywood": "usa-hollywood.jpg",
-  "italy-dolce-vita": "italy-dolce-vita.jpg",
-  "ghana-natural": "ghana-natural.jpg",
-  "morocco-hammam": "morocco-hammam.jpg",
-  "thailand-classical": "thailand-classical.jpg",
-  "ethiopia-traditional": "ethiopia-traditional.jpg",
-  "colombia-vibrant": "colombia-vibrant.jpg",
-  "philippines-morena": "philippines-morena.jpg",
-  "australia-beach": "australia-beach.jpg",
-  "china-cbeauty": "china-cbeauty.jpg",
-  "iran-persian": "iran-persian.jpg",
-  "saudi-gulf-glam": "saudi-gulf-glam.jpg",
-  "brazil-natural": "brazil-natural.jpg"
+  "lip-soap-brow-nude": "lip-soap-brow-nude.jpg"
 };
 
   export function getLookImage(id: string, baseUrl = import.meta.env.BASE_URL): string | undefined {

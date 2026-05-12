@@ -1,3 +1,9 @@
+import { halloweenLooks } from "./halloween";
+import { gothLooks } from "./goth";
+import { styleExpansionLooks } from "./styleExpansion";
+import { pageantLooks } from "./pageantLooks";
+import { dragLooks } from "./dragLooks";
+
 export interface LookStep {
   id: string;
   name: string;
@@ -2056,6 +2062,8 @@ export const allCompleteLooks = [...byEraLooks, ...trendLooks, ...seasonalCapsul
 export const allEyeLooks = [...eyeLooks, ...moreEyeLooks];
 export const allLipLooks = [...lipLooks, ...moreLipLooks];
 
+export { halloweenLooks, gothLooks, styleExpansionLooks, pageantLooks, dragLooks };
+
 // Master flat list — used by Feed/search to scan the entire catalogue.
 export const ALL_LOOKS_FLAT: Look[] = [
   ...byEraLooks,
@@ -2065,4 +2073,9 @@ export const ALL_LOOKS_FLAT: Look[] = [
   ...moreEyeLooks,
   ...moreLipLooks,
   ...seasonalCapsule2026,
+  ...halloweenLooks,
+  ...gothLooks,
+  ...styleExpansionLooks,
+  ...pageantLooks,
+  ...dragLooks,
 ];

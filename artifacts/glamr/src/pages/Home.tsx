@@ -3,14 +3,11 @@ import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   byEraLooks, trendLooks,
-  allEyeLooks, allLipLooks, allCompleteLooks, Look
+  allEyeLooks, allLipLooks, allCompleteLooks, ALL_LOOKS_FLAT, Look,
+  halloweenLooks, gothLooks, styleExpansionLooks, pageantLooks, dragLooks,
 } from "../lib/looks";
 import { getLookImage } from "../lib/lookImages";
-import { halloweenLooks } from "../lib/halloween";
-import { gothLooks, type GothSubcategory, GOTH_SUBCATEGORY_LABELS } from "../lib/goth";
-import { styleExpansionLooks } from "../lib/styleExpansion";
-import { pageantLooks } from "../lib/pageantLooks";
-import { dragLooks } from "../lib/dragLooks";
+import { type GothSubcategory, GOTH_SUBCATEGORY_LABELS } from "../lib/goth";
 import {
   lashBrands, lashStyles, recommendLooksForLash,
   type LashStyle,
@@ -658,11 +655,7 @@ function EmptyFavorites() {
 const TIERS = ["All", "Luxury", "Prestige", "Mid-Range", "Indie", "Drugstore"] as const;
 type TierFilter = typeof TIERS[number];
 const DIFFICULTIES: Difficulty[] = ["All", "Beginner", "Intermediate", "Advanced"];
-const EVERY_LOOK: Look[] = [
-  ...allCompleteLooks, ...allEyeLooks, ...allLipLooks,
-  ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
-  ...pageantLooks, ...dragLooks,
-];
+const EVERY_LOOK: Look[] = ALL_LOOKS_FLAT;
 // ── Home ──────────────────────────────────────────────────────────────────────
 
 // Time-aware greeting — small but powerful "personalisation" signal
