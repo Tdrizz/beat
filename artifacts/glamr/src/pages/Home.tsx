@@ -307,13 +307,18 @@ function LashStyleCard({ style, looksPool }: { style: LashStyle; looksPool: Look
       <div className="p-4 flex flex-col gap-2">
         <p className="text-sm text-foreground/80 leading-snug">{style.blurb}</p>
         <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground">Best for:</span> {style.bestFor}</p>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {style.tags.slice(0, 8).map(tag => (
+            <span key={tag} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">{tag}</span>
+          ))}
+        </div>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           className="mt-1 text-xs text-primary font-semibold inline-flex items-center gap-1 self-start hover:underline"
         >
-          {open ? "Hide recommended looks" : "Recommended looks"}
+          {open ? "Hide matches" : "Match to look"}
           <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
         <AnimatePresence initial={false}>

@@ -16,25 +16,21 @@ const MESSAGES = [
   "Make yourself the main character.",
 ] as const;
 
-const SPLASH_KEY = "glamr_splash_shown";
 const VISIBLE_MS = 1800;
 
 /**
- * Cold-start positivity splash. Shows once per browser session (uses
- * sessionStorage so reload-during-session doesn't re-trigger it, but a
- * brand new tab always re-shows). Tap-to-dismiss for impatient users.
+ * Cold-start positivity splash. Shows on every page load (~1.8s).
+ * Tap-to-dismiss for impatient users.
  * Honours `prefers-reduced-motion` by skipping the entrance animation.
  */
 export function SplashPositivity() {
-  const [visible, setVisible] = useState(false);
-  const [message, setMessage] = useState<string>("");
+  const [visible, setVisible] = useState(true);
+  const [message] = useState<string>(
+    () => MESSAGES[Math.floor(Math.random() * MESSAGES.length)] ?? MESSAGES[0],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.sessionStorage.getItem(SPLASH_KEY)) return;
-    window.sessionStorage.setItem(SPLASH_KEY, "1");
-    setMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)] ?? MESSAGES[0]);
-    setVisible(true);
     const t = window.setTimeout(() => setVisible(false), VISIBLE_MS);
     return () => window.clearTimeout(t);
   }, []);
