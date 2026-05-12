@@ -348,7 +348,7 @@ function ResultView({
                 <div className="group cursor-pointer">
                   <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-muted relative">
                     <img
-                      src={getLookImage(l.id)}
+                      src={getLookImage(l.id, import.meta.env.BASE_URL, l.palette as [string, string, string])}
                       alt={l.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"

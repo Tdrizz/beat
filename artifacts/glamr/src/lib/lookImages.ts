@@ -1,5 +1,4 @@
-// Auto-generated. Maps look id -> public image filename in /looks/.
-  export const lookImageMap: Record<string, string> = {
+export const lookImageMap: Record<string, string> = {
   "1920s-flapper": "1920s-flapper.jpg",
   "1940s-pinup": "1940s-pinup.jpg",
   "1950s-hollywood": "1950s-hollywood.jpg",
@@ -83,9 +82,25 @@
   "lip-soap-brow-nude": "lip-soap-brow-nude.jpg"
 };
 
-  export function getLookImage(id: string, baseUrl = import.meta.env.BASE_URL): string | undefined {
-    const file = lookImageMap[id];
-    if (!file) return undefined;
-    return baseUrl + "looks/" + file;
-  }
-  
+const svgCache = new Map<string, string>();
+
+function paletteToSvgDataUri(palette: [string, string, string]): string {
+  const key = palette.join(",");
+  const cached = svgCache.get(key);
+  if (cached) return cached;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${palette[0]}"/><stop offset="50%" stop-color="${palette[1]}"/><stop offset="100%" stop-color="${palette[2]}"/></linearGradient></defs><rect width="400" height="400" fill="url(#g)"/></svg>`;
+  const uri = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  svgCache.set(key, uri);
+  return uri;
+}
+
+export function getLookImage(
+  id: string,
+  baseUrl = import.meta.env.BASE_URL,
+  palette?: [string, string, string],
+): string {
+  const file = lookImageMap[id];
+  if (file) return baseUrl + "looks/" + file;
+  if (palette) return paletteToSvgDataUri(palette);
+  return paletteToSvgDataUri(["#e8b4c8", "#c07898", "#884868"]);
+}

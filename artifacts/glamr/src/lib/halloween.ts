@@ -425,6 +425,14 @@ const RAW: HalloweenSeed[] = [
     lips: ["Glossy black liner blended with deep red on the inside of the lip.", "#0a0a0a", "Demonic Black"],
     cheeks: ["Sharp cool sculpt.", "#80505a", "Cool Sculpt"],
     palette: ["#c83018", "#0a0a0a", "#80505a"], tags: ["devil", "halloween", "dramatic", "smokey", "advanced"] },
+  { id: "haunted-doll", name: "Haunted Doll", mood: "Creepy-Cute", difficulty: "Intermediate", time: "30 min",
+    blurb: "Cracked porcelain skin, oversized doll eyes, rosebud lips — the porcelain toy that blinks at midnight.",
+    base: ["Ultra-pale matte foundation with hairline cracks drawn in grey liner.", "#f0e8e0", "Porcelain"],
+    eyes: ["Round, wide doll-eye liner with white waterline and oversized falsies.", "#6a3828", "Doll Brown"],
+    brows: ["Thin, arched, doll-like, drawn slightly higher than natural.", "#4a2818", "Painted Brow"],
+    lips: ["Tiny rosebud shape overdrawn in rosy pink.", "#d05870", "Rosebud"],
+    cheeks: ["Perfect round circles of bright pink blush on the apples.", "#e87888", "Doll Flush"],
+    palette: ["#f0e8e0", "#d05870", "#e87888"], tags: ["doll", "halloween", "theatrical", "cute", "intermediate"] },
 ];
 
 export const halloweenLooks: (Look & { tags: string[] })[] = RAW.map(mk);

@@ -210,7 +210,7 @@ function LookCard({ look, index, isFav, onToggleFav }: {
   look: Look; index: number; isFav: boolean; onToggleFav: (id: string) => void;
 }) {
   const gradStyle = { background: `linear-gradient(135deg, ${look.palette[0]} 0%, ${look.palette[1]} 50%, ${look.palette[2]} 100%)` };
-  const imgSrc = getLookImage(look.id);
+  const imgSrc = getLookImage(look.id, import.meta.env.BASE_URL, look.palette as [string, string, string]);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
