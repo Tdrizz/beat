@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { Look } from "../lib/looks";
 import type { ArchetypeId } from "../lib/archetypes";
+import type { WigStyle, WigColor } from "../lib/wigs";
 
 interface RunArgs {
   video: HTMLVideoElement | null;
@@ -13,6 +14,9 @@ interface RunArgs {
    *  the server biases the finish (smokier / glowier / sharper / etc.)
    *  toward the archetype while preserving the look's signature shades. */
   archetype?: ArchetypeId | null;
+  /** Optional wig swap. When provided, the AI render also replaces the
+   *  subject's hair with the chosen style + colour. */
+  wig?: { style: WigStyle; color: WigColor } | null;
 }
 
 export interface AngleResult {
@@ -106,7 +110,7 @@ export function useAITryOn() {
   // launching overlapping requests that would race on setState.
   const inFlight = useRef(false);
 
-  const run = useCallback(async ({ video, look, intensity = 60, angleLabel, archetype }: RunArgs) => {
+  const run = useCallback(async ({ video, look, intensity = 60, angleLabel, archetype, wig }: RunArgs) => {
     if (inFlight.current) return;
     if (!video || !video.videoWidth || !video.videoHeight) {
       setError("Camera not ready yet — try again in a moment.");
@@ -164,6 +168,18 @@ export function useAITryOn() {
           steps,
           skinTone,
           archetype: archetype ?? null,
+          wig: wig
+            ? {
+                styleId: wig.style.id,
+                styleName: wig.style.name,
+                length: wig.style.length,
+                texture: wig.style.texture,
+                description: wig.style.description,
+                colorName: wig.color.name,
+                rootHex: wig.color.rootHex,
+                tipHex: wig.color.tipHex,
+              }
+            : null,
         }),
       });
 

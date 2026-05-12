@@ -53,6 +53,24 @@ const TryonBody = z.object({
     .enum(["romantic", "siren", "icon", "muse", "rebel", "naturalist"])
     .nullable()
     .optional(),
+  // Optional wig swap. When present, the model is also instructed to
+  // replace the subject's hair with the described wig style + colour.
+  // Free-text fields are length-bounded to keep the final prompt
+  // bounded and to limit prompt-injection surface area; texture/length
+  // are enum-locked for the same reason.
+  wig: z
+    .object({
+      styleId: z.string().min(1).max(60),
+      styleName: z.string().min(1).max(80),
+      length: z.enum(["Pixie", "Short", "Bob", "Shoulder", "Long", "Extra Long"]),
+      texture: z.enum(["Straight", "Wavy", "Curly", "Coily", "Braided", "Locs"]),
+      description: z.string().max(200).optional(),
+      colorName: z.string().min(1).max(60),
+      rootHex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+      tipHex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+    })
+    .nullable()
+    .optional(),
 });
 
 // Translate a 0–100 intensity into a short natural-language descriptor that
@@ -112,6 +130,26 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
     lines.push(s.instruction ? `${piece}. ${s.instruction}` : piece);
   }
   lines.push("");
+  if (parsed.wig) {
+    const w = parsed.wig;
+    const isSolid = w.rootHex.toLowerCase() === w.tipHex.toLowerCase();
+    lines.push("ALSO REPLACE THE SUBJECT'S HAIR WITH A WIG:");
+    lines.push(
+      `• Style: "${w.styleName}" — ${w.length.toLowerCase()} length, ${w.texture.toLowerCase()} texture.`,
+    );
+    if (w.description) lines.push(`• Look: ${w.description}`);
+    if (isSolid) {
+      lines.push(`• Colour: ${w.colorName} (solid ${w.rootHex}) from root to tip.`);
+    } else {
+      lines.push(
+        `• Colour: ${w.colorName} — root ${w.rootHex} blending into ${w.tipHex} at the tips.`,
+      );
+    }
+    lines.push("  Render a natural hairline melt — no obvious wig cap edge, no halo of original hair peeking out.");
+    lines.push("  Hair should sit with realistic weight, shadow, and shine for the texture described.");
+    lines.push("  Preserve the original lighting on the hair as if it were the person's own.");
+    lines.push("");
+  }
   if (parsed.archetype) {
     const guidance = ARCHETYPE_GUIDANCE[parsed.archetype];
     if (guidance) {
@@ -143,8 +181,16 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   lines.push("");
   lines.push("STRICT RULES:");
   lines.push("- Preserve the person's identity, face shape, bone structure, eye shape, nose, lip shape and proportions exactly.");
-  lines.push("- Preserve the original lighting, camera angle, background, hair, clothing and skin texture (pores, freckles, fine lines).");
-  lines.push("- Do NOT change race, age, gender, expression, hairstyle, or skin tone.");
+  lines.push(
+    parsed.wig
+      ? "- Preserve the original lighting, camera angle, background, clothing and skin texture (pores, freckles, fine lines). Hair IS being replaced per the wig instructions above; everything else stays identical."
+      : "- Preserve the original lighting, camera angle, background, hair, clothing and skin texture (pores, freckles, fine lines).",
+  );
+  lines.push(
+    parsed.wig
+      ? "- Do NOT change race, age, gender, expression, or skin tone. Hairstyle changes ONLY to match the wig described above."
+      : "- Do NOT change race, age, gender, expression, hairstyle, or skin tone.",
+  );
   lines.push("- Do NOT smooth or airbrush the skin beyond what real makeup would do — pores and micro-texture must remain visible.");
   lines.push("- Apply makeup precisely to the correct facial regions: eyeshadow only on lids, lipstick only on lips, blush only on cheek apples, etc.");
   lines.push("- Output a single photorealistic image of the same person wearing the look. No text, no watermark, no border.");

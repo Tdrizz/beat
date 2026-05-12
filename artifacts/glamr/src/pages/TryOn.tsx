@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "wouter";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useParams, Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks } from "../lib/looks";
+import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks, type Look } from "../lib/looks";
+import { wigStyles, wigSwatchGradient, NO_WIG_ID, type WigStyle, type WigColor } from "../lib/wigs";
+import { getLookImage } from "../lib/lookImages";
 import { useCamera } from "../hooks/useCamera";
 import { useAITryOn } from "../hooks/useAITryOn";
 import { useStreak } from "../hooks/useStreak";
@@ -218,11 +220,201 @@ function GuidedOverlayPanel({
   );
 }
 
+// ── Dual-scroll switcher (Looks + Wigs) ──────────────────────────────────────
+//
+// Two horizontally-scrolling, snap-aligned rails sit at the bottom of the
+// camera area. Tapping a card updates the selection used for the next AI
+// generation (and auto-re-fires so the user sees the swap immediately).
+//
+// We deliberately use native CSS scroll-snap rather than a JS carousel — it
+// matches mobile users' muscle memory, requires no extra deps, and stays
+// responsive even mid-generation.
+
+function LookRail({
+  looks, selectedId, onSelect,
+}: {
+  looks: Look[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const railRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll the selected card into view (smooth) whenever the parent
+  // changes selection — e.g. when the user lands on the page from a deep
+  // link, or when wig changes shift focus back to the look rail.
+  useEffect(() => {
+    if (!selectedId || !railRef.current) return;
+    const el = railRef.current.querySelector<HTMLElement>(`[data-look-id="${selectedId}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [selectedId]);
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between px-3">
+        <span className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/70">Makeup</span>
+        <span className="text-[10px] text-white/50">{looks.length} looks</span>
+      </div>
+      <div
+        ref={railRef}
+        className="flex gap-2 overflow-x-auto px-3 pb-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {looks.map((l) => {
+          const active = l.id === selectedId;
+          return (
+            <button
+              key={l.id}
+              data-look-id={l.id}
+              onClick={() => onSelect(l.id)}
+              className={`relative snap-center shrink-0 w-16 h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                active ? "border-primary scale-105 shadow-lg shadow-primary/30" : "border-white/15 opacity-80 hover:opacity-100"
+              }`}
+              aria-label={`Use makeup look ${l.name}`}
+              aria-pressed={active}
+            >
+              <img
+                src={getLookImage(l.id, undefined, [l.palette[0] ?? "#888", l.palette[1] ?? "#aaa", l.palette[2] ?? "#666"])}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-1 pt-2 pb-1">
+                <p className="text-[9px] font-semibold text-white leading-tight truncate">{l.name}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WigRail({
+  selectedWigId, selectedColorIdByWig, onSelectWig, onSelectColor,
+}: {
+  selectedWigId: string;
+  selectedColorIdByWig: Record<string, string>;
+  onSelectWig: (id: string) => void;
+  onSelectColor: (wigId: string, colorId: string) => void;
+}) {
+  const railRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!railRef.current) return;
+    const el = railRef.current.querySelector<HTMLElement>(`[data-wig-id="${selectedWigId}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [selectedWigId]);
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between px-3">
+        <span className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/70">Wig</span>
+        <span className="text-[10px] text-white/50">{wigStyles.length + 1} options</span>
+      </div>
+      <div
+        ref={railRef}
+        className="flex gap-2 overflow-x-auto px-3 pb-1 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {/* "Own hair" option — always first so users can opt out of a wig
+            without scrolling. */}
+        <button
+          data-wig-id={NO_WIG_ID}
+          onClick={() => onSelectWig(NO_WIG_ID)}
+          className={`snap-center shrink-0 w-16 h-20 rounded-xl border-2 transition-all flex flex-col items-center justify-center text-center px-1 ${
+            selectedWigId === NO_WIG_ID
+              ? "border-primary bg-primary/15 scale-105 shadow-lg shadow-primary/30"
+              : "border-white/15 bg-white/5 opacity-80 hover:opacity-100"
+          }`}
+          aria-label="No wig — use my own hair"
+          aria-pressed={selectedWigId === NO_WIG_ID}
+        >
+          <span className="text-base leading-none">✦</span>
+          <span className="text-[9px] font-semibold text-white mt-1 leading-tight">My hair</span>
+        </button>
+        {wigStyles.map((w) => {
+          const active = w.id === selectedWigId;
+          const currentColorId = selectedColorIdByWig[w.id] ?? w.colors[0]?.id;
+          const previewColor = w.colors.find((c) => c.id === currentColorId) ?? w.colors[0];
+          return (
+            <div
+              key={w.id}
+              data-wig-id={w.id}
+              className={`snap-center shrink-0 w-20 rounded-xl border-2 transition-all overflow-hidden ${
+                active ? "border-primary scale-105 shadow-lg shadow-primary/30" : "border-white/15 opacity-80 hover:opacity-100"
+              }`}
+            >
+              <button
+                onClick={() => onSelectWig(w.id)}
+                className="block w-full h-16 relative"
+                style={{ background: previewColor ? wigSwatchGradient(previewColor) : "#222" }}
+                aria-label={`Use wig ${w.name}`}
+                aria-pressed={active}
+              >
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-1 pt-2 pb-0.5">
+                  <p className="text-[9px] font-semibold text-white leading-tight truncate">{w.name}</p>
+                </div>
+              </button>
+              {/* Colour swatches — only visible / interactive once the wig
+                  is selected (otherwise tapping a swatch on a non-selected
+                  wig is ambiguous; we just bring focus to the wig first). */}
+              {active && (
+                <div className="flex gap-0.5 px-1 py-1 bg-black/40 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {w.colors.map((c) => {
+                    const activeColor = c.id === (currentColorId ?? w.colors[0]?.id);
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={(e) => { e.stopPropagation(); onSelectColor(w.id, c.id); }}
+                        className={`shrink-0 w-3.5 h-3.5 rounded-full border transition-transform ${
+                          activeColor ? "border-white scale-110 ring-1 ring-primary" : "border-white/40"
+                        }`}
+                        style={{ background: wigSwatchGradient(c) }}
+                        aria-label={`${w.name} colour ${c.name}`}
+                        aria-pressed={activeColor}
+                        title={c.name}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function TryOn() {
-  const { lookId } = useParams();
-  const baseLook = ALL_LOOKS.find((l) => l.id === lookId);
+  const { lookId: paramLookId } = useParams();
+  const [, navigate] = useLocation();
+
+  // Look + wig selections drive the dual-scroll carousels below.
+  // `paramLookId` seeds the initial look; tapping a card in the carousel
+  // updates the in-page selection AND replaces the URL so deep-links and
+  // back-navigation still target the visible look.
+  const initialLookId = useMemo(
+    () => (paramLookId && ALL_LOOKS.some((l) => l.id === paramLookId) ? paramLookId : ALL_LOOKS[0]?.id ?? null),
+    [paramLookId],
+  );
+  const [selectedLookId, setSelectedLookId] = useState<string | null>(initialLookId);
+  const [selectedWigId, setSelectedWigId] = useState<string>(NO_WIG_ID);
+  const [selectedColorIdByWig, setSelectedColorIdByWig] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (paramLookId && paramLookId !== selectedLookId && ALL_LOOKS.some((l) => l.id === paramLookId)) {
+      setSelectedLookId(paramLookId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramLookId]);
+
+  const baseLook: Look | undefined = ALL_LOOKS.find((l) => l.id === selectedLookId);
+  const selectedWig: WigStyle | null =
+    selectedWigId === NO_WIG_ID ? null : wigStyles.find((w) => w.id === selectedWigId) ?? null;
+  const selectedColor: WigColor | null = selectedWig
+    ? selectedWig.colors.find((c) => c.id === selectedColorIdByWig[selectedWig.id]) ?? selectedWig.colors[0] ?? null
+    : null;
+  const wigArg = selectedWig && selectedColor ? { style: selectedWig, color: selectedColor } : null;
 
   const { videoRef, isReady, error } = useCamera();
 
@@ -272,6 +464,7 @@ export default function TryOn() {
       intensity: aiIntensity,
       angleLabel,
       archetype: userArchetype,
+      wig: wigArg,
     });
   };
 
@@ -299,13 +492,23 @@ export default function TryOn() {
         intensity: aiIntensity,
         angleLabel: "Front",
         archetype: userArchetype,
+        wig: wigArg,
       });
     }, 900);
     return () => window.clearTimeout(t);
     // aiTryon / videoRef are stable enough; we deliberately key off camera
-    // readiness and the look id so navigating to a different look fires once.
+    // readiness and the current (look + wig + colour) combination so any
+    // change in the dual-scroll switcher re-fires the auto-generate once.
+    // The combo-key reset effect below clears `autoFiredForLook` so this
+    // effect sees a fresh value on swap.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady, baseLook?.id]);
+  }, [isReady, baseLook?.id, selectedWigId, selectedColor?.id]);
+
+  // When the user swaps look, wig, or colour mid-session, clear the latch
+  // so the auto-fire effect above re-runs for the new combination.
+  useEffect(() => {
+    autoFiredForLook.current = null;
+  }, [selectedLookId, selectedWigId, selectedColor?.id]);
   const closeAITryon = () => {
     // Don't reset() — we keep the last result so the user can re-open it
     // via the image button in the top bar. A subsequent run() will overwrite
@@ -443,10 +646,34 @@ export default function TryOn() {
           </div>
         </div>
 
+        {/* Dual-scroll switcher — sits above the FAB inside the camera area.
+            Hidden during the guided walkthrough so it doesn't compete with
+            the step-by-step overlay for the user's attention. */}
+        {!guidedMode && (
+          <div className="absolute bottom-28 left-0 right-0 z-30 space-y-1.5 bg-gradient-to-t from-black/70 via-black/40 to-transparent pt-3 pb-1">
+            <LookRail
+              looks={ALL_LOOKS}
+              selectedId={selectedLookId}
+              onSelect={(id) => {
+                setSelectedLookId(id);
+                navigate(`/looks/${id}/try-on`, { replace: true });
+              }}
+            />
+            <WigRail
+              selectedWigId={selectedWigId}
+              selectedColorIdByWig={selectedColorIdByWig}
+              onSelectWig={setSelectedWigId}
+              onSelectColor={(wigId, colorId) =>
+                setSelectedColorIdByWig((m) => ({ ...m, [wigId]: colorId }))
+              }
+            />
+          </div>
+        )}
+
         {/* AI Try-On FAB — fires automatically on camera-ready, but stays
             available so the user can regenerate if they didn't love the result. */}
         {!guidedMode && (
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1.5">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1">
             <Button
               onClick={() => runAITryon()}
               disabled={!isReady || isGenerating}
