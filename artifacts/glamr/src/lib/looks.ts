@@ -2051,15 +2051,14 @@ export function getLookSeason(look: Look): Season {
 
 export const SEASONS: Season[] = ["spring", "summer", "fall", "winter", "allyear"];
 
-export const allLooks = [...byEraLooks, ...celebrityLooks, ...seasonalCapsule2026];
-export const allCompleteLooks = [...byEraLooks, ...celebrityLooks, ...trendLooks, ...seasonalCapsule2026];
+export const allLooks = [...byEraLooks, ...seasonalCapsule2026];
+export const allCompleteLooks = [...byEraLooks, ...trendLooks, ...seasonalCapsule2026];
 export const allEyeLooks = [...eyeLooks, ...moreEyeLooks];
 export const allLipLooks = [...lipLooks, ...moreLipLooks];
 
 // Master flat list — used by Feed/search to scan the entire catalogue.
 export const ALL_LOOKS_FLAT: Look[] = [
   ...byEraLooks,
-  ...celebrityLooks,
   ...eyeLooks,
   ...lipLooks,
   ...trendLooks,

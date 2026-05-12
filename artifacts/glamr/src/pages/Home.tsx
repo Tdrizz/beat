@@ -7,7 +7,7 @@ import {
 } from "../lib/looks";
 import { getLookImage } from "../lib/lookImages";
 import { halloweenLooks } from "../lib/halloween";
-import { gothLooks, type GothSubcategory } from "../lib/goth";
+import { gothLooks, type GothSubcategory, GOTH_SUBCATEGORY_LABELS } from "../lib/goth";
 import { styleExpansionLooks } from "../lib/styleExpansion";
 import { pageantLooks } from "../lib/pageantLooks";
 import { dragLooks } from "../lib/dragLooks";
@@ -984,6 +984,19 @@ export default function Home() {
                     <ChevronLeft className="w-4 h-4" /> Back to categories
                   </button>
                   <SectionHeader icon={t.icon ?? <Sparkles className="w-5 h-5" />} title={t.title} count={t.looks.length} />
+                  {t.id === "goth" && (
+                    <div className="flex gap-2 flex-wrap mb-4">
+                      {(["all", ...Object.keys(GOTH_SUBCATEGORY_LABELS)] as const).map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => setGothSub(sub as GothSubcategory | "all")}
+                          className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${gothSub === sub ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"}`}
+                        >
+                          {sub === "all" ? "All" : GOTH_SUBCATEGORY_LABELS[sub as GothSubcategory]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {t.id === "saved" && favorites.size === 0
                       ? <EmptyFavorites />
