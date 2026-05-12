@@ -28,6 +28,8 @@ import Tools from "@/pages/Tools";
 import Nutrition from "@/pages/Nutrition";
 import SocialLinksSettings from "@/pages/SocialLinksSettings";
 import Friends from "@/pages/Friends";
+import Juicing from "@/pages/Juicing";
+import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +56,7 @@ function Router() {
       <Route path="/archetype" component={Archetype} />
       <Route path="/tools" component={Tools} />
       <Route path="/nutrition" component={Nutrition} />
+      <Route path="/juicing" component={Juicing} />
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
@@ -82,6 +85,7 @@ function App() {
           <TopNav />
           <Router />
           <MobileTabBar />
+          <SplashPositivity />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

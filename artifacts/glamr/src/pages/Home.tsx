@@ -2,11 +2,17 @@ import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  byEraLooks, celebrityLooks, trendLooks,
+  byEraLooks, trendLooks,
   allEyeLooks, allLipLooks, allCompleteLooks, Look
 } from "../lib/looks";
 import { getLookImage } from "../lib/lookImages";
-import { countryLooks, REGIONS, type CountryLook } from "../lib/countryLooks";
+import { halloweenLooks } from "../lib/halloween";
+import { gothLooks, type GothSubcategory } from "../lib/goth";
+import { styleExpansionLooks } from "../lib/styleExpansion";
+import {
+  lashBrands, lashStyles, recommendLooksForLash,
+  type LashStyle,
+} from "../lib/lashes";
 import { brands, Brand } from "../lib/brands";
 import { palettes, Palette } from "../lib/palettes";
 import { getDailyBeat, SEASON_THEME } from "../lib/dailyBeat";
@@ -26,8 +32,9 @@ import { Input } from "@/components/ui/input";
 import {
   Sparkles, Camera, Eye, Smile, Layers, Search, X,
   Heart, TrendingUp, ScanFace, Clock, ChevronRight, ChevronLeft, CalendarDays,
-  Crown, Palette as PaletteIcon, ExternalLink, Globe, Leaf,
-  BookOpen, FlaskConical, Apple, Brush, Star
+  Crown, Palette as PaletteIcon, ExternalLink, Leaf,
+  BookOpen, FlaskConical, Apple, Brush, Star,
+  Ghost, Skull, Citrus,
 } from "lucide-react";
 
 type Difficulty = "All" | "Beginner" | "Intermediate" | "Advanced";
@@ -236,7 +243,7 @@ function LookCard({ look, index, isFav, onToggleFav }: {
         <CardHeader className="pb-2 flex-grow">
           <CardTitle className="font-serif text-lg text-foreground leading-snug">{look.name}</CardTitle>
           <CardDescription className="flex justify-between items-center">
-            <span className="text-xs text-muted-foreground">{(look as CountryLook).country || look.era || look.celebrity || ""}</span>
+            <span className="text-xs text-muted-foreground">{look.era || look.celebrity || ""}</span>
             <span className="italic text-primary/80 text-xs">{look.mood}</span>
           </CardDescription>
         </CardHeader>
@@ -258,84 +265,88 @@ function LookCard({ look, index, isFav, onToggleFav }: {
   );
 }
 
-// ── Country Look Card ─────────────────────────────────────────────────────────
+// ── Lash Brand & Style cards ──────────────────────────────────────────────────
 
-function CountryLookCard({ look, index }: { look: CountryLook; index: number }) {
-  const [open, setOpen] = useState(false);
-  const gradStyle = { background: `linear-gradient(135deg, ${look.palette[0]} 0%, ${look.palette[1]} 50%, ${look.palette[2]} 100%)` };
-  const imgSrc = getLookImage(look.id);
-
+function LashBrandCard({ brand }: { brand: typeof lashBrands[number] }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: Math.min(index * 0.04, 0.5) }}
-    >
-      <Card className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all duration-300 h-full flex flex-col group">
-        <div className="h-40 w-full relative overflow-hidden" style={gradStyle}>
-          {imgSrc && (
-            <img
-              src={imgSrc}
-              alt={`${look.country} ${look.name} makeup look`}
-              loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-            />
+    <Card className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all duration-300 h-full flex flex-col">
+      <div className="p-5 flex items-start gap-3">
+        <BrandLogo name={brand.name} size={48} />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{brand.heritage}</p>
+          <CardTitle className="font-serif text-xl leading-tight mt-0.5">{brand.name}</CardTitle>
+          <p className="text-sm text-muted-foreground italic mt-1">{brand.tagline}</p>
+        </div>
+      </div>
+      <div className="px-5 pb-5 space-y-2">
+        <p className="text-xs text-foreground/80 leading-relaxed">{brand.vibe}</p>
+        <div className="text-[11px] text-muted-foreground space-y-0.5">
+          <p><span className="font-semibold text-foreground">Notable:</span> {brand.notable}</p>
+          <p><span className="font-semibold text-foreground">Price:</span> {brand.priceRange}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function LashStyleCard({ style, looksPool }: { style: LashStyle; looksPool: Look[] }) {
+  const [open, setOpen] = useState(false);
+  const recs = useMemo(() => recommendLooksForLash(style, looksPool, 4), [style, looksPool]);
+  return (
+    <Card className="overflow-hidden bg-card border-border hover:border-primary/40 transition-all duration-300 flex flex-col">
+      <div className={`relative h-32 w-full bg-gradient-to-br ${style.swatch} flex items-end p-4`}>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="relative z-10">
+          <p className="text-[10px] uppercase tracking-wider text-white/90 font-semibold">{style.finish}</p>
+          <h3 className="font-serif text-2xl text-white drop-shadow font-bold leading-tight">{style.name}</h3>
+        </div>
+        <Badge variant="secondary" className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white border-none text-xs">{style.difficulty}</Badge>
+      </div>
+      <div className="p-4 flex flex-col gap-2">
+        <p className="text-sm text-foreground/80 leading-snug">{style.blurb}</p>
+        <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground">Best for:</span> {style.bestFor}</p>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="mt-1 text-xs text-primary font-semibold inline-flex items-center gap-1 self-start hover:underline"
+        >
+          {open ? "Hide recommended looks" : "Recommended looks"}
+          <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+        </button>
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              {recs.length === 0 ? (
+                <p className="text-xs text-muted-foreground mt-2">No matching looks yet.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  {recs.map((l) => (
+                    <Link key={l.id} href={`/looks/${l.id}`}>
+                      <div
+                        className="rounded-lg overflow-hidden border border-border cursor-pointer hover:border-primary/40 transition-colors"
+                        style={{ background: `linear-gradient(135deg, ${l.palette[0]} 0%, ${l.palette[1]} 50%, ${l.palette[2]} 100%)` }}
+                      >
+                        <div className="p-2.5 bg-gradient-to-t from-black/70 to-transparent">
+                          <p className="text-[11px] font-serif font-bold text-white leading-tight drop-shadow">{l.name}</p>
+                          <p className="text-[9px] uppercase tracking-wider text-white/80 mt-0.5">{l.mood}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-          <div className="absolute top-2 left-2 z-10 drop-shadow-lg">
-            <span className="text-3xl">{look.flag}</span>
-          </div>
-          <div className="absolute bottom-2 left-2 flex gap-1.5">
-            <Badge variant="secondary" className="bg-black/50 backdrop-blur-md text-white border-none text-xs">{look.region}</Badge>
-            <Badge variant="outline" className="bg-black/50 backdrop-blur-md text-white border-white/20 text-xs">{look.difficulty}</Badge>
-          </div>
-        </div>
-
-        <CardHeader className="pb-2 flex-grow">
-          <p className="text-xs font-bold text-muted-foreground">{look.country}</p>
-          <CardTitle className="font-serif text-lg leading-snug">{look.name}</CardTitle>
-          <div className="flex items-center gap-1 text-muted-foreground mt-0.5">
-            <Clock className="w-3 h-3" />
-            <span className="text-xs">{look.timeEstimate}</span>
-            <span className="text-xs italic ml-1 text-primary/80">{look.mood}</span>
-          </div>
-        </CardHeader>
-
-        <div className="px-6 pb-2">
-          <button onClick={() => setOpen(o => !o)} className="text-xs text-primary hover:underline flex items-center gap-1">
-            {open ? "Hide" : "Cultural context"}
-            {open ? <X className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-          </button>
-          <AnimatePresence>
-            {open && (
-              <motion.p
-                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                className="text-xs text-muted-foreground leading-relaxed mt-2 overflow-hidden"
-              >
-                {look.culturalContext}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <CardFooter className="px-6 pb-4 pt-2 flex gap-2">
-          <Link href={`/try-on/${look.id}`} className="w-full">
-            <Button size="sm" className="w-full gap-1.5 text-xs">
-              <Camera className="w-3 h-3" />Try AR
-            </Button>
-          </Link>
-          <a
-            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(look.youtubeSearch)}`}
-            target="_blank" rel="noopener noreferrer"
-            className="shrink-0"
-          >
-            <Button size="sm" variant="outline" className="gap-1 text-xs">
-              <ExternalLink className="w-3 h-3" />Tutorial
-            </Button>
-          </a>
-        </CardFooter>
-      </Card>
-    </motion.div>
+        </AnimatePresence>
+      </div>
+    </Card>
   );
 }
 
@@ -527,6 +538,14 @@ function SectionShortcuts() {
       border: "border-fuchsia-500/20",
     },
     {
+      href: "/juicing",
+      icon: <Citrus className="w-5 h-5" />,
+      label: "Juicing for Beauty",
+      desc: "Glow, collagen & clear-skin recipes",
+      gradient: "from-orange-500/20 to-pink-500/10",
+      border: "border-orange-500/20",
+    },
+    {
       href: "/tools",
       icon: <Brush className="w-5 h-5" />,
       label: "Brushes & Tools",
@@ -608,8 +627,10 @@ function EmptyFavorites() {
 const TIERS = ["All", "Luxury", "Prestige", "Mid-Range", "Indie", "Drugstore"] as const;
 type TierFilter = typeof TIERS[number];
 const DIFFICULTIES: Difficulty[] = ["All", "Beginner", "Intermediate", "Advanced"];
-const EVERY_LOOK = [...allCompleteLooks, ...allEyeLooks, ...allLipLooks];
-
+const EVERY_LOOK: Look[] = [
+  ...allCompleteLooks, ...allEyeLooks, ...allLipLooks,
+  ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
+];
 // ── Home ──────────────────────────────────────────────────────────────────────
 
 // Time-aware greeting — small but powerful "personalisation" signal
@@ -628,10 +649,11 @@ export default function Home() {
   const [brandQuery, setBrandQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<TierFilter>("All");
   const [paletteQuery, setPaletteQuery] = useState("");
-  const [countryRegion, setCountryRegion] = useState("All");
-  const [countryQuery, setCountryQuery] = useState("");
   const [activeMood, setActiveMood] = useState<MoodOption | null>(null);
   const [lookCategory, setLookCategory] = useState<string | null>(null);
+  const [gothSub, setGothSub] = useState<GothSubcategory | "all">("all");
+  const [lashView, setLashView] = useState<"styles" | "brands">("styles");
+  const [lashSearch, setLashSearch] = useState("");
   const { favorites, toggle, isFavorite } = useFavorites();
   const streak = useStreak();
   const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
@@ -652,24 +674,43 @@ export default function Home() {
     return matchQ && matchD;
   });
 
-  const filtered = useMemo(() => ({
-    all: filter(allCompleteLooks),
-    era: filter(byEraLooks),
-    celebrity: filter(celebrityLooks),
-    trending: filter(trendLooks),
-    eyes: filter(allEyeLooks),
-    lips: filter(allLipLooks),
-    saved: filter(EVERY_LOOK.filter(l => favorites.has(l.id))),
-  }), [query, difficulty, favorites]);
+  const filtered = useMemo(() => {
+    const gothFiltered = gothSub === "all" ? gothLooks : gothLooks.filter(l => l.subcategory === gothSub);
+    const everyForAll: Look[] = [
+      ...allCompleteLooks, ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
+    ];
+    return {
+      all:        filter(everyForAll),
+      era:        filter(byEraLooks),
+      halloween:  filter(halloweenLooks),
+      goth:       filter(gothFiltered),
+      moreStyles: filter(styleExpansionLooks),
+      trending:   filter([...trendLooks, ...styleExpansionLooks]),
+      eyes:       filter(allEyeLooks),
+      lips:       filter(allLipLooks),
+      saved:      filter(EVERY_LOOK.filter(l => favorites.has(l.id))),
+    };
+  }, [query, difficulty, favorites, gothSub]);
 
-  const filteredCountryLooks = useMemo(() => {
-    const q = countryQuery.trim().toLowerCase();
-    return countryLooks.filter(l => {
-      const matchR = countryRegion === "All" || l.region === countryRegion;
-      const matchQ = !q || l.country.toLowerCase().includes(q) || l.name.toLowerCase().includes(q) || l.mood.toLowerCase().includes(q);
-      return matchR && matchQ;
-    });
-  }, [countryRegion, countryQuery]);
+  const filteredLashBrands = useMemo(() => {
+    const q = lashSearch.trim().toLowerCase();
+    if (!q) return lashBrands;
+    return lashBrands.filter(b =>
+      b.name.toLowerCase().includes(q) ||
+      b.vibe.toLowerCase().includes(q) ||
+      b.notable.toLowerCase().includes(q),
+    );
+  }, [lashSearch]);
+
+  const filteredLashStyles = useMemo(() => {
+    const q = lashSearch.trim().toLowerCase();
+    if (!q) return lashStyles;
+    return lashStyles.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.blurb.toLowerCase().includes(q) ||
+      s.tags.some(t => t.includes(q)),
+    );
+  }, [lashSearch]);
 
   const filteredBrands = useMemo(() => {
     const q = brandQuery.trim().toLowerCase();
@@ -688,19 +729,23 @@ export default function Home() {
   }, [paletteQuery]);
 
   const lookTabs = [
-    { id: "all",       label: "All",       icon: <Layers className="w-3.5 h-3.5" />,       title: "Complete Makeup Styles", looks: filtered.all,
+    { id: "all",        label: "All",        icon: <Layers className="w-3.5 h-3.5" />,       title: "Complete Makeup Styles", looks: filtered.all,
       blurb: "Every look in the catalogue.", gradient: "from-rose-200 via-pink-200 to-orange-100" },
-    { id: "trending",  label: "Trending",  icon: <TrendingUp className="w-3.5 h-3.5" />,   title: "Trending Styles",        looks: filtered.trending,
+    { id: "trending",   label: "Trending",   icon: <TrendingUp className="w-3.5 h-3.5" />,   title: "Trending Styles",        looks: filtered.trending,
       blurb: "What's hot right now on the FYP.", gradient: "from-pink-300 via-fuchsia-200 to-violet-200" },
-    { id: "era",       label: "By Era",    icon: <CalendarDays className="w-3.5 h-3.5" />, title: "By Era",                 looks: filtered.era,
+    { id: "halloween",  label: "Halloween",  icon: <Ghost className="w-3.5 h-3.5" />,        title: "Halloween Looks",        looks: filtered.halloween,
+      blurb: "50 costumes — from glam witch to sugar skull.", gradient: "from-orange-400 via-purple-500 to-zinc-900" },
+    { id: "goth",       label: "Goth",       icon: <Skull className="w-3.5 h-3.5" />,        title: "Goth Styles",            looks: filtered.goth,
+      blurb: "Trad, soft, pastel, e-girl, cyber & romantic.", gradient: "from-zinc-700 via-zinc-800 to-black" },
+    { id: "more",       label: "More Styles", icon: <Sparkles className="w-3.5 h-3.5" />,    title: "More Modern Styles",     looks: filtered.moreStyles,
+      blurb: "Douyin, latte, indie sleaze, drag & more.", gradient: "from-fuchsia-200 via-rose-200 to-amber-200" },
+    { id: "era",        label: "By Era",     icon: <CalendarDays className="w-3.5 h-3.5" />, title: "By Era",                 looks: filtered.era,
       blurb: "1920s flapper to Y2K — pick your decade.", gradient: "from-amber-200 via-rose-200 to-purple-200" },
-    { id: "celebrity", label: "Celebrity", icon: <Star className="w-3.5 h-3.5" />,         title: "Celebrity Icons",        looks: filtered.celebrity,
-      blurb: "Recreate looks from your favourite stars.", gradient: "from-yellow-200 via-amber-200 to-rose-200" },
-    { id: "eyes",      label: "Eyes",      icon: <Eye className="w-3.5 h-3.5" />,          title: "Eye Styles",             looks: filtered.eyes,
+    { id: "eyes",       label: "Eyes",       icon: <Eye className="w-3.5 h-3.5" />,          title: "Eye Styles",             looks: filtered.eyes,
       blurb: "Liners, smokes, graphics & shimmers.", gradient: "from-sky-200 via-violet-200 to-pink-200" },
-    { id: "lips",      label: "Lips",      icon: <Smile className="w-3.5 h-3.5" />,        title: "Lip Styles",             looks: filtered.lips,
+    { id: "lips",       label: "Lips",       icon: <Smile className="w-3.5 h-3.5" />,        title: "Lip Styles",             looks: filtered.lips,
       blurb: "Glosses, ombres, bitten reds and beyond.", gradient: "from-rose-300 via-red-200 to-orange-200" },
-    { id: "saved",     label: "Saved",     icon: <Heart className="w-3.5 h-3.5" />,        title: "Saved Looks",            looks: filtered.saved,
+    { id: "saved",      label: "Saved",      icon: <Heart className="w-3.5 h-3.5" />,        title: "Saved Looks",            looks: filtered.saved,
       blurb: "Looks you've hearted to come back to.", gradient: "from-rose-200 via-pink-100 to-rose-200" },
   ];
 
@@ -809,8 +854,8 @@ export default function Home() {
               <TabsTrigger value="looks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-1.5 px-4 py-2 text-sm whitespace-nowrap">
                 <Layers className="w-3.5 h-3.5" />Looks
               </TabsTrigger>
-              <TabsTrigger value="country" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-1.5 px-4 py-2 text-sm whitespace-nowrap">
-                <Globe className="w-3.5 h-3.5" />By Country
+              <TabsTrigger value="lashes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-1.5 px-4 py-2 text-sm whitespace-nowrap">
+                <Eye className="w-3.5 h-3.5" />Lashes
               </TabsTrigger>
               <TabsTrigger value="brands" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-1.5 px-4 py-2 text-sm whitespace-nowrap">
                 <Crown className="w-3.5 h-3.5" />Top Brands
@@ -915,44 +960,67 @@ export default function Home() {
             })()}
           </TabsContent>
 
-          {/* ── BY COUNTRY TAB ──────────────────────────────────────────────── */}
-          <TabsContent value="country" className="mt-0">
-            <div className="mb-8 space-y-3">
+          {/* ── LASHES TAB ───────────────────────────────────────────────────── */}
+          <TabsContent value="lashes" className="mt-0">
+            <div className="mb-6 space-y-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <Input value={countryQuery} onChange={e => setCountryQuery(e.target.value)}
-                  placeholder="Search country, mood, look name…"
+                <Input value={lashSearch} onChange={e => setLashSearch(e.target.value)}
+                  placeholder="Search lash brands, styles, vibes…"
                   className="pl-9 pr-9 bg-card border-border" />
-                {countryQuery && <button onClick={() => setCountryQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>}
+                {lashSearch && <button onClick={() => setLashSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>}
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {["All", ...REGIONS].map(r => (
-                  <button key={r} onClick={() => setCountryRegion(r)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium border transition-all ${countryRegion === r ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40"}`}>
-                    {r}
-                  </button>
-                ))}
+              <div className="flex gap-1 p-1 bg-muted/50 rounded-full self-start">
+                <button
+                  type="button"
+                  onClick={() => setLashView("styles")}
+                  aria-pressed={lashView === "styles"}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    lashView === "styles" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Styles ({filteredLashStyles.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLashView("brands")}
+                  aria-pressed={lashView === "brands"}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    lashView === "brands" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Brands ({filteredLashBrands.length})
+                </button>
               </div>
             </div>
 
-            <SectionHeader icon={<Globe className="w-5 h-5" />} title="Looks by Country" count={filteredCountryLooks.length} />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredCountryLooks.length === 0 ? (
-                <div className="col-span-3 flex flex-col items-center py-24 text-center">
-                  <Globe className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                  <p className="text-lg font-serif mb-1">No looks match those filters.</p>
-                  <p className="text-sm text-muted-foreground mb-5">Try a different region or clear your search.</p>
-                  <button
-                    onClick={() => { setCountryRegion("All"); setCountryQuery(""); }}
-                    className="px-4 py-2 rounded-full text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition"
-                  >
-                    Show all countries
-                  </button>
+            {lashView === "styles" ? (
+              <>
+                <SectionHeader icon={<Eye className="w-5 h-5" />} title="Lash Styles" count={filteredLashStyles.length} unit="style" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredLashStyles.length === 0 ? (
+                    <div className="col-span-3 flex flex-col items-center py-24 text-center">
+                      <Eye className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                      <p className="text-lg font-serif">No lash styles match.</p>
+                    </div>
+                  ) : filteredLashStyles.map((s) => (
+                    <LashStyleCard key={s.id} style={s} looksPool={EVERY_LOOK} />
+                  ))}
                 </div>
-              ) : filteredCountryLooks.map((look, i) => (
-                <CountryLookCard key={look.id} look={look} index={i} />
-              ))}
-            </div>
+              </>
+            ) : (
+              <>
+                <SectionHeader icon={<Crown className="w-5 h-5" />} title="Lash Brands" count={filteredLashBrands.length} unit="brand" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredLashBrands.length === 0 ? (
+                    <div className="col-span-3 flex flex-col items-center py-24 text-center">
+                      <Crown className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                      <p className="text-lg font-serif">No brands match.</p>
+                    </div>
+                  ) : filteredLashBrands.map((b) => <LashBrandCard key={b.id} brand={b} />)}
+                </div>
+              </>
+            )}
           </TabsContent>
 
           {/* ── BRANDS TAB ──────────────────────────────────────────────────── */}

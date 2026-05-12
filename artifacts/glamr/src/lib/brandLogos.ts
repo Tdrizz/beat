@@ -1,4 +1,16 @@
 export const BRAND_DOMAINS: Record<string, string> = {
+  // Eyelash brands
+  "ardell": "ardellbeauty.com",
+  "lilly lashes": "lillylashes.com",
+  "velour lashes": "velourbeauty.com",
+  "velour": "velourbeauty.com",
+  "eylure": "eylure.com",
+  "house of lashes": "houseoflashes.com",
+  "kiss": "kissusa.com",
+  "sephora collection": "sephora.com",
+  "tatti lashes": "tattilashes.com",
+  "doe lashes": "doelashes.com",
+  "glamnetic": "glamnetic.com",
   "charlotte tilbury": "charlottetilbury.com",
   "nars": "narscosmetics.com",
   "mac cosmetics": "maccosmetics.com",

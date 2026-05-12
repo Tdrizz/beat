@@ -1,0 +1,137 @@
+// Broader makeup-style coverage to widen the catalogue beyond the
+// existing trendLooks set. New, mostly modern internet-named styles
+// that surface in the Looks tab grid.
+import type { Look } from "./looks";
+
+type Seed = {
+  id: string; name: string; mood: string;
+  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  time: string; blurb: string;
+  base: [string, string, string];
+  eyes: [string, string, string];
+  brows: [string, string, string];
+  lips: [string, string, string];
+  cheeks: [string, string, string];
+  palette: [string, string, string];
+  tags: string[];
+};
+
+const mk = (s: Seed): Look & { tags: string[] } => ({
+  id: `style-${s.id}`,
+  name: s.name,
+  mood: s.mood,
+  difficulty: s.difficulty,
+  era: "Modern Style",
+  timeEstimate: s.time,
+  description: s.blurb,
+  steps: {
+    base:   { id: "base",   name: "Base",   instruction: s.base[0],   color: s.base[1],   colorName: s.base[2] },
+    eyes:   { id: "eyes",   name: "Eyes",   instruction: s.eyes[0],   color: s.eyes[1],   colorName: s.eyes[2] },
+    brows:  { id: "brows",  name: "Brows",  instruction: s.brows[0],  color: s.brows[1],  colorName: s.brows[2] },
+    lips:   { id: "lips",   name: "Lips",   instruction: s.lips[0],   color: s.lips[1],   colorName: s.lips[2] },
+    cheeks: { id: "cheeks", name: "Cheeks", instruction: s.cheeks[0], color: s.cheeks[1], colorName: s.cheeks[2] },
+  },
+  palette: s.palette,
+  tags: s.tags,
+});
+
+const RAW: Seed[] = [
+  { id: "douyin", name: "Douyin Doll", mood: "Doll-like", difficulty: "Intermediate", time: "30 min",
+    blurb: "Aegyo-sal under the eye, soft puppy-eye liner, glossy gradient lip and porcelain skin — China's TikTok-defining look.",
+    base: ["Glass-skin base — translucent, dewy, no contour.", "#f0e0d0", "Glass Doll"],
+    eyes: ["Sweep soft warm brown across the lid + small puppy-eye downward liner; brighten under-eye 'aegyo-sal' with shimmer.", "#5a3010", "Puppy Brown"],
+    brows: ["Straight, flat, soft brown.", "#705038", "Straight Brow"],
+    lips: ["Pink gradient — pigment in the centre, blurred outward.", "#e89098", "Doll Gradient"],
+    cheeks: ["Pink cream blush dotted high on the apples + soft strobe.", "#e898a8", "Innocent Flush"],
+    palette: ["#e89098", "#5a3010", "#e898a8"], tags: ["douyin", "doll", "soft", "asian beauty"] },
+  { id: "latte", name: "Latte Makeup", mood: "Warm", difficulty: "Beginner", time: "15 min",
+    blurb: "All caramel everywhere — warm bronze lid, caramel lip liner, latte-toned cream contour. Cosy maximalism.",
+    base: ["Warm satin foundation + warm bronzer all over.", "#cc8c5a", "Latte"],
+    eyes: ["Warm caramel shadow blended with brown.", "#9a5a30", "Caramel"],
+    brows: ["Defined warm arch.", "#3a1f0c", "Auburn"],
+    lips: ["Caramel-brown liner blended with a warm gloss.", "#a06848", "Caramel Lip"],
+    cheeks: ["Warm bronzer + warm flush.", "#b06850", "Latte Sculpt"],
+    palette: ["#9a5a30", "#a06848", "#b06850"], tags: ["latte", "warm", "soft glam", "tiktok"] },
+  { id: "indie-sleaze", name: "Indie Sleaze", mood: "Edgy", difficulty: "Beginner", time: "12 min",
+    blurb: "Smudged kohl liner, glittery cheekbone, slightly bitten lip — the 2008 Tumblr revival.",
+    base: ["Bare skin, light coverage only on blemishes.", "#dcb098", "Bare"],
+    eyes: ["Smudged black kohl all around the eye, single coat of mascara.", "#1a1010", "Smudged Kohl"],
+    brows: ["Brushed up, untamed.", "#3a2010", "Untamed"],
+    lips: ["Slightly bitten plum-stained balm.", "#7a3848", "Bitten Plum"],
+    cheeks: ["Cool sculpt + a streak of silver glitter on the cheekbone.", "#806068", "Glitter Streak"],
+    palette: ["#1a1010", "#7a3848", "#806068"], tags: ["indie sleaze", "grunge", "soft", "messy"] },
+  { id: "drag", name: "Drag Glam", mood: "Larger Than Life", difficulty: "Advanced", time: "60 min",
+    blurb: "Sky-high painted brows, razor cut crease, blinding strobe, overdrawn lips — the art form that taught everyone else.",
+    base: ["Block out brows with glue stick. Foundation 1 shade lighter, full coverage. Bake heavily.", "#e8c8a8", "Painted Glam"],
+    eyes: ["Razor-sharp cut crease in deep colour with shimmer pressed into the centre + multiple strip lashes stacked.", "#3a2858", "Cut Crease"],
+    brows: ["Painted higher than natural, sharp arch.", "#1a0808", "Painted Arch"],
+    lips: ["Massively overdrawn liner well above the natural lip line, filled with bold matte.", "#a01828", "Overdrawn"],
+    cheeks: ["Sharp painted contour + heavy painted blush + blinding strobe.", "#a85838", "Drag Sculpt"],
+    palette: ["#3a2858", "#a01828", "#a85838"], tags: ["drag", "dramatic", "advanced", "graphic", "glam"] },
+  { id: "espresso", name: "Espresso Makeup", mood: "Rich", difficulty: "Beginner", time: "12 min",
+    blurb: "Deep espresso brown smoke, espresso liner, brown gloss lip — the rich-girl autumn aesthetic.",
+    base: ["Warm satin base.", "#dcb088", "Warm Satin"],
+    eyes: ["Deep espresso brown smoked around the eye.", "#3a2010", "Espresso"],
+    brows: ["Defined, soft.", "#2a1808", "Soft Defined"],
+    lips: ["Deep brown lip liner with brown gloss on top.", "#5a3018", "Espresso Lip"],
+    cheeks: ["Warm brown sculpt + warm flush.", "#a86848", "Warm Sculpt"],
+    palette: ["#3a2010", "#5a3018", "#a86848"], tags: ["espresso", "warm", "tiktok", "soft glam"] },
+  { id: "strawberry-girl", name: "Strawberry Girl", mood: "Sweet", difficulty: "Beginner", time: "12 min",
+    blurb: "Heavy red flush across the apples like a sun-kissed strawberry, freckles dotted on top, glossy red lip.",
+    base: ["Glow dewy skin tint.", "#e8c8a8", "Glow Tint"],
+    eyes: ["Soft warm brown wash, glossy lid in the centre.", "#7a4838", "Warm Wash"],
+    brows: ["Brushed up, soft.", "#3a2010", "Soft"],
+    lips: ["Glossy strawberry red.", "#c8203a", "Strawberry"],
+    cheeks: ["Heavy berry-red blush across the apples + freckles dotted on top.", "#c83048", "Strawberry Flush"],
+    palette: ["#c8203a", "#c83048", "#e8c8a8"], tags: ["strawberry girl", "soft", "tiktok", "natural"] },
+  { id: "tomato-girl", name: "Tomato Girl", mood: "Sun-Kissed", difficulty: "Beginner", time: "12 min",
+    blurb: "Sun-kissed red flush, glossy red lip, bronzed glowy skin — Mediterranean summer.",
+    base: ["Bronzed dewy skin tint.", "#cc8c5a", "Bronze Glow"],
+    eyes: ["Warm bronze shimmer + brown smoke.", "#7a4828", "Bronze Smoke"],
+    brows: ["Brushed up, warm-toned.", "#3a2010", "Warm Soft"],
+    lips: ["Glossy red.", "#c82828", "Tomato"],
+    cheeks: ["Heavy red flush blended outward + warm bronzer.", "#c84830", "Tomato Flush"],
+    palette: ["#c82828", "#c84830", "#cc8c5a"], tags: ["tomato girl", "summer", "warm", "soft glam"] },
+  { id: "underpainting", name: "Underpainting", mood: "Sculpted", difficulty: "Advanced", time: "45 min",
+    blurb: "Cream contour and blush placed UNDER foundation for a baked-in seamless sculpt — viral TikTok technique.",
+    base: ["Cream contour, blush, and highlight placed FIRST, then sheer skin tint patted on top.", "#dcb098", "Underpainted"],
+    eyes: ["Soft warm brown wash.", "#7a4830", "Soft Wash"],
+    brows: ["Defined, soft.", "#3a2010", "Defined"],
+    lips: ["Glossy nude with hint of pink.", "#c89898", "Nude Gloss"],
+    cheeks: ["Cream blush + cream contour + highlight placed UNDER the foundation.", "#a06848", "Hidden Sculpt"],
+    palette: ["#dcb098", "#a06848", "#c89898"], tags: ["underpainting", "tiktok", "advanced", "sculpted", "soft glam"] },
+  { id: "donut-glaze", name: "Donut Glaze", mood: "Glassy", difficulty: "Beginner", time: "10 min",
+    blurb: "Glaze-like glossy lid, lip, and cheek over a dewy base — Hailey Bieber's signature.",
+    base: ["Skin tint + drops of liquid highlighter mixed in for glaze.", "#dcb098", "Glaze"],
+    eyes: ["Clear lip gloss patted onto the lid.", "#ffffff", "Clear Glaze"],
+    brows: ["Brushed up, soap brows.", "#3a2010", "Soap Brow"],
+    lips: ["Glossy nude lip oil.", "#c89890", "Glaze Nude"],
+    cheeks: ["Liquid highlighter + tiny dot of liquid blush.", "#dcb098", "Glaze Cheek"],
+    palette: ["#dcb098", "#c89890", "#ffffff"], tags: ["donut glaze", "glass skin", "soft", "tiktok", "beginner"] },
+  { id: "twilight", name: "Twilight Smoulder", mood: "Sultry", difficulty: "Intermediate", time: "25 min",
+    blurb: "Deep navy smoke, plum lip, dewy skin — the dusk-hour glow.",
+    base: ["Dewy luminous foundation.", "#dcb098", "Dewy"],
+    eyes: ["Deep navy smoked into violet at the outer corner.", "#1a1858", "Twilight Navy"],
+    brows: ["Defined, soft.", "#2a1818", "Defined"],
+    lips: ["Plum-stained matte.", "#5a182a", "Plum"],
+    cheeks: ["Cool plum sculpt + iridescent strobe.", "#80505a", "Plum Sculpt"],
+    palette: ["#1a1858", "#5a182a", "#80505a"], tags: ["twilight", "smokey", "sultry", "moody"] },
+  { id: "tinted-spice", name: "Tinted Spice", mood: "Warm", difficulty: "Beginner", time: "10 min",
+    blurb: "Tinted spice — a warm cinnamon-ginger one-tone wash on lid, lip, and cheek for an everyday warmth.",
+    base: ["Warm satin foundation.", "#dcb088", "Warm Satin"],
+    eyes: ["Cinnamon-ginger cream shadow patted onto the lid.", "#a85838", "Cinnamon"],
+    brows: ["Brushed up, warm-toned.", "#3a2010", "Warm"],
+    lips: ["Cinnamon-tinted balm.", "#a05838", "Spice Tint"],
+    cheeks: ["Cinnamon blush blended high.", "#c87858", "Spice Flush"],
+    palette: ["#a85838", "#a05838", "#c87858"], tags: ["spice", "warm", "monochrome", "soft glam", "beginner"] },
+  { id: "editorial", name: "Editorial Statement", mood: "Avant-garde", difficulty: "Advanced", time: "45 min",
+    blurb: "A single bold colour swept dramatically beyond the eye into a graphic shape — runway editorial.",
+    base: ["Skin-like foundation.", "#dcb098", "Editorial Skin"],
+    eyes: ["A single bright colour (electric blue, neon yellow, or hot pink) painted in a sharp graphic shape extending beyond the eye.", "#0848e0", "Statement Colour"],
+    brows: ["Sleek, brushed up, may be bleached.", "#a08070", "Bleached Editorial"],
+    lips: ["Bare or matte nude — let the eye speak.", "#c08878", "Bare Editorial"],
+    cheeks: ["Sculpted only — no blush.", "#806858", "Bare Sculpt"],
+    palette: ["#0848e0", "#c08878", "#806858"], tags: ["editorial", "graphic", "advanced", "runway"] },
+];
+
+export const styleExpansionLooks: (Look & { tags: string[] })[] = RAW.map(mk);

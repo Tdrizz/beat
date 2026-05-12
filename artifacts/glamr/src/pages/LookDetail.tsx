@@ -8,10 +8,18 @@ import { Separator } from "@/components/ui/separator";
 import { AffiliateProductsForLook } from "@/components/AffiliateProductsForLook";
 import { RemixCount } from "@/components/RemixCount";
 import { ShareToDmButton } from "@/components/ShareToDmButton";
+import { RecommendedLashes } from "@/components/RecommendedLashes";
+import { halloweenLooks } from "@/lib/halloween";
+import { gothLooks } from "@/lib/goth";
+import { styleExpansionLooks } from "@/lib/styleExpansion";
 
 export default function LookDetail() {
   const { lookId } = useParams();
-  const ALL_LOOKS = [...allLooks, ...eyeLooks, ...lipLooks, ...trendLooks, ...moreEyeLooks, ...moreLipLooks];
+  const ALL_LOOKS = [
+    ...allLooks, ...eyeLooks, ...lipLooks, ...trendLooks,
+    ...moreEyeLooks, ...moreLipLooks,
+    ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
+  ];
   const look = ALL_LOOKS.find((l) => l.id === lookId);
 
   if (!look) {
@@ -129,6 +137,8 @@ export default function LookDetail() {
           </div>
 
           <RemixCount lookId={look.id} />
+
+          <RecommendedLashes look={look} />
 
           <AffiliateProductsForLook lookId={look.id} />
         </motion.div>
