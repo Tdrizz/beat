@@ -12,6 +12,8 @@ import { RecommendedLashes } from "@/components/RecommendedLashes";
 import { halloweenLooks } from "@/lib/halloween";
 import { gothLooks } from "@/lib/goth";
 import { styleExpansionLooks } from "@/lib/styleExpansion";
+import { pageantLooks } from "@/lib/pageantLooks";
+import { dragLooks } from "@/lib/dragLooks";
 
 export default function LookDetail() {
   const { lookId } = useParams();
@@ -19,6 +21,7 @@ export default function LookDetail() {
     ...allLooks, ...eyeLooks, ...lipLooks, ...trendLooks,
     ...moreEyeLooks, ...moreLipLooks,
     ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
+    ...pageantLooks, ...dragLooks,
   ];
   const look = ALL_LOOKS.find((l) => l.id === lookId);
 

@@ -9,6 +9,7 @@ import { api, type Post } from "@/lib/api";
 import { ALL_LOOKS_FLAT, SEASONS, SEASON_LABELS, type Season } from "@/lib/looks";
 import { CameraCapture } from "@/components/CameraCapture";
 import { Camera, Loader2, ImagePlus, X } from "lucide-react";
+import { KindnessOverlay, useKindnessCheck } from "@/components/KindnessPrompt";
 
 // sessionStorage key used by AITryOnModal to deep-link a generated image
 // straight into the upload composer. We use sessionStorage (not query
@@ -23,6 +24,7 @@ interface UploadPrefill {
 function UploadInner() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
+  const { showOverlay, checkText, dismiss } = useKindnessCheck();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [objectPath, setObjectPath] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -207,10 +209,14 @@ function UploadInner() {
         </div>
         {prefillError && <p className="text-sm text-red-500">Couldn't auto-upload your AI try-on: {prefillError}. Pick a photo manually instead.</p>}
         {create.isError && <p className="text-sm text-red-500">{(create.error as Error).message}</p>}
-        <Button className="w-full rounded-full" disabled={!imageUrl || create.isPending} onClick={() => create.mutate()}>
+        <Button className="w-full rounded-full" disabled={!imageUrl || create.isPending} onClick={() => {
+          if (checkText(caption)) return;
+          create.mutate();
+        }}>
           {create.isPending ? "Posting…" : "Post"}
         </Button>
       </main>
+      <KindnessOverlay visible={showOverlay} onDismiss={dismiss} />
     </div>
   );
 }

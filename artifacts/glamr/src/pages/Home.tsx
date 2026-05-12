@@ -9,6 +9,8 @@ import { getLookImage } from "../lib/lookImages";
 import { halloweenLooks } from "../lib/halloween";
 import { gothLooks, type GothSubcategory } from "../lib/goth";
 import { styleExpansionLooks } from "../lib/styleExpansion";
+import { pageantLooks } from "../lib/pageantLooks";
+import { dragLooks } from "../lib/dragLooks";
 import {
   lashBrands, lashStyles, recommendLooksForLash,
   type LashStyle,
@@ -34,7 +36,7 @@ import {
   Heart, TrendingUp, ScanFace, Clock, ChevronRight, ChevronLeft, CalendarDays,
   Crown, Palette as PaletteIcon, ExternalLink, Leaf,
   BookOpen, FlaskConical, Apple, Brush, Star,
-  Ghost, Skull, Citrus,
+  Ghost, Skull, Citrus, Coffee, BookHeart, Gem, Drama,
 } from "lucide-react";
 
 type Difficulty = "All" | "Beginner" | "Intermediate" | "Advanced";
@@ -553,6 +555,30 @@ function SectionShortcuts() {
       gradient: "from-violet-500/20 to-purple-500/10",
       border: "border-violet-500/20",
     },
+    {
+      href: "/slay-bible",
+      icon: <BookHeart className="w-5 h-5" />,
+      label: "The Slay Bible",
+      desc: "Skincare guide for every condition",
+      gradient: "from-rose-500/20 to-fuchsia-500/10",
+      border: "border-rose-500/20",
+    },
+    {
+      href: "/teapot",
+      icon: <Coffee className="w-5 h-5" />,
+      label: "The Teapot",
+      desc: "Community feed — spill the tea",
+      gradient: "from-pink-500/20 to-rose-500/10",
+      border: "border-pink-500/20",
+    },
+    {
+      href: "/esthetician-hub",
+      icon: <Gem className="w-5 h-5" />,
+      label: "Esthetician Hub",
+      desc: "Find verified skin pros near you",
+      gradient: "from-amber-500/20 to-yellow-500/10",
+      border: "border-amber-500/20",
+    },
   ];
   return (
     <div className="max-w-6xl mx-auto px-6 mb-8">
@@ -630,6 +656,7 @@ const DIFFICULTIES: Difficulty[] = ["All", "Beginner", "Intermediate", "Advanced
 const EVERY_LOOK: Look[] = [
   ...allCompleteLooks, ...allEyeLooks, ...allLipLooks,
   ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
+  ...pageantLooks, ...dragLooks,
 ];
 // ── Home ──────────────────────────────────────────────────────────────────────
 
@@ -678,6 +705,7 @@ export default function Home() {
     const gothFiltered = gothSub === "all" ? gothLooks : gothLooks.filter(l => l.subcategory === gothSub);
     const everyForAll: Look[] = [
       ...allCompleteLooks, ...halloweenLooks, ...gothLooks, ...styleExpansionLooks,
+      ...pageantLooks, ...dragLooks,
     ];
     return {
       all:        filter(everyForAll),
@@ -688,6 +716,8 @@ export default function Home() {
       trending:   filter([...trendLooks, ...styleExpansionLooks]),
       eyes:       filter(allEyeLooks),
       lips:       filter(allLipLooks),
+      pageant:    filter(pageantLooks),
+      drag:       filter(dragLooks),
       saved:      filter(EVERY_LOOK.filter(l => favorites.has(l.id))),
     };
   }, [query, difficulty, favorites, gothSub]);
@@ -737,8 +767,12 @@ export default function Home() {
       blurb: "50 costumes — from glam witch to sugar skull.", gradient: "from-orange-400 via-purple-500 to-zinc-900" },
     { id: "goth",       label: "Goth",       icon: <Skull className="w-3.5 h-3.5" />,        title: "Goth Styles",            looks: filtered.goth,
       blurb: "Trad, soft, pastel, e-girl, cyber & romantic.", gradient: "from-zinc-700 via-zinc-800 to-black" },
+    { id: "pageant",    label: "Pageant",    icon: <Crown className="w-3.5 h-3.5" />,       title: "Beauty Pageant Looks",   looks: filtered.pageant,
+      blurb: "Stage-ready glam — from swimsuit to evening gown.", gradient: "from-amber-200 via-yellow-100 to-rose-200" },
+    { id: "drag",       label: "Drag",       icon: <Drama className="w-3.5 h-3.5" />,       title: "Drag Queen Looks",       looks: filtered.drag,
+      blurb: "Full fantasy — club kid to ballroom eleganza.", gradient: "from-fuchsia-400 via-purple-300 to-pink-300" },
     { id: "more",       label: "More Styles", icon: <Sparkles className="w-3.5 h-3.5" />,    title: "More Modern Styles",     looks: filtered.moreStyles,
-      blurb: "Douyin, latte, indie sleaze, drag & more.", gradient: "from-fuchsia-200 via-rose-200 to-amber-200" },
+      blurb: "Douyin, latte, indie sleaze & more.", gradient: "from-fuchsia-200 via-rose-200 to-amber-200" },
     { id: "era",        label: "By Era",     icon: <CalendarDays className="w-3.5 h-3.5" />, title: "By Era",                 looks: filtered.era,
       blurb: "1920s flapper to Y2K — pick your decade.", gradient: "from-amber-200 via-rose-200 to-purple-200" },
     { id: "eyes",       label: "Eyes",       icon: <Eye className="w-3.5 h-3.5" />,          title: "Eye Styles",             looks: filtered.eyes,

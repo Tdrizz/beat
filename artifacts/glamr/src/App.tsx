@@ -29,6 +29,9 @@ import Nutrition from "@/pages/Nutrition";
 import SocialLinksSettings from "@/pages/SocialLinksSettings";
 import Friends from "@/pages/Friends";
 import Juicing from "@/pages/Juicing";
+import SlayBible from "@/pages/SlayBible";
+import Teapot from "@/pages/Teapot";
+import EstheticianHub from "@/pages/EstheticianHub";
 import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
@@ -57,6 +60,9 @@ function Router() {
       <Route path="/tools" component={Tools} />
       <Route path="/nutrition" component={Nutrition} />
       <Route path="/juicing" component={Juicing} />
+      <Route path="/slay-bible" component={SlayBible} />
+      <Route path="/teapot" component={Teapot} />
+      <Route path="/esthetician-hub" component={EstheticianHub} />
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>

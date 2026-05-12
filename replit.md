@@ -37,6 +37,12 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Skin Nutrition Data**: `lib/skinNutrition.ts`
 - **Makeup Tools Data**: `lib/tools.ts`
 - **Seasonal Look Catalogue**: `lib/looks.ts`
+- **Slay Bible (Skincare Guide)**: `artifacts/glamr/src/lib/slayBible.ts`, `artifacts/glamr/src/pages/SlayBible.tsx`
+- **Beauty Pageant Looks**: `artifacts/glamr/src/lib/pageantLooks.ts`
+- **Drag Queen Looks**: `artifacts/glamr/src/lib/dragLooks.ts`
+- **The Teapot (Community Feed)**: `artifacts/glamr/src/pages/Teapot.tsx`
+- **Esthetician Hub (Premium)**: `artifacts/glamr/src/pages/EstheticianHub.tsx`
+- **Kindness Prompt**: `artifacts/glamr/src/components/KindnessPrompt.tsx`
 
 ## Architecture decisions
 
@@ -55,6 +61,12 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Affiliate Program**: Creators can earn from product recommendations with an affiliate dashboard.
 - **Curated Content**: Dedicated sections for skin nutrition guidance and makeup tools catalogue.
 - **Onboarding Checklist**: Guides new users through initial engagement steps.
+- **The Slay Bible**: Skincare guide covering 16 conditions (eczema, blemishes, dark circles, etc.) with do/avoid lists, key ingredients, and makeup tips.
+- **Beauty Pageant Looks**: 12 stage-ready pageant looks from teen fresh to crown-worthy finale.
+- **Drag Queen Looks**: 12 drag looks from classic queen to alien fantasy and ballroom eleganza.
+- **The Teapot**: Public community feed where all users can post and interact.
+- **Esthetician Hub**: Premium directory for licensed estheticians to promote their services.
+- **Kindness Prompt**: Anti-bullying overlay triggered by derogatory language in posts/captions — shows "be kind" message for 5 seconds before allowing resume.
 
 ## User preferences
 
