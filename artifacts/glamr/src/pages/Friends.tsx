@@ -298,6 +298,7 @@ export default function Friends() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
             type="search"
+            aria-label="Search creators by username, name or email"
             placeholder="Search by username, name or email…"
             value={query}
             onChange={(e) => {

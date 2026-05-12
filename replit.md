@@ -66,6 +66,19 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - Conditional `return null` for `TopNav` must be **after** all hook calls to prevent "Rendered fewer hooks than expected" errors.
 - Selfies are mirrored on both preview and capture to ensure text reads correctly.
 - Rate limiting is in-memory; horizontal scaling would require Redis.
+- `POST /ai-tryon` is auth + rate-limited (10 calls / 5 min / user). Never remove either guard — the route hits Gemini image generation on every call (paid, unbounded cost if left open).
+- `socialRouter` must remain mounted **before** `profilesRouter` in `routes/index.ts`, otherwise `/profiles/:handle` swallows `/profiles/featured`, `/profiles/search`, and `/profiles/me/friends`.
+- `GET /storage/objects/*` currently has no auth/ACL guard (placeholder). If/when private user uploads start being stored there, uncomment the auth + ACL block in `storage.ts` first.
+
+### Health sweep — May 2026
+
+- **Typecheck**: green across all 5 workspace projects (`pnpm run typecheck`).
+- **Builds**: `@workspace/api-server` and `@workspace/glamr` both build cleanly. Vite emits a "sourcemap reporting" notice on a few Radix-wrapping `ui/*` files (`tooltip`, `sheet`, `progress`, `avatar`, `dropdown-menu`); cosmetic, build still succeeds.
+- **Static**: zero `any`, `@ts-ignore`, `@ts-expect-error`, or `TODO/FIXME` left in app code. Only one `console.warn` (in `useFaceAnalysis` when `video.play()` rejects), which is intentional.
+- **Auth audit**: every mutating route is auth-gated except the now-fixed `POST /ai-tryon`, which was open to anonymous callers and burning Gemini credits. Added `requireAuth` + a 10/5-min token-bucket rate limit.
+- **A11y**: search input on `Friends.tsx` was relying on a placeholder for context — added `aria-label`. All `<img>` tags carry alt text. No `<button>` was rendering with neither text nor aria-label on any audited page.
+- **Smoke**: `/`, `/api/profiles/featured` → 200; `/api/profiles/search` and `/api/ai-tryon` → 401 anonymously, as expected.
+- **Known but out-of-scope**: ~36 unused shadcn `ui/*` components scaffolded but never imported (kept — shadcn is a component library); main JS bundle is 1.5 MB ungzipped (447 kB gzipped) — would benefit from route-level code splitting later.
 
 ## Pointers
 

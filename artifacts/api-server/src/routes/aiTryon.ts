@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
 import { ai } from "@workspace/integrations-gemini-ai";
 import { z } from "zod";
+import { requireAuth } from "../middlewares/requireAuth";
+import { rateLimit } from "../middlewares/rateLimit";
 
 const router: IRouter = Router();
 
@@ -149,7 +151,12 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   return lines.join("\n");
 }
 
-router.post("/ai-tryon", async (req, res) => {
+// SECURITY: requireAuth + rate-limit are mandatory here. The endpoint
+// invokes Gemini image generation on every call, which is metered and
+// expensive — leaving it open would let anonymous callers burn credits
+// at will. The 10/5min/user budget covers a reasonable session of
+// iteration on a look without enabling abuse.
+router.post("/ai-tryon", requireAuth, rateLimit({ scope: "ai-tryon", max: 10, windowMs: 5 * 60_000 }), async (req, res) => {
   const log = req.log;
   const parseResult = TryonBody.safeParse(req.body);
   if (!parseResult.success) {
