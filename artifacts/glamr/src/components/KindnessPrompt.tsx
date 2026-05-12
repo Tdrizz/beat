@@ -107,18 +107,32 @@ export function KindnessOverlay({
 
 export function useKindnessCheck() {
   const [showOverlay, setShowOverlay] = useState(false);
+  // Remember the exact text the user was last warned about. Once the
+  // 5s overlay has played for that text we let them resubmit it as-is
+  // (the prompt is a nudge, not a hard block). Editing the text resets
+  // the override, so a fresh mean phrase triggers the overlay again.
+  const [acknowledgedText, setAcknowledgedText] = useState<string | null>(null);
+  const [pendingText, setPendingText] = useState<string | null>(null);
 
-  const checkText = useCallback((text: string): boolean => {
-    if (containsMeanContent(text)) {
+  const checkText = useCallback(
+    (text: string): boolean => {
+      if (!containsMeanContent(text)) return false;
+      if (acknowledgedText !== null && acknowledgedText === text) {
+        // User already saw the prompt for this exact text — let it through.
+        return false;
+      }
+      setPendingText(text);
       setShowOverlay(true);
       return true;
-    }
-    return false;
-  }, []);
+    },
+    [acknowledgedText],
+  );
 
   const dismiss = useCallback(() => {
     setShowOverlay(false);
-  }, []);
+    setAcknowledgedText(pendingText);
+    setPendingText(null);
+  }, [pendingText]);
 
   return { showOverlay, checkText, dismiss };
 }

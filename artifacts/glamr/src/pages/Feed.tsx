@@ -5,20 +5,41 @@ import { motion } from "framer-motion";
 import { Heart, MessageCircle, Plus, Filter, Flame, Users, Wand2 } from "lucide-react";
 import { api, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ShareToDmButton } from "@/components/ShareToDmButton";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { WeeklyChallenge } from "@/components/WeeklyChallenge";
 import { ArchetypeBadge } from "@/components/ArchetypeBadge";
+import { KindnessOverlay, useKindnessCheck } from "@/components/KindnessPrompt";
 import { useArchetype } from "@/hooks/useArchetype";
 import { SEASONS, SEASON_LABELS, type Season } from "@/lib/looks";
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, onMeanComment }: { post: Post; onMeanComment: (text: string) => boolean }) {
   const qc = useQueryClient();
+  const [commentBody, setCommentBody] = useState("");
   const like = useMutation({
     mutationFn: () =>
       post.likedByMe ? api.del(`/posts/${post.id}/like`) : api.post(`/posts/${post.id}/like`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["feed"] }),
   });
+  const addComment = useMutation({
+    mutationFn: (text: string) =>
+      api.post(`/posts/${post.id}/comments`, { body: text }),
+    onSuccess: () => {
+      setCommentBody("");
+      qc.invalidateQueries({ queryKey: ["feed"] });
+      qc.invalidateQueries({ queryKey: ["post", post.id, "comments"] });
+    },
+  });
+  function submitComment(e: React.FormEvent) {
+    e.preventDefault();
+    const text = commentBody.trim();
+    if (!text || addComment.isPending) return;
+    // Surface the Kindness overlay first. If mean content is detected we
+    // block this submission; the user can resubmit once the 5s timer ends.
+    if (onMeanComment(text)) return;
+    addComment.mutate(text);
+  }
   const shareBody = post.lookId
     ? `Try this look on Beat: ${window.location.origin}/try-on/${post.lookId}`
     : `Check this Beat post: ${window.location.origin}/posts/${post.id}`;
@@ -75,6 +96,25 @@ function PostCard({ post }: { post: Post }) {
             <Button size="sm" variant="outline" className="rounded-full text-xs">Try this look →</Button>
           </Link>
         )}
+        <form onSubmit={submitComment} className="flex items-center gap-2 pt-1">
+          <Input
+            value={commentBody}
+            onChange={(e) => setCommentBody(e.target.value)}
+            placeholder="Add a kind comment…"
+            maxLength={500}
+            aria-label="Add a comment"
+            className="rounded-full h-9 text-sm"
+          />
+          <Button
+            type="submit"
+            size="sm"
+            variant="ghost"
+            className="rounded-full"
+            disabled={!commentBody.trim() || addComment.isPending}
+          >
+            {addComment.isPending ? "…" : "Post"}
+          </Button>
+        </form>
       </div>
     </motion.div>
   );
@@ -86,6 +126,7 @@ export default function Feed() {
   const [season, setSeason] = useState<string | null>(null);
   const [scope, setScope] = useState<Scope>("foryou");
   const { archetype } = useArchetype();
+  const { showOverlay, checkText, dismiss } = useKindnessCheck();
   const { data, isLoading } = useQuery({
     queryKey: ["feed", scope, season, scope === "iola" ? archetype : null],
     queryFn: () => {
@@ -101,6 +142,7 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen vanity-bg">
+      <KindnessOverlay visible={showOverlay} onDismiss={dismiss} />
       <main className="max-w-xl mx-auto px-4 py-6 space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="font-serif text-3xl">Feed</h1>
@@ -165,7 +207,7 @@ export default function Feed() {
         ) : (
           <>
             <OnboardingChecklist />
-            {posts.map((p) => <PostCard key={p.id} post={p} />)}
+            {posts.map((p) => <PostCard key={p.id} post={p} onMeanComment={checkText} />)}
           </>
         )}
       </main>

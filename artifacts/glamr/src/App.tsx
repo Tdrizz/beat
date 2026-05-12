@@ -33,6 +33,7 @@ import SlayBible from "@/pages/SlayBible";
 import Teapot from "@/pages/Teapot";
 import EstheticianHub from "@/pages/EstheticianHub";
 import PeriodTracker from "@/pages/PeriodTracker";
+import PostDetail from "@/pages/PostDetail";
 import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ function Router() {
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
+      <Route path="/posts/:id"><AuthedRoute><PostDetail /></AuthedRoute></Route>
       <Route path="/upload"><AuthedRoute><Upload /></AuthedRoute></Route>
       <Route path="/messages"><AuthedRoute><Messages /></AuthedRoute></Route>
       <Route path="/messages/:handle"><AuthedRoute><MessageThread /></AuthedRoute></Route>
