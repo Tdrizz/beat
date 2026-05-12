@@ -73,7 +73,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 ### Health sweep — May 2026
 
 - **Typecheck**: green across all 5 workspace projects (`pnpm run typecheck`).
-- **Builds**: `@workspace/api-server` and `@workspace/glamr` both build cleanly. Vite emits a "sourcemap reporting" notice on a few Radix-wrapping `ui/*` files (`tooltip`, `sheet`, `progress`, `avatar`, `dropdown-menu`); cosmetic, build still succeeds.
+- **Builds**: `@workspace/api-server` and `@workspace/glamr` both build cleanly when invoked through the configured workflows (which provide the `PORT` / `BASE_PATH` env vars Vite relies on); a bare `pnpm --filter ... run build` from a plain shell will fail without those vars set. Vite emits a "sourcemap reporting" notice on a few Radix-wrapping `ui/*` files (`tooltip`, `sheet`, `progress`, `avatar`, `dropdown-menu`); cosmetic, build still succeeds.
 - **Static**: zero `any`, `@ts-ignore`, `@ts-expect-error`, or `TODO/FIXME` left in app code. Only one `console.warn` (in `useFaceAnalysis` when `video.play()` rejects), which is intentional.
 - **Auth audit**: every mutating route is auth-gated except the now-fixed `POST /ai-tryon`, which was open to anonymous callers and burning Gemini credits. Added `requireAuth` + a 10/5-min token-bucket rate limit.
 - **A11y**: search input on `Friends.tsx` was relying on a placeholder for context — added `aria-label`. All `<img>` tags carry alt text. No `<button>` was rendering with neither text nor aria-label on any audited page.
