@@ -1,6 +1,14 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import {
+  TUTORIALS,
+  TUTORIAL_CATEGORY_LABELS,
+  getTutorial,
+  type Tutorial,
+} from "@/lib/tutorials";
 import {
   byEraLooks, trendLooks,
   allEyeLooks, allLipLooks, allCompleteLooks, ALL_LOOKS_FLAT, Look,
@@ -34,7 +42,14 @@ import {
   Crown, Palette as PaletteIcon, ExternalLink, Leaf,
   BookOpen, FlaskConical, Apple, Brush, Star,
   Ghost, Skull, Citrus, Coffee, BookHeart, Gem, Drama,
+  GraduationCap,
 } from "lucide-react";
+
+interface TutorialStat {
+  tutorialId: string;
+  averageRating: number;
+  reviewCount: number;
+}
 
 type Difficulty = "All" | "Beginner" | "Intermediate" | "Advanced";
 
@@ -134,6 +149,102 @@ function VanityBulbs({ count = 12 }: { count?: number }) {
         <div key={i} className="vanity-bulb" style={{ animationDelay: `${(i * 0.25) % 3}s` }} />
       ))}
     </div>
+  );
+}
+
+// ── Trending Tutorials Rail ───────────────────────────────────────────────────
+// Discovery boost for Tutorials, which otherwise only live in the More drawer.
+// Pulls aggregate ratings from `/api/tutorials/stats` and shows the top 5 by
+// average rating (ties broken by review count). If no reviews exist yet the
+// rail hides itself — we don't want to bait-and-switch with an empty section
+// or a hard-coded "trending" list.
+
+function TrendingTutorialsRail() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["tutorial-stats"],
+    queryFn: () => api.get<{ stats: TutorialStat[] }>("/tutorials/stats"),
+  });
+
+  const top = useMemo(() => {
+    const stats = data?.stats ?? [];
+    const rated = stats
+      .filter((s) => s.reviewCount > 0)
+      .map((s) => ({ stat: s, tutorial: getTutorial(s.tutorialId) }))
+      .filter((x): x is { stat: TutorialStat; tutorial: Tutorial } => x.tutorial !== null);
+    rated.sort((a, b) => {
+      const diff = b.stat.averageRating - a.stat.averageRating;
+      if (diff !== 0) return diff;
+      return b.stat.reviewCount - a.stat.reviewCount;
+    });
+    return rated.slice(0, 5);
+  }, [data]);
+
+  if (isLoading || top.length === 0) return null;
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="max-w-6xl mx-auto px-6 mb-10"
+      aria-labelledby="trending-tutorials-heading"
+    >
+      <div className="flex items-end justify-between mb-3 gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <GraduationCap className="w-5 h-5 text-primary shrink-0" />
+          <div className="min-w-0">
+            <h2 id="trending-tutorials-heading" className="font-serif text-lg sm:text-xl font-bold leading-tight">
+              Trending tutorials this week
+            </h2>
+            <p className="text-xs text-muted-foreground">Top-rated step-by-steps from the community.</p>
+          </div>
+        </div>
+        <Link href="/tutorials" className="shrink-0">
+          <Button variant="ghost" size="sm" className="gap-1 rounded-full text-xs">
+            See all <ChevronRight className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 snap-x snap-mandatory scrollbar-hide">
+        {top.map(({ tutorial, stat }) => (
+          <Link
+            key={tutorial.id}
+            href={`/tutorials/${tutorial.id}`}
+            className="snap-start shrink-0 w-56 sm:w-60 bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-sm transition-all group flex flex-col"
+          >
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-primary/30 to-accent/30">
+              <img
+                src={tutorial.thumbnail}
+                alt={tutorial.title}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              />
+              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-background/85 backdrop-blur text-[10px] font-semibold uppercase tracking-wider">
+                {TUTORIAL_CATEGORY_LABELS[tutorial.category]}
+              </div>
+              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-background/85 backdrop-blur text-[11px] font-semibold flex items-center gap-1">
+                <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                {stat.averageRating.toFixed(1)}
+                <span className="text-muted-foreground font-normal">({stat.reviewCount})</span>
+              </div>
+            </div>
+            <div className="p-3 flex flex-col flex-1">
+              <p className="font-semibold text-sm leading-tight line-clamp-2">{tutorial.title}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">by {tutorial.instructor}</p>
+              <div className="flex items-center justify-between mt-auto pt-2 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> {tutorial.minutes} min
+                </span>
+                <span className="capitalize">{tutorial.difficulty}</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </motion.section>
   );
 }
 
@@ -869,6 +980,10 @@ export default function Home() {
       <div className="mt-6">
         <DailyBeatCard />
       </div>
+
+      {/* Trending tutorials rail — surfaces top-rated tutorials directly on
+          Home so they're not buried behind the More drawer. */}
+      <TrendingTutorialsRail />
 
       {/* Archetype callout — entry point to the personality quiz, or a
           banner showing the user's archetype if they've already taken it. */}
