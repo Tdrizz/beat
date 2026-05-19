@@ -11,6 +11,7 @@ import type { Profile } from "@/lib/api";
 import NotFound from "@/pages/not-found";
 import {
   getTutorial,
+  resolveTutorialMediaUrl,
   TUTORIAL_CATEGORY_LABELS,
   TUTORIAL_DIFFICULTY_LABELS,
 } from "@/lib/tutorials";
@@ -127,9 +128,22 @@ export default function TutorialDetail() {
                 <div className="shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center">
                   {i + 1}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm">{s.title}</p>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{s.body}</p>
+                  {s.videoUrl && (
+                    <div className="mt-2 rounded-xl overflow-hidden bg-black aspect-video">
+                      <video
+                        src={resolveTutorialMediaUrl(s.videoUrl)}
+                        poster={resolveTutorialMediaUrl(s.videoPoster)}
+                        controls
+                        preload="metadata"
+                        playsInline
+                        className="w-full h-full object-cover"
+                        aria-label={`Demo clip for step ${i + 1}: ${s.title}`}
+                      />
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.body}</p>
                 </div>
               </li>
             ))}

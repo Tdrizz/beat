@@ -70,6 +70,20 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Kindness Prompt**: Anti-bullying overlay triggered by derogatory language in posts/captions — shows "be kind" message for 5 seconds before allowing resume.
 - **Cycle Tracker**: On-device period tracker with phase detection (menstrual, follicular, ovulation, luteal), next-period prediction, and phase-specific skin/makeup/self-care tips. All data stored in localStorage.
 
+### Tutorial step video clips
+
+`TutorialStep` supports an optional `videoUrl` (and optional `videoPoster`) for a short demo clip rendered inline above the written body on `TutorialDetail`. Curated upload flow:
+
+1. From an authenticated session, `POST /api/storage/uploads/request-url` with `{ name, size, contentType: "video/mp4" }` to get a presigned `uploadURL` + canonical `objectPath`.
+2. `PUT` the file directly to `uploadURL`.
+3. Paste the returned `objectPath` (e.g. `/objects/uploads/<uuid>`) — or a fully-qualified CDN URL — into the step's `videoUrl` in `artifacts/glamr/src/lib/tutorials.ts`. The same flow works for a still-frame `videoPoster`. The detail page resolves `/objects/...` to the served `/api/storage/objects/...` route automatically (see `resolveTutorialMediaUrl`), so you can store the canonical entity path verbatim.
+
+Storage limits / authoring guidance for the curated set:
+- **Length**: 10-30 seconds per clip. Anything longer belongs in a full tutorial.
+- **Size**: keep each clip ≤ 8 MB. H.264 MP4, 720p, ~1.5 Mbps, AAC audio (or muted) hits this comfortably.
+- **Aspect**: 16:9 to match the inline player's `aspect-video` frame; vertical clips will be letterboxed.
+- **Privacy**: served via the existing `GET /api/storage/objects/*` route, which is currently public (see the "Gotchas" note). Do not put user-private content behind a tutorial `videoUrl` until that route's ACL guard is enabled.
+
 ## User preferences
 
 - _Populate as you build_

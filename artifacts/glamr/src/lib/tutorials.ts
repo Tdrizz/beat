@@ -34,6 +34,38 @@ export const TUTORIAL_DIFFICULTY_LABELS: Record<TutorialDifficulty, string> = {
 export interface TutorialStep {
   title: string;
   body: string;
+  // Optional short demo clip (10-30s) shown inline above the written
+  // instructions on the detail page. Upload via the existing object
+  // storage bucket (see `artifacts/api-server/src/routes/storage.ts`)
+  // and paste either the returned `objectPath` (e.g.
+  // `/objects/uploads/<id>` — it will be auto-resolved to the served
+  // `/api/storage` route via `resolveTutorialMediaUrl`) or a
+  // fully-qualified URL. See `replit.md` → "Tutorial step video
+  // clips" for the curated upload flow and size guidance.
+  videoUrl?: string;
+  // Optional poster image for the video (recommended — shows before
+  // the user hits play instead of a black frame). Same URL rules as
+  // `videoUrl`.
+  videoPoster?: string;
+}
+
+/**
+ * Resolve a tutorial media URL into something the browser can fetch.
+ *
+ * Accepts:
+ *  - Fully-qualified URLs (`https://…`, `http://…`, `data:…`, `blob:…`)
+ *    → returned as-is.
+ *  - Canonical object-storage entity paths from the upload flow
+ *    (`/objects/<id>`) → prefixed with `/api/storage` so they hit the
+ *    served route in `artifacts/api-server/src/routes/storage.ts`.
+ *  - Anything else (already `/api/storage/...`, relative paths)
+ *    → returned as-is.
+ */
+export function resolveTutorialMediaUrl(url: string | undefined): string | undefined {
+  if (!url) return url;
+  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  if (url.startsWith("/objects/")) return `/api/storage${url}`;
+  return url;
 }
 
 export interface Tutorial {
