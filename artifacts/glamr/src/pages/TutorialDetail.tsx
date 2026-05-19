@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/react";
-import { Star, Clock, ChevronLeft, Sparkles, ImageOff, Trash2, GraduationCap } from "lucide-react";
+import { Star, Clock, ChevronLeft, Sparkles, ImageOff, Trash2, GraduationCap, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -12,9 +12,17 @@ import NotFound from "@/pages/not-found";
 import {
   getTutorial,
   resolveTutorialMediaUrl,
+  submittedToTutorial,
   TUTORIAL_CATEGORY_LABELS,
   TUTORIAL_DIFFICULTY_LABELS,
+  type SubmittedTutorial,
+  type Tutorial,
 } from "@/lib/tutorials";
+
+// Curated tutorials are static string ids ("soft-glam-smokey"). Creator
+// submissions are UUIDs. We use the shape of the id to skip the
+// server round-trip for curated tutorials.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface Review {
   id: string;
@@ -36,11 +44,23 @@ interface ReviewsResponse {
 export default function TutorialDetail() {
   const params = useParams<{ id: string }>();
   const tutorialId = params.id ?? "";
-  const tutorial = getTutorial(tutorialId);
+  const curated = useMemo(() => getTutorial(tutorialId), [tutorialId]);
   const { isSignedIn } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [broken, setBroken] = useState(false);
+
+  // Submitted (creator) tutorials are UUIDs and need to be fetched. The
+  // server returns 404 for non-public submissions unless you're the author
+  // or an admin, so we don't have to gate the lookup here.
+  const isSubmittedId = UUID_RE.test(tutorialId);
+  const { data: submittedRaw, isLoading: submittedLoading, isError: submittedError } = useQuery({
+    queryKey: ["submitted-tutorial", tutorialId],
+    queryFn: () => api.get<SubmittedTutorial>(`/tutorials/submitted/${tutorialId}`),
+    enabled: isSubmittedId,
+  });
+  const submitted = submittedRaw ?? null;
+  const tutorial: Tutorial | null = curated ?? (submitted ? submittedToTutorial(submitted) : null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["tutorial-reviews", tutorialId],
@@ -48,7 +68,10 @@ export default function TutorialDetail() {
     enabled: !!tutorial,
   });
 
-  if (!tutorial) return <NotFound />;
+  if (isSubmittedId && submittedLoading) {
+    return <div className="min-h-screen vanity-bg p-8 text-sm text-muted-foreground">Loading…</div>;
+  }
+  if (!tutorial || (isSubmittedId && submittedError)) return <NotFound />;
 
   return (
     <div className="min-h-screen vanity-bg">
@@ -101,7 +124,15 @@ export default function TutorialDetail() {
 
           <h1 className="font-serif text-3xl leading-tight">{tutorial.title}</h1>
           <p className="text-sm text-muted-foreground">
-            by <span className="font-semibold text-foreground">{tutorial.instructor}</span>
+            by{" "}
+            {submitted?.author?.handle ? (
+              <Link href={`/u/${submitted.author.handle}`} className="font-semibold text-foreground hover:underline inline-flex items-center gap-1">
+                {tutorial.instructor}
+                <Users className="w-3 h-3 text-primary" />
+              </Link>
+            ) : (
+              <span className="font-semibold text-foreground">{tutorial.instructor}</span>
+            )}
           </p>
           <p className="text-sm">{tutorial.summary}</p>
         </header>

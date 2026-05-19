@@ -317,6 +317,55 @@ export function getTutorial(id: string): Tutorial | null {
   return TUTORIALS.find((t) => t.id === id) ?? null;
 }
 
+// Shape returned by `GET /tutorials/submitted` — a published creator
+// submission, with its author profile pre-hydrated. Mirrors
+// `submittedTutorialsTable` plus the joined `profiles` row.
+export interface SubmittedTutorial {
+  id: string;
+  authorId: string;
+  title: string;
+  category: TutorialCategory;
+  difficulty: TutorialDifficulty;
+  minutes: number;
+  thumbnail: string;
+  summary: string;
+  tools: string[];
+  steps: TutorialStep[];
+  proTip: string | null;
+  status: "draft" | "pending" | "published" | "featured" | "rejected";
+  moderationNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  author: {
+    userId: string;
+    handle: string;
+    displayName: string;
+    avatarUrl: string | null;
+  } | null;
+}
+
+// Normalise a submitted tutorial into the shared `Tutorial` shape so the
+// listing + detail pages can render curated and creator content with the
+// same components. `featured` submissions get a leading sparkle so they
+// stand out without needing a separate card variant.
+export function submittedToTutorial(s: SubmittedTutorial): Tutorial {
+  return {
+    id: s.id,
+    title: s.status === "featured" ? `✨ ${s.title}` : s.title,
+    category: s.category,
+    difficulty: s.difficulty,
+    minutes: s.minutes,
+    instructor: s.author?.displayName ?? s.author?.handle ?? "Community creator",
+    thumbnail: s.thumbnail,
+    summary: s.summary,
+    tools: s.tools,
+    steps: s.steps,
+    proTip: s.proTip ?? undefined,
+  } as Tutorial;
+}
+
 // NOTE: the API server holds a canonical `TUTORIAL_IDS` allowlist in
 // `lib/db/src/schema/tutorials.ts` that it uses to validate review writes.
 // If you add/remove/rename a tutorial here, update that list too — otherwise

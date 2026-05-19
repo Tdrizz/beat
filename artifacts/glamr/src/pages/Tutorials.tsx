@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
+import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
-import { Star, Clock, GraduationCap, Search, ImageOff } from "lucide-react";
+import { Star, Clock, GraduationCap, Search, ImageOff, Plus, ShieldCheck, FileEdit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
@@ -11,6 +12,8 @@ import {
   TUTORIAL_CATEGORY_LABELS,
   TUTORIAL_DIFFICULTIES,
   TUTORIAL_DIFFICULTY_LABELS,
+  submittedToTutorial,
+  type SubmittedTutorial,
   type Tutorial,
   type TutorialCategory,
   type TutorialDifficulty,
@@ -39,6 +42,7 @@ export default function Tutorials() {
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("top-rated");
+  const { isSignedIn } = useAuth();
 
   const { data } = useQuery({
     queryKey: ["tutorial-stats"],
@@ -50,9 +54,33 @@ export default function Tutorials() {
     return m;
   }, [data]);
 
+  // Approved creator submissions, merged into the same grid as the
+  // curated catalogue so filters/sort behave identically.
+  const { data: submittedData } = useQuery({
+    queryKey: ["submitted-tutorials"],
+    queryFn: () => api.get<{ tutorials: SubmittedTutorial[] }>("/tutorials/submitted"),
+  });
+  // Track which ids came from creator submissions so we can flag featured
+  // submissions in the sort without bloating the static Tutorial type.
+  const featuredSet = useMemo(
+    () => new Set((submittedData?.tutorials ?? []).filter((s) => s.status === "featured").map((s) => s.id)),
+    [submittedData],
+  );
+
+  const allTutorials = useMemo<Tutorial[]>(
+    () => [...TUTORIALS, ...(submittedData?.tutorials ?? []).map(submittedToTutorial)],
+    [submittedData],
+  );
+
+  const { data: adminMeta } = useQuery({
+    queryKey: ["tutorial-admin-flag"],
+    queryFn: () => api.get<{ isAdmin: boolean }>("/tutorials/me/admin"),
+    enabled: !!isSignedIn,
+  });
+
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    let list = TUTORIALS.filter((t) => {
+    let list = allTutorials.filter((t) => {
       if (category !== "all" && t.category !== category) return false;
       if (difficulty !== "all" && t.difficulty !== difficulty) return false;
       if (needle && !`${t.title} ${t.summary} ${t.instructor}`.toLowerCase().includes(needle)) return false;
@@ -61,11 +89,12 @@ export default function Tutorials() {
     const stat = (id: string) => statsById.get(id);
     if (sort === "top-rated") {
       // Bayesian-ish: anchor un-reviewed tutorials at ~3.5 so they don't
-      // bubble unfairly above genuinely well-rated ones.
+      // bubble unfairly above genuinely well-rated ones. Featured creator
+      // submissions get a +0.5 boost so editors can hand-promote.
       const score = (id: string) => {
         const s = stat(id);
-        if (!s || s.reviewCount === 0) return 3.5;
-        return s.averageRating;
+        const base = !s || s.reviewCount === 0 ? 3.5 : s.averageRating;
+        return base + (featuredSet.has(id) ? 0.5 : 0);
       };
       list = [...list].sort((a, b) => {
         const diff = score(b.id) - score(a.id);
@@ -78,13 +107,13 @@ export default function Tutorials() {
       list = [...list].sort((a, b) => a.minutes - b.minutes);
     }
     return list;
-  }, [category, difficulty, q, sort, statsById]);
+  }, [allTutorials, category, difficulty, q, sort, statsById, featuredSet]);
 
   const totals = useMemo(() => ({
-    count: TUTORIALS.length,
+    count: allTutorials.length,
     categories: TUTORIAL_CATEGORIES.length,
-    quickest: Math.min(...TUTORIALS.map((t) => t.minutes)),
-  }), []);
+    quickest: Math.min(...allTutorials.map((t) => t.minutes)),
+  }), [allTutorials]);
 
   const resetAll = () => {
     setCategory("all");
@@ -96,10 +125,31 @@ export default function Tutorials() {
   return (
     <div className="min-h-screen vanity-bg">
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-5">
-        <header className="space-y-1">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-6 h-6 text-primary" />
-            <h1 className="font-serif text-3xl">Tutorials</h1>
+        <header className="space-y-2">
+          <div className="flex items-start gap-2 justify-between flex-wrap">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-6 h-6 text-primary" />
+              <h1 className="font-serif text-3xl">Tutorials</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              {isSignedIn && (
+                <>
+                  <Link href="/tutorials/mine">
+                    <Button size="sm" variant="outline"><FileEdit className="w-3.5 h-3.5 mr-1" /> My tutorials</Button>
+                  </Link>
+                  <Link href="/tutorials/submit">
+                    <Button size="sm"><Plus className="w-3.5 h-3.5 mr-1" /> Submit</Button>
+                  </Link>
+                </>
+              )}
+              {adminMeta?.isAdmin && (
+                <Link href="/tutorials/moderation">
+                  <Button size="sm" variant="outline" className="text-primary border-primary/50">
+                    <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Moderate
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
           <p className="text-sm text-muted-foreground">
             {totals.count} step-by-step beauty tutorials across {totals.categories} categories —
@@ -122,10 +172,10 @@ export default function Tutorials() {
         {/* Category pills */}
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
           <CategoryPill active={category === "all"} onClick={() => setCategory("all")}>
-            All ({TUTORIALS.length})
+            All ({allTutorials.length})
           </CategoryPill>
           {TUTORIAL_CATEGORIES.map((c) => {
-            const n = TUTORIALS.filter((t) => t.category === c).length;
+            const n = allTutorials.filter((t) => t.category === c).length;
             return (
               <CategoryPill key={c} active={category === c} onClick={() => setCategory(c)}>
                 {TUTORIAL_CATEGORY_LABELS[c]} ({n})

@@ -36,6 +36,9 @@ import PeriodTracker from "@/pages/PeriodTracker";
 import PostDetail from "@/pages/PostDetail";
 import Tutorials from "@/pages/Tutorials";
 import TutorialDetail from "@/pages/TutorialDetail";
+import TutorialSubmit from "@/pages/TutorialSubmit";
+import MySubmittedTutorials from "@/pages/MySubmittedTutorials";
+import TutorialModeration from "@/pages/TutorialModeration";
 import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
@@ -69,6 +72,13 @@ function Router() {
       <Route path="/esthetician-hub" component={EstheticianHub} />
       <Route path="/cycle" component={PeriodTracker} />
       <Route path="/tutorials" component={Tutorials} />
+      {/* Specific tutorial subpaths must come before the catch-all
+          `/tutorials/:id` route, otherwise "submit" / "mine" / "moderation"
+          would be treated as tutorial ids. */}
+      <Route path="/tutorials/submit" component={TutorialSubmit} />
+      <Route path="/tutorials/submit/:id" component={TutorialSubmit} />
+      <Route path="/tutorials/mine" component={MySubmittedTutorials} />
+      <Route path="/tutorials/moderation" component={TutorialModeration} />
       <Route path="/tutorials/:id" component={TutorialDetail} />
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
