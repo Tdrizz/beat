@@ -8,7 +8,10 @@ import {
   TUTORIAL_CATEGORY_LABELS,
   getTutorial,
   type Tutorial,
+  type TutorialCategory,
 } from "@/lib/tutorials";
+import { useArchetype } from "../hooks/useArchetype";
+import type { ArchetypeId } from "../lib/archetypes";
 import {
   byEraLooks, trendLooks,
   allEyeLooks, allLipLooks, allCompleteLooks, ALL_LOOKS_FLAT, Look,
@@ -159,7 +162,21 @@ function VanityBulbs({ count = 12 }: { count?: number }) {
 // rail hides itself — we don't want to bait-and-switch with an empty section
 // or a hard-coded "trending" list.
 
+// Archetype → preferred tutorial categories. Used to bias the trending
+// rail toward what the user's archetype tends to spend time on. These
+// are loose preferences (not exclusions) — if there aren't enough
+// matches we backfill from the overall top-rated list.
+const ARCHETYPE_TUTORIAL_CATEGORIES: Record<ArchetypeId, TutorialCategory[]> = {
+  romantic:   ["lips", "skincare", "foundation"],
+  siren:      ["eyes", "lips", "contouring"],
+  icon:       ["brows", "lips", "foundation"],
+  muse:       ["eyes", "lips"],
+  rebel:      ["eyes", "lips", "brows"],
+  naturalist: ["skincare", "foundation"],
+};
+
 function TrendingTutorialsRail() {
+  const { archetype } = useArchetype();
   const { data, isLoading } = useQuery({
     queryKey: ["tutorial-stats"],
     queryFn: () => api.get<{ stats: TutorialStat[] }>("/tutorials/stats"),
@@ -176,8 +193,16 @@ function TrendingTutorialsRail() {
       if (diff !== 0) return diff;
       return b.stat.reviewCount - a.stat.reviewCount;
     });
-    return rated.slice(0, 5);
-  }, [data]);
+    if (!archetype) return rated.slice(0, 5);
+    // Bias: matches first (in rating order), then backfill with the
+    // remaining top-rated so the rail always shows 5 when possible
+    // and never goes empty just because the archetype's preferred
+    // categories have few rated tutorials yet.
+    const preferred = new Set(ARCHETYPE_TUTORIAL_CATEGORIES[archetype]);
+    const matches = rated.filter((r) => preferred.has(r.tutorial.category));
+    const rest    = rated.filter((r) => !preferred.has(r.tutorial.category));
+    return [...matches, ...rest].slice(0, 5);
+  }, [data, archetype]);
 
   if (isLoading || top.length === 0) return null;
 
