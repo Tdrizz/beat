@@ -34,6 +34,8 @@ import Teapot from "@/pages/Teapot";
 import EstheticianHub from "@/pages/EstheticianHub";
 import PeriodTracker from "@/pages/PeriodTracker";
 import PostDetail from "@/pages/PostDetail";
+import Tutorials from "@/pages/Tutorials";
+import TutorialDetail from "@/pages/TutorialDetail";
 import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,8 @@ function Router() {
       <Route path="/teapot" component={Teapot} />
       <Route path="/esthetician-hub" component={EstheticianHub} />
       <Route path="/cycle" component={PeriodTracker} />
+      <Route path="/tutorials" component={Tutorials} />
+      <Route path="/tutorials/:id" component={TutorialDetail} />
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
