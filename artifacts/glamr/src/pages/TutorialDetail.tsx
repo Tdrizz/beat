@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/react";
-import { Star, Clock, ChevronLeft, Sparkles, ImageOff, Trash2, GraduationCap, Users } from "lucide-react";
+import { Star, Clock, ChevronLeft, Sparkles, ImageOff, Trash2, GraduationCap, Users, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -68,6 +68,30 @@ export default function TutorialDetail() {
     enabled: !!tutorial,
   });
 
+  const { data: bookmarkData } = useQuery({
+    queryKey: ["tutorial-bookmarks"],
+    queryFn: () => api.get<{ tutorialIds: string[] }>("/tutorials/me/bookmarks"),
+    enabled: !!isSignedIn,
+  });
+  const isBookmarked = !!bookmarkData?.tutorialIds?.includes(tutorialId);
+  const saveBookmark = useMutation({
+    mutationFn: () => api.post(`/tutorials/${tutorialId}/bookmark`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tutorial-bookmarks"] });
+      toast({ title: "Saved to your bookmarks" });
+    },
+    onError: (e: Error) => toast({ title: "Couldn't save", description: e.message, variant: "destructive" }),
+  });
+  const removeBookmark = useMutation({
+    mutationFn: () => api.del(`/tutorials/${tutorialId}/bookmark`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tutorial-bookmarks"] });
+      toast({ title: "Removed from bookmarks" });
+    },
+    onError: (e: Error) => toast({ title: "Couldn't remove", description: e.message, variant: "destructive" }),
+  });
+  const bookmarkPending = saveBookmark.isPending || removeBookmark.isPending;
+
   if (isSubmittedId && submittedLoading) {
     return <div className="min-h-screen vanity-bg p-8 text-sm text-muted-foreground">Loading…</div>;
   }
@@ -122,7 +146,23 @@ export default function TutorialDetail() {
             )}
           </div>
 
-          <h1 className="font-serif text-3xl leading-tight">{tutorial.title}</h1>
+          <div className="flex items-start gap-3 justify-between">
+            <h1 className="font-serif text-3xl leading-tight flex-1">{tutorial.title}</h1>
+            {isSignedIn && (
+              <Button
+                type="button"
+                size="sm"
+                variant={isBookmarked ? "default" : "outline"}
+                disabled={bookmarkPending}
+                onClick={() => (isBookmarked ? removeBookmark.mutate() : saveBookmark.mutate())}
+                aria-pressed={isBookmarked}
+                className="shrink-0"
+              >
+                <Bookmark className={`w-3.5 h-3.5 mr-1 ${isBookmarked ? "fill-current" : ""}`} />
+                {isBookmarked ? "Saved" : "Save"}
+              </Button>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             by{" "}
             {submitted?.author?.handle ? (

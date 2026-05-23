@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
-import { useQuery } from "@tanstack/react-query";
-import { Star, Clock, GraduationCap, Search, ImageOff, Plus, ShieldCheck, FileEdit } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Star, Clock, GraduationCap, Search, ImageOff, Plus, ShieldCheck, FileEdit, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import {
   TUTORIALS,
@@ -21,6 +22,7 @@ import {
 
 type CategoryFilter = "all" | TutorialCategory;
 type DifficultyFilter = "all" | TutorialDifficulty;
+type SavedFilter = "all" | "saved";
 
 const SORTS = ["top-rated", "most-reviewed", "quickest", "curated"] as const;
 type Sort = (typeof SORTS)[number];
@@ -40,6 +42,7 @@ interface TutorialStat {
 export default function Tutorials() {
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
+  const [saved, setSaved] = useState<SavedFilter>("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("top-rated");
   const { isSignedIn } = useAuth();
@@ -78,11 +81,22 @@ export default function Tutorials() {
     enabled: !!isSignedIn,
   });
 
+  const { data: bookmarkData } = useQuery({
+    queryKey: ["tutorial-bookmarks"],
+    queryFn: () => api.get<{ tutorialIds: string[] }>("/tutorials/me/bookmarks"),
+    enabled: !!isSignedIn,
+  });
+  const bookmarkedIds = useMemo(
+    () => new Set(bookmarkData?.tutorialIds ?? []),
+    [bookmarkData],
+  );
+
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
     let list = allTutorials.filter((t) => {
       if (category !== "all" && t.category !== category) return false;
       if (difficulty !== "all" && t.difficulty !== difficulty) return false;
+      if (saved === "saved" && !bookmarkedIds.has(t.id)) return false;
       if (needle && !`${t.title} ${t.summary} ${t.instructor}`.toLowerCase().includes(needle)) return false;
       return true;
     });
@@ -107,7 +121,7 @@ export default function Tutorials() {
       list = [...list].sort((a, b) => a.minutes - b.minutes);
     }
     return list;
-  }, [allTutorials, category, difficulty, q, sort, statsById, featuredSet]);
+  }, [allTutorials, category, difficulty, saved, bookmarkedIds, q, sort, statsById, featuredSet]);
 
   const totals = useMemo(() => ({
     count: allTutorials.length,
@@ -118,6 +132,7 @@ export default function Tutorials() {
   const resetAll = () => {
     setCategory("all");
     setDifficulty("all");
+    setSaved("all");
     setQ("");
     setSort("top-rated");
   };
@@ -197,6 +212,18 @@ export default function Tutorials() {
               <option key={d} value={d}>{TUTORIAL_DIFFICULTY_LABELS[d]}</option>
             ))}
           </select>
+          {isSignedIn && (
+            <Button
+              size="sm"
+              variant={saved === "saved" ? "default" : "outline"}
+              className="rounded-full text-xs h-8"
+              onClick={() => setSaved(saved === "saved" ? "all" : "saved")}
+              aria-pressed={saved === "saved"}
+            >
+              <Bookmark className={`w-3.5 h-3.5 mr-1 ${saved === "saved" ? "fill-current" : ""}`} />
+              Saved{bookmarkedIds.size > 0 ? ` (${bookmarkedIds.size})` : ""}
+            </Button>
+          )}
           <div className="flex items-center gap-1 ml-auto flex-wrap">
             {SORTS.map((s) => (
               <Button
@@ -222,7 +249,13 @@ export default function Tutorials() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {visible.map((t) => (
-              <TutorialCard key={t.id} t={t} stat={statsById.get(t.id) ?? null} />
+              <TutorialCard
+                key={t.id}
+                t={t}
+                stat={statsById.get(t.id) ?? null}
+                bookmarked={bookmarkedIds.has(t.id)}
+                canBookmark={!!isSignedIn}
+              />
             ))}
           </div>
         )}
@@ -231,7 +264,14 @@ export default function Tutorials() {
   );
 }
 
-function TutorialCard({ t, stat }: { t: Tutorial; stat: TutorialStat | null }) {
+function TutorialCard({
+  t, stat, bookmarked, canBookmark,
+}: {
+  t: Tutorial;
+  stat: TutorialStat | null;
+  bookmarked: boolean;
+  canBookmark: boolean;
+}) {
   const [broken, setBroken] = useState(false);
   const hasReviews = stat && stat.reviewCount > 0;
   return (
@@ -257,13 +297,18 @@ function TutorialCard({ t, stat }: { t: Tutorial; stat: TutorialStat | null }) {
         <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-background/85 backdrop-blur text-[10px] font-semibold uppercase tracking-wider">
           {TUTORIAL_CATEGORY_LABELS[t.category]}
         </div>
-        {hasReviews && (
-          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-background/85 backdrop-blur text-[11px] font-semibold flex items-center gap-1">
-            <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-            {stat!.averageRating.toFixed(1)}
-            <span className="text-muted-foreground font-normal">({stat!.reviewCount})</span>
-          </div>
-        )}
+        <div className="absolute top-2 right-2 flex items-center gap-1.5">
+          {hasReviews && (
+            <div className="px-2 py-0.5 rounded-full bg-background/85 backdrop-blur text-[11px] font-semibold flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+              {stat!.averageRating.toFixed(1)}
+              <span className="text-muted-foreground font-normal">({stat!.reviewCount})</span>
+            </div>
+          )}
+          {canBookmark && (
+            <BookmarkToggle tutorialId={t.id} bookmarked={bookmarked} />
+          )}
+        </div>
       </div>
       <div className="p-4 flex flex-col flex-1">
         <p className="font-semibold text-sm leading-tight">{t.title}</p>
@@ -277,6 +322,48 @@ function TutorialCard({ t, stat }: { t: Tutorial; stat: TutorialStat | null }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function BookmarkToggle({
+  tutorialId, bookmarked,
+}: {
+  tutorialId: string;
+  bookmarked: boolean;
+}) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["tutorial-bookmarks"] });
+  const save = useMutation({
+    mutationFn: () => api.post(`/tutorials/${tutorialId}/bookmark`),
+    onSuccess: () => { invalidate(); toast({ title: "Saved to your bookmarks" }); },
+    onError: (e: Error) => toast({ title: "Couldn't save", description: e.message, variant: "destructive" }),
+  });
+  const remove = useMutation({
+    mutationFn: () => api.del(`/tutorials/${tutorialId}/bookmark`),
+    onSuccess: () => { invalidate(); toast({ title: "Removed from bookmarks" }); },
+    onError: (e: Error) => toast({ title: "Couldn't remove", description: e.message, variant: "destructive" }),
+  });
+  const pending = save.isPending || remove.isPending;
+  return (
+    <button
+      type="button"
+      aria-label={bookmarked ? "Remove bookmark" : "Save tutorial"}
+      aria-pressed={bookmarked}
+      disabled={pending}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (bookmarked) remove.mutate(); else save.mutate();
+      }}
+      className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors backdrop-blur ${
+        bookmarked
+          ? "bg-primary text-primary-foreground"
+          : "bg-background/85 text-foreground hover:bg-background"
+      } ${pending ? "opacity-60" : ""}`}
+    >
+      <Bookmark className={`w-3.5 h-3.5 ${bookmarked ? "fill-current" : ""}`} />
+    </button>
   );
 }
 

@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import {
   db,
   tutorialReviewsTable,
+  tutorialBookmarksTable,
   profilesTable,
   insertTutorialReviewSchema,
   isKnownTutorialId,
@@ -321,6 +322,58 @@ router.post("/tutorials/submitted/:id/moderate", requireAuth, async (req, res) =
 // Tells the frontend whether the current viewer can see the moderation UI.
 router.get("/tutorials/me/admin", optionalAuth, (req, res) => {
   res.json({ isAdmin: isAdmin(req.userId) });
+});
+
+// ---------------------------------------------------------------------------
+// Bookmarks ("save for later")
+// ---------------------------------------------------------------------------
+
+// Current viewer's bookmarked tutorial ids. Returns just the ids — the
+// catalogue page already has the full tutorial data in memory (curated +
+// submitted) and only needs to know which to flag as saved.
+router.get("/tutorials/me/bookmarks", requireAuth, async (req, res) => {
+  const rows = await db
+    .select({
+      tutorialId: tutorialBookmarksTable.tutorialId,
+      createdAt: tutorialBookmarksTable.createdAt,
+    })
+    .from(tutorialBookmarksTable)
+    .where(eq(tutorialBookmarksTable.userId, req.userId!))
+    .orderBy(desc(tutorialBookmarksTable.createdAt));
+  res.json({
+    tutorialIds: rows.map((r) => r.tutorialId),
+    bookmarks: rows,
+  });
+});
+
+// Add a bookmark. Idempotent thanks to the unique (tutorialId, userId)
+// index — repeat POSTs just no-op.
+router.post("/tutorials/:id/bookmark", requireAuth, async (req, res) => {
+  const tutorialId = p(req.params.id);
+  if (!(await isValidReviewableId(tutorialId))) {
+    res.status(404).json({ error: "Tutorial not found" });
+    return;
+  }
+  await db
+    .insert(tutorialBookmarksTable)
+    .values({ tutorialId, userId: req.userId! })
+    .onConflictDoNothing({
+      target: [tutorialBookmarksTable.tutorialId, tutorialBookmarksTable.userId],
+    });
+  res.status(201).json({ tutorialId, bookmarked: true });
+});
+
+router.delete("/tutorials/:id/bookmark", requireAuth, async (req, res) => {
+  const tutorialId = p(req.params.id);
+  await db
+    .delete(tutorialBookmarksTable)
+    .where(
+      and(
+        eq(tutorialBookmarksTable.tutorialId, tutorialId),
+        eq(tutorialBookmarksTable.userId, req.userId!),
+      ),
+    );
+  res.status(204).end();
 });
 
 // ---------------------------------------------------------------------------

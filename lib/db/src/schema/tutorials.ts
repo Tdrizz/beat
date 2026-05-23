@@ -144,3 +144,23 @@ export const submitTutorialSchema = z.object({
 
 export type SubmitTutorialInput = z.infer<typeof submitTutorialSchema>;
 export type SubmittedTutorial = typeof submittedTutorialsTable.$inferSelect;
+
+// Per-user tutorial bookmarks ("save for later"). Keyed by the same string
+// id used for reviews — works for both curated tutorials (slug ids like
+// "soft-glam-smokey") and creator-submitted tutorials (UUIDs). The unique
+// index on (tutorialId, userId) guarantees idempotent bookmarking.
+export const tutorialBookmarksTable = pgTable(
+  "tutorial_bookmarks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tutorialId: varchar("tutorial_id", { length: 80 }).notNull(),
+    userId: varchar("user_id", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    pk: uniqueIndex("tutorial_bookmark_pk_idx").on(t.tutorialId, t.userId),
+    byUser: index("tutorial_bookmark_user_idx").on(t.userId, t.createdAt),
+  }),
+);
+
+export type TutorialBookmark = typeof tutorialBookmarksTable.$inferSelect;
