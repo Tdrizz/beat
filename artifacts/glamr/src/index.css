@@ -76,57 +76,61 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE — warm cream + rose primary
- * Demo: women 14–35. Choices grounded in color-emotion research:
- *  • Warm cream background (vs cold white) → comfort, safety
- *  • Rose primary (340°) → highest affinity for the demographic
- *    across consumer-beauty colour studies (Pantone, Mintel)
- *  • Coral accent (18°) → warmth + energy
- *  • Bigger radius → curvature-preference (Bar & Neta 2006)
+/* LIGHT MODE — earth-tone vibe (May 2026 re-skin)
+ * Direction: warm, grounded, "natural beauty" / clean-girl mood.
+ * Palette draws on terracotta, clay, sand, sage and ochre — the
+ * tones found in raw silk, baked earth and dried botanicals.
+ *  • Sand-cream background (hsl 35,35%,96%) → warmer than off-white,
+ *    cooler than amber; flatters every skin tone in photos.
+ *  • Primary terracotta (hsl 14,55%,48%) — earthy rust, replaces
+ *    the old rose-magenta. Reads as natural confidence.
+ *  • Accent ochre (hsl 35,65%,55%) — sun-baked warmth for highlights.
+ *  • Sage-tinted muted surfaces (hsl 90,12%,92%) for breathing room.
+ *  • Deep walnut foreground (hsl 25,30%,15%) instead of near-black.
  */
 :root {
-  --button-outline: rgba(70, 30, 50, .10);
-  --badge-outline: rgba(70, 30, 50, .06);
+  --button-outline: rgba(60, 40, 25, .10);
+  --badge-outline: rgba(60, 40, 25, .06);
 
   --opaque-button-border-intensity: -8;
 
-  --elevate-1: rgba(220, 79, 132, .04);
-  --elevate-2: rgba(220, 79, 132, .09);
+  --elevate-1: rgba(150, 80, 45, .04);
+  --elevate-2: rgba(150, 80, 45, .09);
 
-  --background: 30 40% 97%;
-  --foreground: 350 25% 12%;
-  --border: 25 25% 88%;
-  --card: 30 50% 99%;
-  --card-foreground: 350 25% 12%;
-  --card-border: 25 25% 88%;
-  --sidebar: 25 35% 95%;
-  --sidebar-foreground: 350 25% 12%;
-  --sidebar-border: 25 25% 88%;
-  --sidebar-primary: 340 75% 56%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 18 85% 67%;
-  --sidebar-accent-foreground: 350 25% 12%;
-  --sidebar-ring: 340 75% 56%;
-  --popover: 30 50% 99%;
-  --popover-foreground: 350 25% 12%;
-  --popover-border: 25 25% 88%;
-  --primary: 340 75% 56%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 340 35% 92%;
-  --secondary-foreground: 340 50% 25%;
-  --muted: 25 30% 94%;
-  --muted-foreground: 350 15% 40%;
-  --accent: 18 85% 67%;
-  --accent-foreground: 350 25% 12%;
-  --destructive: 0 78% 58%;
-  --destructive-foreground: 0 0% 100%;
-  --input: 25 25% 88%;
-  --ring: 340 75% 56%;
-  --chart-1: 340 75% 56%;
-  --chart-2: 18 85% 67%;
-  --chart-3: 280 50% 65%;
-  --chart-4: 35 80% 65%;
-  --chart-5: 195 50% 60%;
+  --background: 35 35% 96%;
+  --foreground: 25 30% 15%;
+  --border: 30 18% 84%;
+  --card: 38 40% 98%;
+  --card-foreground: 25 30% 15%;
+  --card-border: 30 18% 84%;
+  --sidebar: 32 28% 93%;
+  --sidebar-foreground: 25 30% 15%;
+  --sidebar-border: 30 18% 84%;
+  --sidebar-primary: 14 55% 48%;
+  --sidebar-primary-foreground: 38 40% 98%;
+  --sidebar-accent: 35 65% 55%;
+  --sidebar-accent-foreground: 25 30% 15%;
+  --sidebar-ring: 14 55% 48%;
+  --popover: 38 40% 98%;
+  --popover-foreground: 25 30% 15%;
+  --popover-border: 30 18% 84%;
+  --primary: 14 55% 48%;
+  --primary-foreground: 38 40% 98%;
+  --secondary: 28 30% 90%;
+  --secondary-foreground: 18 45% 22%;
+  --muted: 32 22% 92%;
+  --muted-foreground: 25 18% 38%;
+  --accent: 35 65% 55%;
+  --accent-foreground: 25 30% 15%;
+  --destructive: 8 65% 50%;
+  --destructive-foreground: 38 40% 98%;
+  --input: 30 18% 84%;
+  --ring: 14 55% 48%;
+  --chart-1: 14 55% 48%;
+  --chart-2: 35 65% 55%;
+  --chart-3: 90 22% 45%;
+  --chart-4: 28 50% 42%;
+  --chart-5: 195 22% 45%;
 
   --app-font-sans: 'Quicksand', 'Nunito', system-ui, sans-serif;
   --app-font-serif: 'Fredoka', 'Quicksand', sans-serif;
@@ -153,50 +157,50 @@
   --destructive-border: hsl(var(--destructive));
 }
 
-/* DARK MODE — deep plum boudoir, not flat tech-black */
+/* DARK MODE — moonlit clay; deep walnut + warm cocoa, never flat black */
 .dark {
-  --button-outline: rgba(255, 200, 220, .10);
-  --badge-outline: rgba(255, 200, 220, .06);
+  --button-outline: rgba(240, 200, 160, .10);
+  --badge-outline: rgba(240, 200, 160, .06);
 
   --opaque-button-border-intensity: 9;
 
-  --elevate-1: rgba(255, 180, 210, .05);
-  --elevate-2: rgba(255, 180, 210, .10);
+  --elevate-1: rgba(230, 170, 120, .05);
+  --elevate-2: rgba(230, 170, 120, .10);
 
-  --background: 340 25% 7%;
-  --foreground: 30 25% 95%;
-  --border: 340 15% 18%;
-  --card: 340 20% 10%;
-  --card-foreground: 30 25% 95%;
-  --card-border: 340 15% 18%;
-  --sidebar: 340 22% 8%;
-  --sidebar-foreground: 30 25% 95%;
-  --sidebar-border: 340 15% 18%;
-  --sidebar-primary: 340 70% 65%;
-  --sidebar-primary-foreground: 340 30% 8%;
-  --sidebar-accent: 18 75% 70%;
-  --sidebar-accent-foreground: 340 30% 8%;
-  --sidebar-ring: 340 70% 65%;
-  --popover: 340 20% 10%;
-  --popover-foreground: 30 25% 95%;
-  --popover-border: 340 15% 18%;
-  --primary: 340 70% 65%;
-  --primary-foreground: 340 30% 8%;
-  --secondary: 340 25% 22%;
-  --secondary-foreground: 30 25% 95%;
-  --muted: 340 18% 14%;
-  --muted-foreground: 30 15% 65%;
-  --accent: 18 75% 70%;
-  --accent-foreground: 340 30% 8%;
-  --destructive: 0 70% 55%;
-  --destructive-foreground: 30 25% 95%;
-  --input: 340 18% 14%;
-  --ring: 340 70% 65%;
-  --chart-1: 340 70% 65%;
-  --chart-2: 18 75% 70%;
-  --chart-3: 280 50% 70%;
-  --chart-4: 35 80% 70%;
-  --chart-5: 195 50% 65%;
+  --background: 24 18% 8%;
+  --foreground: 35 25% 92%;
+  --border: 24 14% 18%;
+  --card: 24 18% 11%;
+  --card-foreground: 35 25% 92%;
+  --card-border: 24 14% 18%;
+  --sidebar: 24 18% 9%;
+  --sidebar-foreground: 35 25% 92%;
+  --sidebar-border: 24 14% 18%;
+  --sidebar-primary: 18 65% 58%;
+  --sidebar-primary-foreground: 24 25% 8%;
+  --sidebar-accent: 35 60% 62%;
+  --sidebar-accent-foreground: 24 25% 8%;
+  --sidebar-ring: 18 65% 58%;
+  --popover: 24 18% 11%;
+  --popover-foreground: 35 25% 92%;
+  --popover-border: 24 14% 18%;
+  --primary: 18 65% 58%;
+  --primary-foreground: 24 25% 8%;
+  --secondary: 24 22% 20%;
+  --secondary-foreground: 35 25% 92%;
+  --muted: 24 16% 15%;
+  --muted-foreground: 35 14% 65%;
+  --accent: 35 60% 62%;
+  --accent-foreground: 24 25% 8%;
+  --destructive: 8 60% 55%;
+  --destructive-foreground: 35 25% 92%;
+  --input: 24 16% 15%;
+  --ring: 18 65% 58%;
+  --chart-1: 18 65% 58%;
+  --chart-2: 35 60% 62%;
+  --chart-3: 90 22% 55%;
+  --chart-4: 28 50% 55%;
+  --chart-5: 195 22% 55%;
 
   --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.2);
   --shadow-xs: 0px 2px 0px 0px rgba(0,0,0,0.3);
@@ -225,10 +229,10 @@
      * opacity so it reads as a printed pattern, not decoration that
      * competes with content. */
     background-image:
-      radial-gradient(ellipse 70% 45% at 8% 0%, hsla(340, 70%, 86%, 0.45), transparent 60%),
-      radial-gradient(ellipse 65% 55% at 95% 18%, hsla(18, 80%, 88%, 0.38), transparent 65%),
-      radial-gradient(ellipse 55% 45% at 50% 95%, hsla(280, 45%, 88%, 0.30), transparent 65%),
-      radial-gradient(ellipse 40% 30% at 80% 65%, hsla(35, 80%, 90%, 0.28), transparent 70%),
+      radial-gradient(ellipse 70% 45% at 8% 0%, hsla(18, 55%, 82%, 0.42), transparent 60%),
+      radial-gradient(ellipse 65% 55% at 95% 18%, hsla(35, 60%, 85%, 0.40), transparent 65%),
+      radial-gradient(ellipse 55% 45% at 50% 95%, hsla(90, 25%, 84%, 0.32), transparent 65%),
+      radial-gradient(ellipse 40% 30% at 80% 65%, hsla(28, 45%, 88%, 0.30), transparent 70%),
       var(--floral-motif);
     background-attachment: fixed, fixed, fixed, fixed, fixed;
     background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
@@ -236,9 +240,9 @@
   }
   .dark body {
     background-image:
-      radial-gradient(ellipse 70% 45% at 8% 0%, hsla(340, 60%, 30%, 0.55), transparent 60%),
-      radial-gradient(ellipse 65% 55% at 95% 18%, hsla(18, 60%, 25%, 0.40), transparent 65%),
-      radial-gradient(ellipse 55% 45% at 50% 95%, hsla(280, 45%, 28%, 0.35), transparent 65%),
+      radial-gradient(ellipse 70% 45% at 8% 0%, hsla(18, 55%, 28%, 0.55), transparent 60%),
+      radial-gradient(ellipse 65% 55% at 95% 18%, hsla(35, 50%, 24%, 0.40), transparent 65%),
+      radial-gradient(ellipse 55% 45% at 50% 95%, hsla(90, 22%, 22%, 0.35), transparent 65%),
       var(--floral-motif-dark);
   }
 }
@@ -283,30 +287,30 @@
  * skews "tech / masculine luxury". */
 .vanity-bg {
   background:
-    radial-gradient(ellipse at 50% 0%, hsla(340, 80%, 75%, 0.35) 0%, transparent 55%),
-    radial-gradient(ellipse at 0% 100%, hsla(18, 85%, 78%, 0.28) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, hsla(280, 50%, 80%, 0.22) 0%, transparent 50%),
-    linear-gradient(180deg, hsl(30, 50%, 97%) 0%, hsl(340, 35%, 95%) 100%);
+    radial-gradient(ellipse at 50% 0%, hsla(18, 60%, 72%, 0.32) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 100%, hsla(35, 65%, 78%, 0.28) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, hsla(90, 22%, 78%, 0.22) 0%, transparent 50%),
+    linear-gradient(180deg, hsl(35, 38%, 96%) 0%, hsl(28, 28%, 92%) 100%);
 }
 .dark .vanity-bg {
   background:
-    radial-gradient(ellipse at 50% 0%, hsla(340, 70%, 35%, 0.5) 0%, transparent 55%),
-    radial-gradient(ellipse at 0% 100%, hsla(18, 65%, 30%, 0.4) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, hsla(280, 50%, 30%, 0.3) 0%, transparent 50%),
-    linear-gradient(180deg, hsl(340, 25%, 9%) 0%, hsl(340, 25%, 6%) 100%);
+    radial-gradient(ellipse at 50% 0%, hsla(18, 55%, 32%, 0.5) 0%, transparent 55%),
+    radial-gradient(ellipse at 0% 100%, hsla(35, 50%, 28%, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, hsla(90, 22%, 22%, 0.3) 0%, transparent 50%),
+    linear-gradient(180deg, hsl(24, 20%, 10%) 0%, hsl(24, 18%, 7%) 100%);
 }
 
 /* Soft glow gradient utility — used for hero/CTA cards */
 .blush-glow {
   background:
-    radial-gradient(ellipse at top left, hsla(340, 80%, 75%, 0.18), transparent 60%),
-    radial-gradient(ellipse at bottom right, hsla(18, 85%, 78%, 0.18), transparent 60%),
+    radial-gradient(ellipse at top left, hsla(18, 55%, 75%, 0.18), transparent 60%),
+    radial-gradient(ellipse at bottom right, hsla(35, 60%, 78%, 0.18), transparent 60%),
     hsl(var(--card));
 }
 .dark .blush-glow {
   background:
-    radial-gradient(ellipse at top left, hsla(340, 70%, 50%, 0.15), transparent 60%),
-    radial-gradient(ellipse at bottom right, hsla(18, 70%, 50%, 0.12), transparent 60%),
+    radial-gradient(ellipse at top left, hsla(18, 55%, 45%, 0.15), transparent 60%),
+    radial-gradient(ellipse at bottom right, hsla(35, 55%, 45%, 0.12), transparent 60%),
     hsl(var(--card));
 }
 
@@ -338,11 +342,13 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff5f8, #fcc9d8 45%, #f08aaa 85%);
+  /* Re-tinted to warm ochre/amber so the bulbs match the earth-tone vibe
+   * instead of the old rose. Reads as candlelight on baked clay. */
+  background: radial-gradient(circle at 35% 35%, #fff7e8, #f4d4a0 45%, #c98a3f 85%);
   box-shadow:
-    0 0 8px 3px hsla(340, 80%, 75%, 0.4),
-    0 0 20px 6px hsla(340, 70%, 65%, 0.18),
-    0 0 1px 1px hsla(340, 100%, 95%, 0.4);
+    0 0 8px 3px hsla(35, 70%, 65%, 0.4),
+    0 0 20px 6px hsla(28, 60%, 55%, 0.18),
+    0 0 1px 1px hsla(38, 90%, 88%, 0.4);
   animation: bulb-pulse 3s ease-in-out infinite;
 }
 
@@ -351,8 +357,8 @@
 }
 
 @keyframes bulb-pulse {
-  0%, 100% { opacity: 0.88; box-shadow: 0 0 8px 3px hsla(340, 80%, 75%, 0.4), 0 0 20px 6px hsla(340, 70%, 65%, 0.18); }
-  50%      { opacity: 1.00; box-shadow: 0 0 10px 5px hsla(340, 85%, 80%, 0.5), 0 0 28px 10px hsla(340, 75%, 70%, 0.3); }
+  0%, 100% { opacity: 0.88; box-shadow: 0 0 8px 3px hsla(35, 70%, 65%, 0.4), 0 0 20px 6px hsla(28, 60%, 55%, 0.18); }
+  50%      { opacity: 1.00; box-shadow: 0 0 10px 5px hsla(35, 75%, 70%, 0.5), 0 0 28px 10px hsla(28, 65%, 60%, 0.3); }
 }
 
 /* Warm amber glow overlay on camera feed */

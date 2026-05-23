@@ -892,29 +892,44 @@ export default function Home() {
     );
   }, [paletteQuery]);
 
-  const lookTabs = [
+  const lookTabs: Array<{
+    id: string; label: string; icon: React.ReactNode; title: string;
+    looks: typeof filtered.all; blurb: string; gradient: string;
+    modelImage?: string; modelAlt?: string;
+  }> = [
     { id: "all",        label: "All",        icon: <Layers className="w-3.5 h-3.5" />,       title: "Complete Makeup Styles", looks: filtered.all,
-      blurb: "Every look in the catalogue.", gradient: "from-rose-200 via-pink-200 to-orange-100" },
+      blurb: "Every look in the catalogue.", gradient: "from-rose-200 via-pink-200 to-orange-100",
+      modelImage: "zendaya-ethereal.jpg", modelAlt: "Mixed-heritage model with ethereal glam" },
     { id: "trending",   label: "Trending",   icon: <TrendingUp className="w-3.5 h-3.5" />,   title: "Trending Styles",        looks: filtered.trending,
-      blurb: "What's hot right now on the FYP.", gradient: "from-pink-300 via-fuchsia-200 to-violet-200" },
+      blurb: "What's hot right now on the FYP.", gradient: "from-pink-300 via-fuchsia-200 to-violet-200",
+      modelImage: "beyonce-golden.jpg", modelAlt: "Black model in golden glam" },
     { id: "halloween",  label: "Halloween",  icon: <Ghost className="w-3.5 h-3.5" />,        title: "Halloween Looks",        looks: filtered.halloween,
-      blurb: `${halloweenLooks.length} costumes — from glam witch to sugar skull.`, gradient: "from-orange-400 via-purple-500 to-zinc-900" },
+      blurb: `${halloweenLooks.length} costumes — from glam witch to sugar skull.`, gradient: "from-orange-400 via-purple-500 to-zinc-900",
+      modelImage: "mexico-frida.jpg", modelAlt: "Latina model with Day-of-the-Dead inspired look" },
     { id: "goth",       label: "Goth",       icon: <Skull className="w-3.5 h-3.5" />,        title: "Goth Styles",            looks: filtered.goth,
-      blurb: "Trad, soft, pastel, e-girl, cyber & romantic.", gradient: "from-zinc-700 via-zinc-800 to-black" },
+      blurb: "Trad, soft, pastel, e-girl, cyber & romantic.", gradient: "from-zinc-700 via-zinc-800 to-black",
+      modelImage: "trend-goth.jpg", modelAlt: "Model in dark gothic makeup" },
     { id: "pageant",    label: "Pageant",    icon: <Crown className="w-3.5 h-3.5" />,       title: "Beauty Pageant Looks",   looks: filtered.pageant,
-      blurb: "Stage-ready glam — from swimsuit to evening gown.", gradient: "from-amber-200 via-yellow-100 to-rose-200" },
+      blurb: "Stage-ready glam — from swimsuit to evening gown.", gradient: "from-amber-200 via-yellow-100 to-rose-200",
+      modelImage: "philippines-morena.jpg", modelAlt: "Filipina pageant-style glam" },
     { id: "drag",       label: "Drag",       icon: <Drama className="w-3.5 h-3.5" />,       title: "Drag Queen Looks",       looks: filtered.drag,
-      blurb: "Full fantasy — club kid to ballroom eleganza.", gradient: "from-fuchsia-400 via-purple-300 to-pink-300" },
+      blurb: "Full fantasy — club kid to ballroom eleganza.", gradient: "from-fuchsia-400 via-purple-300 to-pink-300",
+      modelImage: "rihanna-edgy.jpg", modelAlt: "Black model in bold high-fantasy glam" },
     { id: "more",       label: "More Styles", icon: <Sparkles className="w-3.5 h-3.5" />,    title: "More Modern Styles",     looks: filtered.moreStyles,
-      blurb: "Douyin, latte, indie sleaze & more.", gradient: "from-fuchsia-200 via-rose-200 to-amber-200" },
+      blurb: "Douyin, latte, indie sleaze & more.", gradient: "from-fuchsia-200 via-rose-200 to-amber-200",
+      modelImage: "china-cbeauty.jpg", modelAlt: "East-Asian model in modern C-beauty look" },
     { id: "era",        label: "By Era",     icon: <CalendarDays className="w-3.5 h-3.5" />, title: "By Era",                 looks: filtered.era,
-      blurb: "1920s flapper to Y2K — pick your decade.", gradient: "from-amber-200 via-rose-200 to-purple-200" },
+      blurb: "1920s flapper to Y2K — pick your decade.", gradient: "from-amber-200 via-rose-200 to-purple-200",
+      modelImage: "jlo-y2k.jpg", modelAlt: "Latina model in Y2K era glam" },
     { id: "eyes",       label: "Eyes",       icon: <Eye className="w-3.5 h-3.5" />,          title: "Eye Styles",             looks: filtered.eyes,
-      blurb: "Liners, smokes, graphics & shimmers.", gradient: "from-sky-200 via-violet-200 to-pink-200" },
+      blurb: "Liners, smokes, graphics & shimmers.", gradient: "from-sky-200 via-violet-200 to-pink-200",
+      modelImage: "eye-arabic-kohl.jpg", modelAlt: "MENA model with kohl-lined eyes" },
     { id: "lips",       label: "Lips",       icon: <Smile className="w-3.5 h-3.5" />,        title: "Lip Styles",             looks: filtered.lips,
-      blurb: "Glosses, ombres, bitten reds and beyond.", gradient: "from-rose-300 via-red-200 to-orange-200" },
+      blurb: "Glosses, ombres, bitten reds and beyond.", gradient: "from-rose-300 via-red-200 to-orange-200",
+      modelImage: "nigeria-afrobeats.jpg", modelAlt: "Nigerian model with rich lip colour" },
     { id: "saved",      label: "Saved",      icon: <Heart className="w-3.5 h-3.5" />,        title: "Saved Looks",            looks: filtered.saved,
-      blurb: "Looks you've hearted to come back to.", gradient: "from-rose-200 via-pink-100 to-rose-200" },
+      blurb: "Looks you've hearted to come back to.", gradient: "from-rose-200 via-pink-100 to-rose-200",
+      modelImage: "ghana-natural.jpg", modelAlt: "Ghanaian model in natural glam" },
   ];
 
   return (
@@ -1086,12 +1101,21 @@ export default function Home() {
                         whileTap={{ scale: 0.97 }}
                         className="group relative text-left rounded-2xl overflow-hidden border border-border bg-card hover:border-primary/40 transition-all shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       >
-                        <div className={`h-20 sm:h-24 bg-gradient-to-br ${t.gradient} relative`}>
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-                          <div className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] font-bold text-foreground/80">
+                        <div className={`h-20 sm:h-24 bg-gradient-to-br ${t.gradient} relative overflow-hidden`}>
+                          {t.modelImage && (
+                            <img
+                              src={`${import.meta.env.BASE_URL}looks/${t.modelImage}`}
+                              alt={t.modelAlt ?? ""}
+                              loading="lazy"
+                              decoding="async"
+                              className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-transparent group-hover:from-black/30 transition-colors" />
+                          <div className="absolute top-2 right-2 bg-white/85 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] font-bold text-foreground/80">
                             {count} {count === 1 ? "look" : "looks"}
                           </div>
-                          <div className="absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-foreground shadow-sm">
+                          <div className="absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-foreground shadow-sm">
                             {t.icon ?? <Sparkles className="w-4 h-4" />}
                           </div>
                         </div>

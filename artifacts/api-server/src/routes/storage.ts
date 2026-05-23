@@ -4,8 +4,9 @@ import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
+import { getAuth } from "@clerk/express";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { ObjectPermission } from "../lib/objectAcl";
+import { ObjectPermission, getObjectAclPolicy, canAccessObject } from "../lib/objectAcl";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -92,20 +93,46 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
-    // --- Protected route example (uncomment when using replit-auth) ---
-    // if (!req.isAuthenticated()) {
-    //   res.status(401).json({ error: "Unauthorized" });
-    //   return;
-    // }
-    // const canAccess = await objectStorageService.canAccessObjectEntity({
-    //   userId: req.user.id,
-    //   objectFile,
-    //   requestedPermission: ObjectPermission.READ,
-    // });
-    // if (!canAccess) {
-    //   res.status(403).json({ error: "Forbidden" });
-    //   return;
-    // }
+    /**
+     * ACL enforcement.
+     *
+     * Current rule:
+     *  • If an object has an explicit ACL policy attached as custom
+     *    metadata (`custom:aclPolicy`) we enforce it via `canAccessObject`.
+     *  • If no policy is attached, we fall back to READ-allowed. This is
+     *    a deliberate backwards-compat default — every object uploaded
+     *    before per-object ACLs were wired into the upload flow lives
+     *    here, and gating them all behind auth would 401 every avatar
+     *    and post image in production.
+     *
+     * Migration plan to close the gap:
+     *  1. Update the upload flow (POST /posts, profile avatar setter,
+     *     anything that calls `request-url`) to call
+     *     `objectStorageService.trySetObjectEntityAclPolicy(path, { owner, visibility })`
+     *     once the upload completes. Use `visibility: "public"` for posts /
+     *     avatars and `"private"` for drafts / DMs.
+     *  2. Backfill ACLs on legacy objects via a one-shot script.
+     *  3. THEN flip the `policyMissing` branch below from "allow" to
+     *     "deny" and document the change in replit.md.
+     */
+    const auth = getAuth(req);
+    const policy = await getObjectAclPolicy(objectFile);
+    if (policy) {
+      const canRead = await canAccessObject({
+        userId: auth.userId ?? undefined,
+        objectFile,
+        requestedPermission: ObjectPermission.READ,
+      });
+      if (!canRead) {
+        if (!auth.userId) {
+          res.status(401).json({ error: "Unauthorized" });
+          return;
+        }
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+    }
+    // policy missing → legacy-public fallback (see comment above).
 
     const response = await objectStorageService.downloadObject(objectFile);
 

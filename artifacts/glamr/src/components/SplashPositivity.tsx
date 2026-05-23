@@ -52,7 +52,7 @@ export function SplashPositivity() {
           exit={{ opacity: 0 }}
           transition={{ duration: reduce ? 0 : 0.4 }}
           onClick={() => setVisible(false)}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 px-8 bg-gradient-to-br from-rose-100 via-pink-100 to-fuchsia-100 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 px-8 bg-gradient-to-br from-orange-100 via-amber-50 to-stone-100 backdrop-blur-sm cursor-pointer"
         >
           <motion.div
             initial={reduce ? { y: 0, opacity: 1 } : { y: 12, opacity: 0 }}
@@ -62,7 +62,7 @@ export function SplashPositivity() {
           >
             <h1
               id="splash-title"
-              className="font-serif font-bold leading-none bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-600 bg-clip-text text-transparent"
+              className="font-serif font-bold leading-none bg-gradient-to-br from-orange-700 via-amber-600 to-stone-700 bg-clip-text text-transparent"
               style={{ fontSize: "clamp(3rem, 14vw, 5rem)" }}
             >
               Beat
@@ -91,7 +91,7 @@ export function SplashPositivity() {
             initial={reduce ? { opacity: 1 } : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: reduce ? 0 : 0.6 }}
-            className="text-xs uppercase tracking-[0.2em] text-foreground/60 px-5 py-2 rounded-full border border-foreground/15 hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500/50"
+            className="text-xs uppercase tracking-[0.2em] text-foreground/60 px-5 py-2 rounded-full border border-foreground/15 hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/50"
           >
             Enter Beat
           </motion.button>

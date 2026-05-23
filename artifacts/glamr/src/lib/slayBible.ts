@@ -14,7 +14,15 @@ export type SkinCondition =
   | "stretch-marks"
   | "wrinkles"
   | "sun-damage"
-  | "dandruff";
+  | "dandruff"
+  | "melasma"
+  | "keratosis-pilaris"
+  | "dehydrated-skin"
+  | "sensitive-skin"
+  | "large-pores"
+  | "hormonal-acne"
+  | "ingrown-hairs"
+  | "puffy-eyes";
 
 export const SKIN_CONDITIONS: SkinCondition[] = [
   "eczema",
@@ -24,12 +32,20 @@ export const SKIN_CONDITIONS: SkinCondition[] = [
   "thin-hair",
   "clogged-pores",
   "pimples",
+  "hormonal-acne",
   "dark-circles",
+  "puffy-eyes",
   "hyperpigmentation",
+  "melasma",
   "rosacea",
   "dry-skin",
+  "dehydrated-skin",
   "oily-skin",
+  "large-pores",
+  "sensitive-skin",
+  "keratosis-pilaris",
   "stretch-marks",
+  "ingrown-hairs",
   "wrinkles",
   "sun-damage",
   "dandruff",
@@ -52,6 +68,14 @@ export const CONDITION_LABELS: Record<SkinCondition, string> = {
   wrinkles: "Fine Lines & Wrinkles",
   "sun-damage": "Sun Damage",
   dandruff: "Dandruff & Scalp",
+  melasma: "Melasma",
+  "keratosis-pilaris": "Keratosis Pilaris",
+  "dehydrated-skin": "Dehydrated Skin",
+  "sensitive-skin": "Sensitive Skin",
+  "large-pores": "Large Pores",
+  "hormonal-acne": "Hormonal Acne",
+  "ingrown-hairs": "Ingrown Hairs",
+  "puffy-eyes": "Puffy Eyes",
 };
 
 export const CONDITION_EMOJI: Record<SkinCondition, string> = {
@@ -71,6 +95,14 @@ export const CONDITION_EMOJI: Record<SkinCondition, string> = {
   wrinkles: "🕐",
   "sun-damage": "☀️",
   dandruff: "❄️",
+  melasma: "🦋",
+  "keratosis-pilaris": "🌾",
+  "dehydrated-skin": "🥛",
+  "sensitive-skin": "🌸",
+  "large-pores": "🔭",
+  "hormonal-acne": "🌙",
+  "ingrown-hairs": "🪒",
+  "puffy-eyes": "🫖",
 };
 
 export const CONDITION_SWATCH: Record<SkinCondition, string> = {
@@ -90,6 +122,14 @@ export const CONDITION_SWATCH: Record<SkinCondition, string> = {
   wrinkles: "from-purple-300 to-violet-200",
   "sun-damage": "from-yellow-400 to-orange-200",
   dandruff: "from-slate-200 to-zinc-300",
+  melasma: "from-amber-300 to-rose-200",
+  "keratosis-pilaris": "from-pink-200 to-orange-100",
+  "dehydrated-skin": "from-cyan-200 to-blue-100",
+  "sensitive-skin": "from-pink-200 to-rose-100",
+  "large-pores": "from-zinc-300 to-stone-200",
+  "hormonal-acne": "from-violet-300 to-pink-200",
+  "ingrown-hairs": "from-amber-200 to-stone-200",
+  "puffy-eyes": "from-blue-200 to-indigo-100",
 };
 
 export interface SlayTip {
@@ -177,6 +217,25 @@ export const SLAY_BIBLE: SlayConditionEntry[] = [
         ingredients: ["Vitamin C (L-ascorbic acid)", "Glycolic acid", "Niacinamide", "Alpha arbutin"],
         makeupTip:
           "Use a peach or orange colour corrector under concealer for dark marks. Set with a light dusting of translucent powder.",
+      },
+      {
+        id: "blm-2",
+        title: "Stop the next mark forming",
+        detail:
+          "Most blemishes are post-inflammatory marks left by spots you've squeezed. Treating active breakouts gently is how you prevent the next round of dark spots.",
+        doList: [
+          "Hands off — never pick or pop",
+          "Use a hydrocolloid pimple patch overnight on whiteheads",
+          "Apply azelaic acid 10% — it treats acne AND fades marks at the same time",
+        ],
+        avoidList: [
+          "Wearing makeup over broken skin",
+          "Hot water on inflamed spots",
+          "Switching products every week — give actives 6-8 weeks",
+        ],
+        ingredients: ["Azelaic acid", "Tranexamic acid", "Centella asiatica", "Liquorice root"],
+        makeupTip:
+          "Stipple — don't drag — concealer over post-acne marks with a small dense brush so you don't lift the surrounding foundation. A skin tint with peach undertones reads more natural than full coverage.",
       },
     ],
   },
@@ -335,6 +394,26 @@ export const SLAY_BIBLE: SlayConditionEntry[] = [
         makeupTip:
           "Use a peach/salmon corrector for blue-toned circles or an orange corrector for deeper skin tones. Apply in a triangle shape under the eye, then blend concealer over it.",
       },
+      {
+        id: "dc-2",
+        title: "Match the corrector to your undertone",
+        detail:
+          "The biggest concealer mistake is using one shade lighter than your foundation everywhere. Under-eye darkness needs a colour-theory fix first, then a brightening concealer on top.",
+        doList: [
+          "Fair/light skin → pink-peach corrector",
+          "Medium/olive → salmon or warm peach",
+          "Deep skin → red or burnt-orange corrector",
+          "Tap (don't drag) with a ring finger so warmth blends the product",
+        ],
+        avoidList: [
+          "White or grey concealers under the eye (looks ashy)",
+          "Heavy powder on top — bakes into lines",
+          "Pulling the skin while applying",
+        ],
+        ingredients: ["Peach pigments", "Hyaluronic acid", "Mica (light-reflecting)", "Vitamin E"],
+        makeupTip:
+          "Set with the tiniest amount of finely-milled translucent powder pressed (not swept) under the eye. Re-hydrate mid-day with a spritz of facial mist before any touch-up.",
+      },
     ],
   },
   {
@@ -440,6 +519,25 @@ export const SLAY_BIBLE: SlayConditionEntry[] = [
         makeupTip:
           "Apply a mattifying primer on the T-zone only. Use blotting papers throughout the day instead of adding more powder — layering powder makes you look cakey.",
       },
+      {
+        id: "oil-2",
+        title: "Balance the shine zones",
+        detail:
+          "Most oily skin is actually combination — only the T-zone is greasy while cheeks can be dehydrated. Treat zones differently instead of stripping the whole face.",
+        doList: [
+          "Use clay mask twice a week on T-zone only",
+          "Add a hydrating toner with PHA on cheeks",
+          "Switch to silk pillowcases — cotton absorbs your face oils",
+        ],
+        avoidList: [
+          "Alcohol-heavy mattifying toners on cheeks",
+          "Touching your face throughout the day",
+          "Powder foundation on dehydrated areas",
+        ],
+        ingredients: ["Kaolin clay", "PHA (gluconolactone)", "Zinc PCA", "Green tea"],
+        makeupTip:
+          "Use a setting spray with hyaluronic acid AND a separate mattifying spray on T-zone only. This gives a glow on cheeks while keeping the centre of the face shine-free for hours.",
+      },
     ],
   },
   {
@@ -543,6 +641,221 @@ export const SLAY_BIBLE: SlayConditionEntry[] = [
         ingredients: ["Ketoconazole", "Zinc pyrithione", "Salicylic acid", "Tea tree oil"],
         makeupTip:
           "Wear dark clothing with a lint roller handy. Before styling, use a scalp mist with witch hazel to control flaking throughout the day.",
+      },
+    ],
+  },
+  {
+    condition: "melasma",
+    overview:
+      "Melasma shows up as symmetrical brown or grey-brown patches, usually on cheeks, forehead and upper lip. It's hormonal (pregnancy, the pill) and worsens with sun, heat and even visible light — including your phone screen.",
+    tips: [
+      {
+        id: "mel-1",
+        title: "Block light, not just UV",
+        detail:
+          "Melasma reacts to visible light too, so a regular SPF isn't enough. You need a tinted mineral SPF with iron oxides, which blocks the blue light from screens and the sun.",
+        doList: [
+          "Use a tinted SPF 50 with iron oxides every single day",
+          "Reapply over makeup with a powder SPF every 2 hours",
+          "Add tranexamic acid serum AM + PM — proven to fade melasma",
+        ],
+        avoidList: [
+          "Heat triggers — saunas, hot yoga, steamy showers on the face",
+          "Waxing the upper lip (the trauma triggers more pigment)",
+          "Hydroquinone for more than 3 months without a break",
+        ],
+        ingredients: ["Tranexamic acid", "Cysteamine", "Iron oxides (in SPF)", "Azelaic acid"],
+        makeupTip:
+          "Layer a peach corrector under foundation on the darkest patches, then use a colour-balancing primer (slight lavender tint) on top to even tone before foundation.",
+      },
+    ],
+  },
+  {
+    condition: "keratosis-pilaris",
+    overview:
+      "KP — those rough little bumps on the backs of arms, thighs and cheeks — is just keratin plugging the hair follicles. It's harmless, very common, and improves dramatically with consistent gentle exfoliation plus moisture.",
+    tips: [
+      {
+        id: "kp-1",
+        title: "Chemical exfoliation beats scrubbing",
+        detail:
+          "Physical scrubs irritate KP and make it redder. Lactic acid or urea lotions dissolve the keratin plugs while moisturising at the same time.",
+        doList: [
+          "Apply a 10-12% urea or AmLactin lotion daily after showering",
+          "Use a soft body brush in circular motions — gentle, not harsh",
+          "Keep showers short and lukewarm to protect the barrier",
+        ],
+        avoidList: [
+          "Loofahs and body scrubs (worsen redness)",
+          "Soap bars that strip oils",
+          "Picking at the bumps",
+        ],
+        ingredients: ["Urea 10-20%", "Lactic acid (AHA)", "Salicylic acid", "Ceramides"],
+        makeupTip:
+          "For the cheeks variation, use a hydrating cushion foundation tapped with a damp sponge instead of buffing with a brush — buffing exaggerates the texture.",
+      },
+    ],
+  },
+  {
+    condition: "dehydrated-skin",
+    overview:
+      "Dehydrated skin lacks WATER (not oil) — so even oily skin can be dehydrated. Signs: tightness after cleansing, fine surface lines, dullness, and makeup that won't sit right. The fix is layered hydration, not heavier creams.",
+    tips: [
+      {
+        id: "dh-1",
+        title: "Layer humectants on damp skin",
+        detail:
+          "Hyaluronic acid only works when there's water already on your face. Apply HA to damp skin then immediately seal with a lightweight moisturiser to lock the water in.",
+        doList: [
+          "Apply hydrating toner or essence to wet skin",
+          "Layer hyaluronic acid serum before it dries",
+          "Seal with a gel-cream moisturiser",
+          "Drink water consistently throughout the day",
+        ],
+        avoidList: [
+          "Foaming/sulphate cleansers (strip the barrier)",
+          "Hot water on the face",
+          "Skipping moisturiser if you have oily skin — that's why you're shiny",
+        ],
+        ingredients: ["Hyaluronic acid (multi-weight)", "Glycerin", "Panthenol", "Beta-glucan"],
+        makeupTip:
+          "Mist your face with a hydrating spray BEFORE foundation, not after — the foundation glides on a moist base. A drop of essence mixed into liquid foundation prevents the chalky look.",
+      },
+    ],
+  },
+  {
+    condition: "sensitive-skin",
+    overview:
+      "Sensitive skin reacts easily — stinging, burning, redness, itching from products that don't bother most people. The goal is a short, fragrance-free routine that focuses on rebuilding the barrier.",
+    tips: [
+      {
+        id: "ss-1",
+        title: "Less is more",
+        detail:
+          "A 3-step routine (gentle cleanser, ceramide moisturiser, mineral SPF) often outperforms a 10-step shelfie. Introduce new products one at a time, two weeks apart, so you can spot the culprit.",
+        doList: [
+          "Patch-test new products behind the ear for 3 days",
+          "Stick to mineral (zinc oxide) sunscreens",
+          "Use a 'skin barrier' cream with ceramides + cholesterol",
+        ],
+        avoidList: [
+          "Essential oils (lavender, citrus, peppermint)",
+          "Alcohol-based toners",
+          "Combining multiple actives (retinol + acid + vitamin C)",
+          "Anything labelled 'fragrance' or 'parfum'",
+        ],
+        ingredients: ["Ceramides", "Centella asiatica", "Panthenol (B5)", "Bisabolol"],
+        makeupTip:
+          "Choose 'sensitive skin' or 'minimalist' brands that skip fragrance and dyes. A skin tint or BB cream is gentler than full-coverage foundation; use a clean fluffy brush — sponges can harbour bacteria that flares sensitive skin.",
+      },
+    ],
+  },
+  {
+    condition: "large-pores",
+    overview:
+      "Pore size is mostly genetic and can't be permanently shrunk, but you CAN minimise their appearance. Keeping them clear and stimulating collagen around them does the heavy lifting.",
+    tips: [
+      {
+        id: "lp-1",
+        title: "Niacinamide is the MVP",
+        detail:
+          "Niacinamide 10% used daily for 8+ weeks visibly tightens pores. Combine with weekly BHA to keep them clear, and retinol at night to firm the skin around them.",
+        doList: [
+          "Apply niacinamide 10% serum daily",
+          "Use a 2% BHA toner 2-3x per week to clear oil plugs",
+          "Add retinol at night to stimulate collagen",
+          "Always remove SPF + makeup at night",
+        ],
+        avoidList: [
+          "Pore strips (only remove surface debris and stretch pores)",
+          "Heavy occlusive oils (coconut, mineral)",
+          "Skipping cleanser after the gym",
+        ],
+        ingredients: ["Niacinamide 10%", "Salicylic acid (BHA)", "Retinol", "Clay (weekly mask)"],
+        makeupTip:
+          "Use a silicone-based primer (look for dimethicone high in the ingredients) over the nose and cheeks to optically blur pores. Avoid full-coverage matte foundations that settle into them — go for a satin/skin-like finish.",
+      },
+    ],
+  },
+  {
+    condition: "hormonal-acne",
+    overview:
+      "Hormonal acne shows up as deep, cystic spots along the jawline, chin and neck — usually flaring the week before your period. Topicals help, but the real fix often comes from inside (diet, hormones, stress).",
+    tips: [
+      {
+        id: "ha-1",
+        title: "Target deep spots before they surface",
+        detail:
+          "Cystic acne starts forming up to 10 days before you see it. Use a spironolactone alternative routine: zinc, omega-3s, and topical azelaic acid daily — not just when you break out.",
+        doList: [
+          "Track your cycle — pre-empt with extra azelaic acid 10 days before period",
+          "Take zinc 15-30mg + omega-3s daily (talk to your GP first)",
+          "Use a warm compress on cystic spots, not toothpaste",
+          "Talk to a doctor about spironolactone or hormonal options",
+        ],
+        avoidList: [
+          "Squeezing cysts (turns into months of scarring)",
+          "Dairy and high-glycemic foods if you notice they trigger you",
+          "Layering 5 actives on the same spot",
+        ],
+        ingredients: ["Azelaic acid 10-15%", "Zinc", "Adapalene 0.1%", "Tea tree (spot-only)"],
+        makeupTip:
+          "On a cyst, skip foundation in that exact spot — a hydrocolloid patch + concealer dabbed over it reads better than thick layers. Use a green colour corrector first, then a single dab of concealer with a tiny brush.",
+      },
+    ],
+  },
+  {
+    condition: "ingrown-hairs",
+    overview:
+      "Ingrowns happen when shaved or waxed hair curls back into the skin, causing red bumps, dark spots and sometimes pain. They're more common on Black, Latina and curly-haired skin where hair texture spirals naturally.",
+    tips: [
+      {
+        id: "ih-1",
+        title: "Prep, exfoliate, never dry-shave",
+        detail:
+          "Most ingrowns are prevented before the razor touches you. Warm water + a fresh sharp blade in the direction of hair growth, plus weekly chemical exfoliation, transforms the area.",
+        doList: [
+          "Exfoliate the area with a BHA toner 2-3x per week",
+          "Shave in the direction of hair growth, not against",
+          "Use a single-blade razor (multi-blades cut below skin level)",
+          "Apply a 2% BHA spray immediately after shaving",
+        ],
+        avoidList: [
+          "Dry shaving",
+          "Using a dull blade",
+          "Picking out ingrowns with tweezers (causes scarring + infection)",
+          "Tight underwear or jeans on freshly shaved skin",
+        ],
+        ingredients: ["Salicylic acid 2%", "Glycolic acid 7%", "Witch hazel", "Tea tree oil"],
+        makeupTip:
+          "For ingrowns on the face (chin/jaw area), a green colour corrector neutralises redness before foundation. For dark spots left behind, azelaic acid daily fades them over 8-12 weeks.",
+      },
+    ],
+  },
+  {
+    condition: "puffy-eyes",
+    overview:
+      "Puffy eyes can be allergies, fluid retention, lack of sleep, salty dinner, or just genetics. The cause matters — depuffing techniques work brilliantly for fluid, but not for fat pads (those need a doctor).",
+    tips: [
+      {
+        id: "pe-1",
+        title: "Drain the morning swell",
+        detail:
+          "First thing in the morning, use cold tools and gentle lymphatic massage to push fluid AWAY from the eye area towards the ears and down the neck.",
+        doList: [
+          "Keep a jade roller or ice globes in the fridge",
+          "Roll outward from inner corner to temple, then down to collarbone",
+          "Sleep with your head slightly elevated",
+          "Cut salt + alcohol the night before an event",
+        ],
+        avoidList: [
+          "Rubbing your eyes (worsens swelling and pigment)",
+          "Heavy creams under the eye at night",
+          "Skipping water — dehydration makes you retain fluid",
+        ],
+        ingredients: ["Caffeine eye cream", "Cold tools", "Peptides", "Cucumber/green tea extract"],
+        makeupTip:
+          "Apply concealer ONLY in a triangle on the dark area below the puff — never on the puff itself, which would just highlight it. A subtle satin highlight on the inner corner draws the eye away from the swelling.",
       },
     ],
   },
