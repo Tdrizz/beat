@@ -6,3 +6,4 @@ export * from "./notifications";
 export * from "./tutorials";
 export * from "./classes";
 export * from "./chat";
+export * from "./wigs";

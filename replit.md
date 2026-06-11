@@ -48,6 +48,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Period/Cycle Tracker**: `artifacts/glamr/src/pages/PeriodTracker.tsx`
 - **Live Classes**: `artifacts/glamr/src/pages/{Classes,ClassDetail,HostClass}.tsx`, `artifacts/api-server/src/routes/classes.ts`, schema `lib/db/src/schema/classes.ts`, seed `artifacts/api-server/src/lib/seedClasses.ts`
 - **Premium (Stripe)**: `artifacts/glamr/src/pages/Premium.tsx`, hook `artifacts/glamr/src/hooks/usePremium.ts`, server `artifacts/api-server/src/{routes/premium.ts,lib/stripeClient.ts,lib/stripeWebhook.ts,lib/premium.ts,middlewares/requirePremium.ts}` — `premium_until` + `stripe_customer_id` columns on `profiles`
+- **Wig Studio (AI wig try-on)**: catalogue `artifacts/glamr/src/lib/wigs.ts` (40 styles + 22-colour palette, face-shape/occasion tags); pages `artifacts/glamr/src/pages/{Wigs,WigDetail,MyWigs}.tsx`; save helper `artifacts/glamr/src/lib/saveWigTryOn.ts`; saved-try-on persistence schema `lib/db/src/schema/wigs.ts` (`wig_tryons` table) + routes `artifacts/api-server/src/routes/wigs.ts` (`POST/GET/DELETE /wig-tryons`, `requireAuth`). Try-on integration reuses the Gemini pipeline (`aiTryon.ts` `wig` field, `useAITryOn`, `TryOn.tsx` WigRail). "Save to My Wigs" button lives in `AITryOnModal.tsx` (`wigSave` prop).
 
 ## Architecture decisions
 
@@ -73,6 +74,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Esthetician Hub**: Premium directory for licensed estheticians to promote their services.
 - **Kindness Prompt**: Anti-bullying overlay triggered by derogatory language in posts/captions — shows "be kind" message for 5 seconds before allowing resume.
 - **Cycle Tracker**: On-device period tracker with phase detection (menstrual, follicular, ovulation, luteal), next-period prediction, and phase-specific skin/makeup/self-care tips. All data stored in localStorage.
+- **Wig Studio**: AI wig try-on catalogue of 40 styles (bobs, waves, curls, braids, locs) in 22 colours with face-shape/occasion suitability tags. "Try this wig" deep-links into the AI try-on (`/try-on/<look>?wig=&color=`) over a neutral base look; renders can be saved to a per-user "My Wigs" gallery (object storage, finalized private). Wig switcher with auto-fire already lives inside the try-on screen.
 
 ### Tutorial step video clips
 

@@ -44,6 +44,9 @@ import Classes from "@/pages/Classes";
 import ClassDetail from "@/pages/ClassDetail";
 import HostClass from "@/pages/HostClass";
 import Premium from "@/pages/Premium";
+import Wigs from "@/pages/Wigs";
+import WigDetail from "@/pages/WigDetail";
+import MyWigs from "@/pages/MyWigs";
 import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
@@ -91,6 +94,10 @@ function Router() {
       <Route path="/classes/:id" component={ClassDetail} />
       <Route path="/host-class" component={HostClass} />
       <Route path="/premium" component={Premium} />
+
+      <Route path="/wigs" component={Wigs} />
+      <Route path="/wigs/:wigId" component={WigDetail} />
+      <Route path="/my-wigs"><AuthedRoute><MyWigs /></AuthedRoute></Route>
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>

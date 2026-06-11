@@ -1,10 +1,21 @@
 import { useEffect, useState, type RefObject } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, X, Download, Sparkles, AlertCircle, RefreshCw, Camera, ChevronLeft, ChevronRight, Send } from "lucide-react";
+import { Loader2, X, Download, Sparkles, AlertCircle, RefreshCw, Camera, ChevronLeft, ChevronRight, Send, Heart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { useToast } from "@/hooks/use-toast";
+import { saveWigTryOn } from "../lib/saveWigTryOn";
 import type { AngleResult } from "../hooks/useAITryOn";
+
+/** When a wig is active in the try-on, this metadata lets the modal offer a
+ *  "Save to My Wigs" action that uploads the render + records the pairing. */
+export interface WigSaveContext {
+  styleId: string;
+  styleName: string;
+  colorId: string;
+  colorName: string;
+}
 
 interface Props {
   open: boolean;
@@ -25,6 +36,8 @@ interface Props {
   /** Live camera ref so the modal can show a small PiP preview to help
    *  the user frame their next angle without dismissing the modal. */
   videoRef: RefObject<HTMLVideoElement | null>;
+  /** Present when a wig is active — enables the "Save to My Wigs" action. */
+  wigSave?: WigSaveContext | null;
 }
 
 function intensityLabel(v: number) {
@@ -59,9 +72,14 @@ const ANGLE_PROMPTS = [
 export function AITryOnModal({
   open, state, gallery, currentIndex, onSelectIndex,
   error, lookName, lookId, intensity, onIntensityChange,
-  onClose, onCaptureAngle, videoRef,
+  onClose, onCaptureAngle, videoRef, wigSave,
 }: Props) {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  // Saved-state is keyed by gallery image id so each angle tracks its own
+  // "saved" badge — saving the Front render shouldn't mark Slight-left saved.
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   // Hand the current generated frame off to the Upload composer via
   // sessionStorage. We can't pass the dataURL through a query string
   // (URLs would be 1MB+) and we don't want to round-trip through the
@@ -126,6 +144,37 @@ export function AITryOnModal({
     a.click();
     document.body.removeChild(a);
   };
+
+  const handleSaveWig = async () => {
+    if (!current?.imageUrl || !wigSave || savingId) return;
+    setSavingId(current.id);
+    try {
+      await saveWigTryOn({
+        dataUrl: current.imageUrl,
+        wigId: wigSave.styleId,
+        wigName: wigSave.styleName,
+        colorId: wigSave.colorId,
+        colorName: wigSave.colorName,
+        angleLabel: current.angleLabel,
+      });
+      setSavedIds((prev) => new Set(prev).add(current.id));
+      toast({
+        title: "Saved to My Wigs",
+        description: `${wigSave.styleName} · ${wigSave.colorName}`,
+      });
+    } catch (err) {
+      toast({
+        title: "Couldn't save",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const isSaved = current ? savedIds.has(current.id) : false;
+  const isSaving = current ? savingId === current.id : false;
 
   const goPrev = () => onSelectIndex(Math.max(0, currentIndex - 1));
   const goNext = () => onSelectIndex(Math.min(gallery.length - 1, currentIndex + 1));
@@ -336,6 +385,23 @@ export function AITryOnModal({
                     <Download className="w-3.5 h-3.5" />
                     Save
                   </Button>
+                  {wigSave && (
+                    <Button
+                      variant="outline"
+                      className="rounded-full gap-1.5 border-pink-300/60 bg-pink-400/20 text-white hover:bg-pink-400/30 hover:text-white"
+                      onClick={handleSaveWig}
+                      disabled={isBusy || isSaving || isSaved}
+                      title="Save this render to your My Wigs gallery"
+                    >
+                      {isSaving ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" />Saving…</>
+                      ) : isSaved ? (
+                        <><Check className="w-3.5 h-3.5" />Saved</>
+                      ) : (
+                        <><Heart className="w-3.5 h-3.5" />My Wigs</>
+                      )}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="rounded-full gap-1.5 border-primary/60 bg-primary/20 text-white hover:bg-primary/30 hover:text-white"

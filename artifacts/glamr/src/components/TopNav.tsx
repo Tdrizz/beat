@@ -8,7 +8,7 @@ import {
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
   Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, CalendarDays, Brush, Apple, Link2, Users,
-  Coffee, BookHeart, Gem, GraduationCap, Crown,
+  Coffee, BookHeart, Gem, GraduationCap, Crown, Scissors,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
@@ -34,6 +34,8 @@ type NavItem = {
   authed?: boolean;
 };
 const SECONDARY: NavItem[] = [
+  { href: "/wigs",      label: "Wig Studio",      icon: Scissors },
+  { href: "/my-wigs",   label: "My Wigs",         icon: Heart, authed: true },
   { href: "/archetype", label: "Iola quiz",       icon: Sparkles },
   { href: "/tutorials", label: "Tutorials",       icon: GraduationCap },
   { href: "/tools",     label: "Brushes & tools", icon: Brush },

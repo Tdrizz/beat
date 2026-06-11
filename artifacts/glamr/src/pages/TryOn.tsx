@@ -794,6 +794,12 @@ export default function TryOn() {
           onClose={closeAITryon}
           onCaptureAngle={(label) => runAITryon(label)}
           videoRef={videoRef}
+          wigSave={selectedWig && selectedColor ? {
+            styleId: selectedWig.id,
+            styleName: selectedWig.name,
+            colorId: selectedColor.id,
+            colorName: selectedColor.name,
+          } : null}
         />
 
         <AnimatePresence>

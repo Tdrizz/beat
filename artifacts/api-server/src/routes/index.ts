@@ -13,6 +13,7 @@ import tutorialsRouter from "./tutorials";
 import classesRouter from "./classes";
 import premiumRouter from "./premium";
 import chatRouter from "./chat";
+import wigsRouter from "./wigs";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(tutorialsRouter);
 router.use(classesRouter);
 router.use(premiumRouter);
 router.use(chatRouter);
+router.use(wigsRouter);
 
 export default router;
