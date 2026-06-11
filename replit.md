@@ -13,6 +13,9 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 **Environment Variables:**
 - `VITE_CLERK_PUBLISHABLE_KEY`: For Clerk authentication.
 - `CURATOR_USER_IDS`: Comma-separated Clerk user IDs allowed to upload/manage tutorial step demo clips (fail-closed; unset ⇒ no curators). See "Tutorial step video clips".
+- `CRON_SECRET`: Shared secret guarding `POST /api/digest/run` (the weekly digest trigger). Set; the endpoint denies all calls when unset.
+- `RESEND_API_KEY` (optional): If set, the digest sends mail with this key directly. Otherwise it falls back to the Replit-managed Resend connector. One of the two must be configured before emails will send.
+- `DIGEST_FROM_EMAIL` (optional): Overrides the digest "from" address (e.g. `Glamr <hello@yourdomain.com>`). Defaults to Resend's shared `onboarding@resend.dev` sender, which only delivers to the Resend account owner until a custom domain is verified.
 
 ## Stack
 
@@ -49,6 +52,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Live Classes**: `artifacts/glamr/src/pages/{Classes,ClassDetail,HostClass}.tsx`, `artifacts/api-server/src/routes/classes.ts`, schema `lib/db/src/schema/classes.ts`, seed `artifacts/api-server/src/lib/seedClasses.ts`
 - **Premium (Stripe)**: `artifacts/glamr/src/pages/Premium.tsx`, hook `artifacts/glamr/src/hooks/usePremium.ts`, server `artifacts/api-server/src/{routes/premium.ts,lib/stripeClient.ts,lib/stripeWebhook.ts,lib/premium.ts,middlewares/requirePremium.ts}` — `premium_until` + `stripe_customer_id` columns on `profiles`
 - **Wig Studio (AI wig try-on)**: catalogue `artifacts/glamr/src/lib/wigs.ts` (40 styles + 22-colour palette, face-shape/occasion tags); pages `artifacts/glamr/src/pages/{Wigs,WigDetail,MyWigs}.tsx`; save helper `artifacts/glamr/src/lib/saveWigTryOn.ts`; saved-try-on persistence schema `lib/db/src/schema/wigs.ts` (`wig_tryons` table) + routes `artifacts/api-server/src/routes/wigs.ts` (`POST/GET/DELETE /wig-tryons`, `requireAuth`). Try-on integration reuses the Gemini pipeline (`aiTryon.ts` `wig` field, `useAITryOn`, `TryOn.tsx` WigRail). "Save to My Wigs" button lives in `AITryOnModal.tsx` (`wigSave` prop).
+- **Weekly Tutorial Digest**: engine `artifacts/api-server/src/lib/digest.ts`, email sender `artifacts/api-server/src/lib/email.ts`, routes `artifacts/api-server/src/routes/digest.ts` (`/digest/run`, `/digest/unsubscribe`, `/digest/resubscribe`), schema `lib/db/src/schema/emailPreferences.ts`. Curated tutorial taxonomy lives in `CURATED_TUTORIAL_META` in `lib/db/src/schema/tutorials.ts`.
 
 ## Architecture decisions
 
@@ -75,6 +79,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Kindness Prompt**: Anti-bullying overlay triggered by derogatory language in posts/captions — shows "be kind" message for 5 seconds before allowing resume.
 - **Cycle Tracker**: On-device period tracker with phase detection (menstrual, follicular, ovulation, luteal), next-period prediction, and phase-specific skin/makeup/self-care tips. All data stored in localStorage.
 - **Wig Studio**: AI wig try-on catalogue of 40 styles (bobs, waves, curls, braids, locs) in 22 colours with face-shape/occasion suitability tags. "Try this wig" deep-links into the AI try-on (`/try-on/<look>?wig=&color=`) over a neutral base look; renders can be saved to a per-user "My Wigs" gallery (object storage, finalized private). Wig switcher with auto-fire already lives inside the try-on screen.
+- **Weekly Tutorial Digest**: Users with ≥1 tutorial bookmark get a weekly email featuring 3–5 freshly-published creator tutorials matched to their bookmarked categories/difficulty (excludes ones they authored or already saved; pads thin weeks; skips users with no category match). One-click unsubscribe via `List-Unsubscribe` header + link, with a resubscribe option. Opt-out is default-off via lazily-created `email_preferences` rows.
 
 ### Tutorial step video clips
 
@@ -96,6 +101,20 @@ Storage limits / authoring guidance (enforced by both the in-app uploader and th
 - **Aspect**: 16:9 to match the inline player's `aspect-video` frame; vertical clips will be letterboxed.
 - **Privacy**: served via the ACL-gated `GET /api/storage/objects/*` route. Curated tutorial clips must be finalized as `public` (step 3 above) so signed-out and other users can play them; user-private uploads should be finalized as `private` so only the uploader can read them.
 
+### Weekly tutorial digest
+
+How it runs: production deploys to **autoscale** (scales to zero), so there is **no in-process timer**. Instead the job is a secret-guarded endpoint triggered externally:
+
+- **Trigger**: `POST /api/digest/run` with header `x-cron-secret: <CRON_SECRET>` (or `?secret=`). Runs the digest for the current ISO week. Idempotent — claims a `digest_sends` row per `(userId, weekStart)` before sending, so retries/overlapping triggers never double-send; a failed send releases the claim for a later retry.
+- **Selection**: candidates = users with ≥1 bookmark, minus opted-out (`email_preferences.weekly_digest = false`) and already-sent-this-week. Tastes are inferred from bookmarked tutorials' category/difficulty (curated from `CURATED_TUTORIAL_META`, creator ones from `submitted_tutorials`). Fresh pool = `submitted_tutorials` published/featured in the last 7 days.
+- **Opt-out**: one-click `GET/POST /api/digest/unsubscribe?token=<uuid>` (rate-limited per IP) flips `weekly_digest=false`; the confirmation page offers `/api/digest/resubscribe`.
+
+**Two setup steps remain before real emails send (deferred at user request):**
+1. **Connect a mailer**: either connect the Replit-managed **Resend** integration, or set a `RESEND_API_KEY` secret. To reach addresses other than the Resend account owner, verify a sending domain in Resend and set `DIGEST_FROM_EMAIL`.
+2. **Schedule it**: create a weekly **Scheduled Deployment** (deployment skill / Publishing UI) whose command POSTs to `https://<prod-domain>/api/digest/run` with the `x-cron-secret` header. Pick any day/time; the engine keys off the ISO week, so an extra run inside the same week is a safe no-op.
+
+Manual test (dev): `curl -XPOST localhost:80/api/digest/run -H "x-cron-secret: $CRON_SECRET"` returns a JSON summary (`sent`, `skipped*`, `failed`, …).
+
 ## User preferences
 
 - _Populate as you build_
@@ -113,6 +132,10 @@ Storage limits / authoring guidance (enforced by both the in-app uploader and th
 - `POST /classes` is gated by `requirePremium` — host-class form must hide/disable for non-premium users (handled by `usePremium()` in `HostClass.tsx`).
 - Classes seed (`seedClassesIfEmpty`) inserts placeholder instructor profiles with `userId` like `seed_creator_*` — these are not real Clerk users; do not assume `profiles.userId` always maps to a Clerk identity.
 - **publicProfile Redaction**: `lib/publicProfile.ts` provides `publicProfile` and `publicProfileOrNull` helpers that strip sensitive billing fields (`stripeCustomerId`, `premiumUntil`) from profile objects. These MUST be used in any route returning profile data to other users (e.g., feed, comments, instructor profiles) to avoid leaking PII/billing status.
+- Weekly digest must be triggered externally (autoscale scales to zero — an in-process `setInterval` would never fire in prod). Never remove the `CRON_SECRET` guard on `POST /digest/run`; the endpoint loops every bookmarking user and sends mail.
+- `digest_sends` is the idempotency ledger — claim-first per `(userId, weekStart)`. Don't change the send to insert-after-send, or racing triggers will double-email.
+- Resend's default `onboarding@resend.dev` sender only delivers to the Resend account owner until a custom domain is verified; set `DIGEST_FROM_EMAIL` after verifying one.
+- `socialRouter`/`profilesRouter` ordering aside, `digestRouter` uses a clean `/digest` prefix so mount order doesn't matter for it.
 
 ### Health sweep — May 2026
 

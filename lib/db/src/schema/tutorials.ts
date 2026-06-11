@@ -29,28 +29,35 @@ export interface TutorialStep {
   body: string;
 }
 
-// Canonical list of tutorial IDs that the server will accept reviews for.
-// Mirrors the static catalogue in `artifacts/glamr/src/lib/tutorials.ts`
-// (which is the source of truth for tutorial *content*). Kept here so the
-// API server can validate `:id` without importing frontend code, and so
-// orphan review rows can't accumulate for tutorials that were never
-// shipped. The frontend asserts its catalogue matches at module load.
-export const TUTORIAL_IDS = [
-  "soft-glam-smokey",
-  "everyday-no-makeup",
-  "classic-red-lip",
-  "snatched-contour",
-  "fluffy-laminated-brows",
-  "glass-skin-routine",
-  "ombre-lip",
-  "winged-eyeliner",
-  "barely-there-skin",
-  "cut-crease-glam",
-  "monochromatic-glow",
-  "evening-skincare-recovery",
-] as const;
-export type TutorialId = (typeof TUTORIAL_IDS)[number];
-const tutorialIdSet: ReadonlySet<string> = new Set(TUTORIAL_IDS);
+// Server-side mirror of the curated catalogue's per-tutorial taxonomy.
+// `artifacts/glamr/src/lib/tutorials.ts` remains the source of truth for
+// tutorial *content*; here we keep just the id -> {category, difficulty}
+// mapping so the API server can, without importing frontend code:
+//   (a) validate `:id` on review/bookmark writes (orphan rows can't
+//       accumulate for tutorials that were never shipped), and
+//   (b) infer a user's taste from the curated tutorials they've
+//       bookmarked — used by the weekly tutorial digest.
+// If you add/rename/remove a curated tutorial there, mirror it here.
+export const CURATED_TUTORIAL_META = {
+  "soft-glam-smokey":          { category: "eyes",       difficulty: "intermediate" },
+  "everyday-no-makeup":        { category: "foundation", difficulty: "beginner" },
+  "classic-red-lip":           { category: "lips",       difficulty: "beginner" },
+  "snatched-contour":          { category: "contouring", difficulty: "intermediate" },
+  "fluffy-laminated-brows":    { category: "brows",      difficulty: "beginner" },
+  "glass-skin-routine":        { category: "skincare",   difficulty: "intermediate" },
+  "ombre-lip":                 { category: "lips",       difficulty: "beginner" },
+  "winged-eyeliner":           { category: "eyes",       difficulty: "advanced" },
+  "barely-there-skin":         { category: "foundation", difficulty: "intermediate" },
+  "cut-crease-glam":           { category: "eyes",       difficulty: "advanced" },
+  "monochromatic-glow":        { category: "contouring", difficulty: "beginner" },
+  "evening-skincare-recovery": { category: "skincare",   difficulty: "beginner" },
+} as const satisfies Record<string, { category: TutorialCategory; difficulty: TutorialDifficulty }>;
+
+// Canonical allowlist of curated tutorial IDs, derived from the metadata
+// map above so there is exactly one place to maintain.
+export type TutorialId = keyof typeof CURATED_TUTORIAL_META;
+export const TUTORIAL_IDS = Object.keys(CURATED_TUTORIAL_META) as TutorialId[];
+const tutorialIdSet: ReadonlySet<string> = new Set<string>(TUTORIAL_IDS);
 export function isKnownTutorialId(id: string): id is TutorialId {
   return tutorialIdSet.has(id);
 }

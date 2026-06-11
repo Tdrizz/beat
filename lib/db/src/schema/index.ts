@@ -7,3 +7,4 @@ export * from "./tutorials";
 export * from "./classes";
 export * from "./chat";
 export * from "./wigs";
+export * from "./emailPreferences";

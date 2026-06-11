@@ -42,3 +42,8 @@ externalPort = 80
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+CRON_SECRET = "db9110b3f18e849ee7cc68c82b5ca871c958b6c6b163937ee3453fca5e6cdd10"
