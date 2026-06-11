@@ -1,0 +1,806 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "t1Sswsu9HZ0jBlPAh8cB_"
+uri = "file://artifacts/glamr/public/looks/auburn-fox.png"
+type = "image"
+title = "auburn-fox"
+
+[[generated]]
+id = "6psirQW_Fxijc7luby2Zo"
+uri = "file://artifacts/glamr/public/looks/ballet-core.png"
+type = "image"
+title = "ballet-core"
+
+[[generated]]
+id = "R5sSUwwu85j9IJcHHy8Hh"
+uri = "file://artifacts/glamr/public/looks/blueberry-eyeliner.png"
+type = "image"
+title = "blueberry-eyeliner"
+
+[[generated]]
+id = "j40LKnk0zxoXwkJdqOzfB"
+uri = "file://artifacts/glamr/public/looks/burgundy-bombshell.png"
+type = "image"
+title = "burgundy-bombshell"
+
+[[generated]]
+id = "XgQCbO1EYGz-rlDRG4bb3"
+uri = "file://artifacts/glamr/public/looks/cashmere-nude.png"
+type = "image"
+title = "cashmere-nude"
+
+[[generated]]
+id = "nYz1VGkK8PN2HYgIpckE7"
+uri = "file://artifacts/glamr/public/looks/champagne-toast.png"
+type = "image"
+title = "champagne-toast"
+
+[[generated]]
+id = "uBhE1XA23IAQ01ynW8WZF"
+uri = "file://artifacts/glamr/public/looks/cherry-blossom-flush.png"
+type = "image"
+title = "cherry-blossom-flush"
+
+[[generated]]
+id = "j6Y4RDNTjMougV4antqtf"
+uri = "file://artifacts/glamr/public/looks/cinnamon-spice.png"
+type = "image"
+title = "cinnamon-spice"
+
+[[generated]]
+id = "p1B1XGRFaup7aCbGVZUH0"
+uri = "file://artifacts/glamr/public/looks/clean-girl-glow.png"
+type = "image"
+title = "clean-girl-glow"
+
+[[generated]]
+id = "vs_wyVtCTZsJCIu-qay7K"
+uri = "file://artifacts/glamr/public/looks/cranberry-crush.png"
+type = "image"
+title = "cranberry-crush"
+
+[[generated]]
+id = "vk2eQy0E-qeOPsdeoa1lG"
+uri = "file://artifacts/glamr/public/looks/cyber-chrome.png"
+type = "image"
+title = "cyber-chrome"
+
+[[generated]]
+id = "HEvqB9pBz4-MqnJKbSUQC"
+uri = "file://artifacts/glamr/public/looks/daffodil-dazzle.png"
+type = "image"
+title = "daffodil-dazzle"
+
+[[generated]]
+id = "5LwbhzqG9wsg88KV_YdtK"
+uri = "file://artifacts/glamr/public/looks/drag-alien-queen.png"
+type = "image"
+title = "drag-alien-queen"
+
+[[generated]]
+id = "UkIQsPzi7DDdESAyJRpH0"
+uri = "file://artifacts/glamr/public/looks/drag-ballroom-eleganza.png"
+type = "image"
+title = "drag-ballroom-eleganza"
+
+[[generated]]
+id = "pzfSD3i3Dj8czY_JRVOMR"
+uri = "file://artifacts/glamr/public/looks/drag-camp-queen.png"
+type = "image"
+title = "drag-camp-queen"
+
+[[generated]]
+id = "QViSrA9YrgsPdlqAovclK"
+uri = "file://artifacts/glamr/public/looks/drag-classic-queen.png"
+type = "image"
+title = "drag-classic-queen"
+
+[[generated]]
+id = "8e_mUSOPw7hWrDdR5znTT"
+uri = "file://artifacts/glamr/public/looks/drag-club-kid.png"
+type = "image"
+title = "drag-club-kid"
+
+[[generated]]
+id = "ddttGyB4-fMysNkdPGeiM"
+uri = "file://artifacts/glamr/public/looks/drag-comedy-queen.png"
+type = "image"
+title = "drag-comedy-queen"
+
+[[generated]]
+id = "0L_tm_eVmzSqMdwealswU"
+uri = "file://artifacts/glamr/public/looks/drag-fish-beat.png"
+type = "image"
+title = "drag-fish-beat"
+
+[[generated]]
+id = "6LakKw4uVKWNdRyixAW9y"
+uri = "file://artifacts/glamr/public/looks/drag-glitter-queen.png"
+type = "image"
+title = "drag-glitter-queen"
+
+[[generated]]
+id = "PXn0oXFeopYOvkybPXb-E"
+uri = "file://artifacts/glamr/public/looks/drag-goth-drag.png"
+type = "image"
+title = "drag-goth-drag"
+
+[[generated]]
+id = "sBe3eyx9-zlsQRXB6IW5K"
+uri = "file://artifacts/glamr/public/looks/drag-lip-sync-assassin.png"
+type = "image"
+title = "drag-lip-sync-assassin"
+
+[[generated]]
+id = "6Z_-nKRZMYjTPnDduU6m0"
+uri = "file://artifacts/glamr/public/looks/drag-old-hollywood.png"
+type = "image"
+title = "drag-old-hollywood"
+
+[[generated]]
+id = "n7Lg9qvhE8yVJHfM8WY_d"
+uri = "file://artifacts/glamr/public/looks/drag-pageant-drag.png"
+type = "image"
+title = "drag-pageant-drag"
+
+[[generated]]
+id = "hlYqm8Xmyq1-T28BWTrRR"
+uri = "file://artifacts/glamr/public/looks/espresso-eyes.png"
+type = "image"
+title = "espresso-eyes"
+
+[[generated]]
+id = "GmrG-cRUHifouTv6_esj9"
+uri = "file://artifacts/glamr/public/looks/frosted-icicle.png"
+type = "image"
+title = "frosted-icicle"
+
+[[generated]]
+id = "uXcyGWG1tqgRsly2s9nk0"
+uri = "file://artifacts/glamr/public/looks/golden-hour-bronze.png"
+type = "image"
+title = "golden-hour-bronze"
+
+[[generated]]
+id = "jphyGePZjNjWcfDUQNmAB"
+uri = "file://artifacts/glamr/public/looks/goth-cyber-chrome.png"
+type = "image"
+title = "goth-cyber-chrome"
+
+[[generated]]
+id = "vgLoZIQiTtVCkFTppsJXa"
+uri = "file://artifacts/glamr/public/looks/goth-cyber-neon.png"
+type = "image"
+title = "goth-cyber-neon"
+
+[[generated]]
+id = "7eVGf5CR7kFLDu2y6n6ty"
+uri = "file://artifacts/glamr/public/looks/goth-egirl-classic.png"
+type = "image"
+title = "goth-egirl-classic"
+
+[[generated]]
+id = "Quf8gxctg7wOvrumcdjD-"
+uri = "file://artifacts/glamr/public/looks/goth-egirl-grunge.png"
+type = "image"
+title = "goth-egirl-grunge"
+
+[[generated]]
+id = "4Z01nqolmpdp5DuQb70FJ"
+uri = "file://artifacts/glamr/public/looks/goth-pastel-lilac.png"
+type = "image"
+title = "goth-pastel-lilac"
+
+[[generated]]
+id = "iKIyMZmd6Op9YzQWNOJX1"
+uri = "file://artifacts/glamr/public/looks/goth-pastel-mint.png"
+type = "image"
+title = "goth-pastel-mint"
+
+[[generated]]
+id = "huqgIHToew6RKHZTNZQ2G"
+uri = "file://artifacts/glamr/public/looks/goth-romantic-rose.png"
+type = "image"
+title = "goth-romantic-rose"
+
+[[generated]]
+id = "X33tDiOcwwoEopBNPf83O"
+uri = "file://artifacts/glamr/public/looks/goth-romantic-velvet.png"
+type = "image"
+title = "goth-romantic-velvet"
+
+[[generated]]
+id = "dPdFIkISOq4zZoSSxnjMB"
+uri = "file://artifacts/glamr/public/looks/goth-soft-mauve.png"
+type = "image"
+title = "goth-soft-mauve"
+
+[[generated]]
+id = "15Pzmfbie8BqbZTtB_ucJ"
+uri = "file://artifacts/glamr/public/looks/goth-soft-violet.png"
+type = "image"
+title = "goth-soft-violet"
+
+[[generated]]
+id = "_7VIhLtzJAllFqT5_Rc6g"
+uri = "file://artifacts/glamr/public/looks/goth-trad-classic.png"
+type = "image"
+title = "goth-trad-classic"
+
+[[generated]]
+id = "NZwjW9GvZlvQWY1l7ysMw"
+uri = "file://artifacts/glamr/public/looks/goth-trad-spider.png"
+type = "image"
+title = "goth-trad-spider"
+
+[[generated]]
+id = "xSwyf_kJlRop0LGBkfyWq"
+uri = "file://artifacts/glamr/public/looks/graphic-cherry-liner.png"
+type = "image"
+title = "graphic-cherry-liner"
+
+[[generated]]
+id = "BVfHxzZND-2Po2U-bL1e9"
+uri = "file://artifacts/glamr/public/looks/honey-glow-summer.png"
+type = "image"
+title = "honey-glow-summer"
+
+[[generated]]
+id = "95X4NqMdk9DBtnB068UEJ"
+uri = "file://artifacts/glamr/public/looks/hot-cocoa.png"
+type = "image"
+title = "hot-cocoa"
+
+[[generated]]
+id = "otTa5xJWT7HQgpKy09_dW"
+uri = "file://artifacts/glamr/public/looks/hw-anime-villain.png"
+type = "image"
+title = "hw-anime-villain"
+
+[[generated]]
+id = "zLXvS2U6ppPYhmRgAqBJ3"
+uri = "file://artifacts/glamr/public/looks/hw-black-cat.png"
+type = "image"
+title = "hw-black-cat"
+
+[[generated]]
+id = "BVcK0RKXupzM22uCDBExG"
+uri = "file://artifacts/glamr/public/looks/hw-black-swan.png"
+type = "image"
+title = "hw-black-swan"
+
+[[generated]]
+id = "x8DzROD3dewFXtmNnsU_J"
+uri = "file://artifacts/glamr/public/looks/hw-bloody-heart-queen.png"
+type = "image"
+title = "hw-bloody-heart-queen"
+
+[[generated]]
+id = "wdaydUA0tai6SRRnAHZ6k"
+uri = "file://artifacts/glamr/public/looks/hw-bridezilla-zombie.png"
+type = "image"
+title = "hw-bridezilla-zombie"
+
+[[generated]]
+id = "OCUbWhahUvhkI1o8VGxuZ"
+uri = "file://artifacts/glamr/public/looks/hw-cat-woman.png"
+type = "image"
+title = "hw-cat-woman"
+
+[[generated]]
+id = "2Ml-2lczM1n941sIQxWue"
+uri = "file://artifacts/glamr/public/looks/hw-catrina.png"
+type = "image"
+title = "hw-catrina"
+
+[[generated]]
+id = "D3hRa68-Vi-mxuBSFhthT"
+uri = "file://artifacts/glamr/public/looks/hw-cherub-gone-bad.png"
+type = "image"
+title = "hw-cherub-gone-bad"
+
+[[generated]]
+id = "b-v3AKmtvpUyShpbspc3u"
+uri = "file://artifacts/glamr/public/looks/hw-classic-devil.png"
+type = "image"
+title = "hw-classic-devil"
+
+[[generated]]
+id = "4qmeO_QjZscZwF2yDYNRB"
+uri = "file://artifacts/glamr/public/looks/hw-classic-witch.png"
+type = "image"
+title = "hw-classic-witch"
+
+[[generated]]
+id = "H23LQMAA6uZA1LJQ5Fd-C"
+uri = "file://artifacts/glamr/public/looks/hw-clown-couture.png"
+type = "image"
+title = "hw-clown-couture"
+
+[[generated]]
+id = "6Zl8q_Fib1qNMClZ75gVQ"
+uri = "file://artifacts/glamr/public/looks/hw-cosmic-witch.png"
+type = "image"
+title = "hw-cosmic-witch"
+
+[[generated]]
+id = "m25OSbIHg658CMq-vajcY"
+uri = "file://artifacts/glamr/public/looks/hw-cruella.png"
+type = "image"
+title = "hw-cruella"
+
+[[generated]]
+id = "ZPKZZWbsdfhKmP4kggfDs"
+uri = "file://artifacts/glamr/public/looks/hw-cyber-goth-hw.png"
+type = "image"
+title = "hw-cyber-goth-hw"
+
+[[generated]]
+id = "vxjEcNn89Lr9-h5CknQSC"
+uri = "file://artifacts/glamr/public/looks/hw-cyborg.png"
+type = "image"
+title = "hw-cyborg"
+
+[[generated]]
+id = "w575ObkvVpDU7e25jE3El"
+uri = "file://artifacts/glamr/public/looks/hw-dark-angel.png"
+type = "image"
+title = "hw-dark-angel"
+
+[[generated]]
+id = "Oe2WYzTzwMatNxWWxYvlq"
+uri = "file://artifacts/glamr/public/looks/hw-dark-fairy.png"
+type = "image"
+title = "hw-dark-fairy"
+
+[[generated]]
+id = "UwpfLY004GesAhs3tfyHV"
+uri = "file://artifacts/glamr/public/looks/hw-decayed-beauty.png"
+type = "image"
+title = "hw-decayed-beauty"
+
+[[generated]]
+id = "SAHJ1x56W4eyGie5uVSO5"
+uri = "file://artifacts/glamr/public/looks/hw-demonic-glow.png"
+type = "image"
+title = "hw-demonic-glow"
+
+[[generated]]
+id = "hv7X0dPoLIb9LiGeytS3i"
+uri = "file://artifacts/glamr/public/looks/hw-ethereal-witch.png"
+type = "image"
+title = "hw-ethereal-witch"
+
+[[generated]]
+id = "4tNsBoz-tC8elHogYuJSS"
+uri = "file://artifacts/glamr/public/looks/hw-evil-mermaid.png"
+type = "image"
+title = "hw-evil-mermaid"
+
+[[generated]]
+id = "q4QFsl0cadGMX8bwOwsLZ"
+uri = "file://artifacts/glamr/public/looks/hw-fairy.png"
+type = "image"
+title = "hw-fairy"
+
+[[generated]]
+id = "iombLRDJY_knZBUX7-Mag"
+uri = "file://artifacts/glamr/public/looks/hw-fallen-angel.png"
+type = "image"
+title = "hw-fallen-angel"
+
+[[generated]]
+id = "j-QlIhMRIOc4Ql2LOayke"
+uri = "file://artifacts/glamr/public/looks/hw-floating-ghost.png"
+type = "image"
+title = "hw-floating-ghost"
+
+[[generated]]
+id = "5W9U8pv41VtBSW2ojPQGz"
+uri = "file://artifacts/glamr/public/looks/hw-forest-fairy.png"
+type = "image"
+title = "hw-forest-fairy"
+
+[[generated]]
+id = "c7kCm0be-0PXUVxjRUicC"
+uri = "file://artifacts/glamr/public/looks/hw-galaxy-alien.png"
+type = "image"
+title = "hw-galaxy-alien"
+
+[[generated]]
+id = "ZEvOLdm-nQK-pZquUq34k"
+uri = "file://artifacts/glamr/public/looks/hw-ghost-bride.png"
+type = "image"
+title = "hw-ghost-bride"
+
+[[generated]]
+id = "fAJh8vjvRhvTSeHCL7gvi"
+uri = "file://artifacts/glamr/public/looks/hw-glam-devil.png"
+type = "image"
+title = "hw-glam-devil"
+
+[[generated]]
+id = "hpv0r4SXqQMG1sRMRD33F"
+uri = "file://artifacts/glamr/public/looks/hw-glam-witch.png"
+type = "image"
+title = "hw-glam-witch"
+
+[[generated]]
+id = "r46XpegYK0MZks32TVxfX"
+uri = "file://artifacts/glamr/public/looks/hw-goth-bride.png"
+type = "image"
+title = "hw-goth-bride"
+
+[[generated]]
+id = "c6gAFi_rb-BEQ28dkn419"
+uri = "file://artifacts/glamr/public/looks/hw-gothic-vampire.png"
+type = "image"
+title = "hw-gothic-vampire"
+
+[[generated]]
+id = "d_RITUwGWR-20JDr2DIZM"
+uri = "file://artifacts/glamr/public/looks/hw-haunted-doll.png"
+type = "image"
+title = "hw-haunted-doll"
+
+[[generated]]
+id = "C3I1q8-IcpMzy4trxN8u0"
+uri = "file://artifacts/glamr/public/looks/hw-killer-clown.png"
+type = "image"
+title = "hw-killer-clown"
+
+[[generated]]
+id = "Bi5xBmtKknaXjjHlK6WNN"
+uri = "file://artifacts/glamr/public/looks/hw-magical-girl-villain.png"
+type = "image"
+title = "hw-magical-girl-villain"
+
+[[generated]]
+id = "--acCl4gMLrn7ONPjlz0P"
+uri = "file://artifacts/glamr/public/looks/hw-maleficent.png"
+type = "image"
+title = "hw-maleficent"
+
+[[generated]]
+id = "1ic9tKlnJFMddLJ41GFW0"
+uri = "file://artifacts/glamr/public/looks/hw-modern-vampire.png"
+type = "image"
+title = "hw-modern-vampire"
+
+[[generated]]
+id = "Bpjp-A3vSmIJH21g2K_y4"
+uri = "file://artifacts/glamr/public/looks/hw-pastel-devil.png"
+type = "image"
+title = "hw-pastel-devil"
+
+[[generated]]
+id = "QWRYviKZLnbrWz6-Eb_Jo"
+uri = "file://artifacts/glamr/public/looks/hw-pierrot-clown.png"
+type = "image"
+title = "hw-pierrot-clown"
+
+[[generated]]
+id = "M35vvLw5Qq1es7JKj2j67"
+uri = "file://artifacts/glamr/public/looks/hw-pretty-skeleton.png"
+type = "image"
+title = "hw-pretty-skeleton"
+
+[[generated]]
+id = "hrbP2bxI7tFtrmAo-JE0p"
+uri = "file://artifacts/glamr/public/looks/hw-pumpkin-princess.png"
+type = "image"
+title = "hw-pumpkin-princess"
+
+[[generated]]
+id = "jEc3-KD789QDGyCLJUfkc"
+uri = "file://artifacts/glamr/public/looks/hw-scarecrow-glam.png"
+type = "image"
+title = "hw-scarecrow-glam"
+
+[[generated]]
+id = "UxkmLmFmqSjS3qog9s_oO"
+uri = "file://artifacts/glamr/public/looks/hw-sea-witch.png"
+type = "image"
+title = "hw-sea-witch"
+
+[[generated]]
+id = "gHA4GWcC9WQB2lM1hVuXB"
+uri = "file://artifacts/glamr/public/looks/hw-skeleton.png"
+type = "image"
+title = "hw-skeleton"
+
+[[generated]]
+id = "PtgPrDa69gsn5jYJG_YTK"
+uri = "file://artifacts/glamr/public/looks/hw-sugar-skull.png"
+type = "image"
+title = "hw-sugar-skull"
+
+[[generated]]
+id = "wHKnMdpNBdbVf7-kk1r7K"
+uri = "file://artifacts/glamr/public/looks/hw-vampire-bride.png"
+type = "image"
+title = "hw-vampire-bride"
+
+[[generated]]
+id = "FXIJfraSzguwTh_AStyPO"
+uri = "file://artifacts/glamr/public/looks/hw-vampire-slayer.png"
+type = "image"
+title = "hw-vampire-slayer"
+
+[[generated]]
+id = "oWj9tLPClMejJmhm3WBXz"
+uri = "file://artifacts/glamr/public/looks/hw-victorian-ghost.png"
+type = "image"
+title = "hw-victorian-ghost"
+
+[[generated]]
+id = "seTHAzxac1ApqTKkbF7YN"
+uri = "file://artifacts/glamr/public/looks/hw-voodoo-doll.png"
+type = "image"
+title = "hw-voodoo-doll"
+
+[[generated]]
+id = "hbi0RO-aPS3QrR3LyjnM9"
+uri = "file://artifacts/glamr/public/looks/hw-werewolf.png"
+type = "image"
+title = "hw-werewolf"
+
+[[generated]]
+id = "D0TFthoN5qBVk_CqtX9OA"
+uri = "file://artifacts/glamr/public/looks/hw-zombie-glam.png"
+type = "image"
+title = "hw-zombie-glam"
+
+[[generated]]
+id = "DZ-FduFLMmcXsHl4uW25T"
+uri = "file://artifacts/glamr/public/looks/iced-matcha.png"
+type = "image"
+title = "iced-matcha"
+
+[[generated]]
+id = "gVH2eXws0Lg52xYsKPffq"
+uri = "file://artifacts/glamr/public/looks/lavender-haze.png"
+type = "image"
+title = "lavender-haze"
+
+[[generated]]
+id = "AbP7WaWaOWcHzqBRqKMT1"
+uri = "file://artifacts/glamr/public/looks/maple-smoke.png"
+type = "image"
+title = "maple-smoke"
+
+[[generated]]
+id = "2vtpbsk0t3HIW3L_ml0pW"
+uri = "file://artifacts/glamr/public/looks/mediterranean-bronze.png"
+type = "image"
+title = "mediterranean-bronze"
+
+[[generated]]
+id = "nRd0CmgLatgB0BrdEuysl"
+uri = "file://artifacts/glamr/public/looks/mermaid-glow.png"
+type = "image"
+title = "mermaid-glow"
+
+[[generated]]
+id = "BCfZ7Yh3G0V3p4Jis9Te1"
+uri = "file://artifacts/glamr/public/looks/midnight-velvet.png"
+type = "image"
+title = "midnight-velvet"
+
+[[generated]]
+id = "S1mn3jUM_eJ-OMxzOBCql"
+uri = "file://artifacts/glamr/public/looks/mocha-mousse.png"
+type = "image"
+title = "mocha-mousse"
+
+[[generated]]
+id = "MgQBCMI3O9SsEi7Am4ZLX"
+uri = "file://artifacts/glamr/public/looks/neon-festival.png"
+type = "image"
+title = "neon-festival"
+
+[[generated]]
+id = "DwqMkHlfyWTVaC3iHboNR"
+uri = "file://artifacts/glamr/public/looks/northern-lights.png"
+type = "image"
+title = "northern-lights"
+
+[[generated]]
+id = "pf0UfLf0lUzxDmr0w2ldg"
+uri = "file://artifacts/glamr/public/looks/pag-classic-queen.png"
+type = "image"
+title = "pag-classic-queen"
+
+[[generated]]
+id = "19j16mpExUL_2GLYP5LBj"
+uri = "file://artifacts/glamr/public/looks/pag-crown-worthy.png"
+type = "image"
+title = "pag-crown-worthy"
+
+[[generated]]
+id = "4quN2NX_xC9w-ap-phPES"
+uri = "file://artifacts/glamr/public/looks/pag-evening-gown.png"
+type = "image"
+title = "pag-evening-gown"
+
+[[generated]]
+id = "eKQoanljQG6LnC8uXaJva"
+uri = "file://artifacts/glamr/public/looks/pag-international-queen.png"
+type = "image"
+title = "pag-international-queen"
+
+[[generated]]
+id = "fXwmK3jBlRamoXlxBn5ml"
+uri = "file://artifacts/glamr/public/looks/pag-latina-heat.png"
+type = "image"
+title = "pag-latina-heat"
+
+[[generated]]
+id = "8T3T3x6wGgajVMRcCjsuY"
+uri = "file://artifacts/glamr/public/looks/pag-miss-congeniality.png"
+type = "image"
+title = "pag-miss-congeniality"
+
+[[generated]]
+id = "-dgMG09uy-tFJ_Ybk2Y_p"
+uri = "file://artifacts/glamr/public/looks/pag-miss-universe.png"
+type = "image"
+title = "pag-miss-universe"
+
+[[generated]]
+id = "quWzA-m8F1GCwfE8dUow4"
+uri = "file://artifacts/glamr/public/looks/pag-natural-beauty.png"
+type = "image"
+title = "pag-natural-beauty"
+
+[[generated]]
+id = "iAPhjvQ7SdWGE2w5rC-OK"
+uri = "file://artifacts/glamr/public/looks/pag-retro-pageant.png"
+type = "image"
+title = "pag-retro-pageant"
+
+[[generated]]
+id = "RPBGjkEaEooGi4zO4u04x"
+uri = "file://artifacts/glamr/public/looks/pag-swimsuit-glow.png"
+type = "image"
+title = "pag-swimsuit-glow"
+
+[[generated]]
+id = "M1LPovDOj5vGNTIuAhGtc"
+uri = "file://artifacts/glamr/public/looks/pag-talent-show.png"
+type = "image"
+title = "pag-talent-show"
+
+[[generated]]
+id = "m15pC_ZM_LFW6VOmLa8v9"
+uri = "file://artifacts/glamr/public/looks/pag-teen-pageant.png"
+type = "image"
+title = "pag-teen-pageant"
+
+[[generated]]
+id = "jcVVCJGLqxiOO0QRd15CY"
+uri = "file://artifacts/glamr/public/looks/pool-party-aqua.png"
+type = "image"
+title = "pool-party-aqua"
+
+[[generated]]
+id = "8SKH3jY0VEQsTsjoZ7g-q"
+uri = "file://artifacts/glamr/public/looks/pumpkin-spice-latte.png"
+type = "image"
+title = "pumpkin-spice-latte"
+
+[[generated]]
+id = "BFlirG6BkIV0lzbKJZCq3"
+uri = "file://artifacts/glamr/public/looks/snow-fairy.png"
+type = "image"
+title = "snow-fairy"
+
+[[generated]]
+id = "YVlUOtT_H0KTF63XztVu0"
+uri = "file://artifacts/glamr/public/looks/soft-girl-2026.png"
+type = "image"
+title = "soft-girl-2026"
+
+[[generated]]
+id = "EgFejQIBt6z8Q85KQkgxB"
+uri = "file://artifacts/glamr/public/looks/strawberry-milkshake.png"
+type = "image"
+title = "strawberry-milkshake"
+
+[[generated]]
+id = "SVSBUJZtiBh5IGW0hzVOd"
+uri = "file://artifacts/glamr/public/looks/style-donut-glaze.png"
+type = "image"
+title = "style-donut-glaze"
+
+[[generated]]
+id = "m-YxJaIdxyBXrWP0iK-Xc"
+uri = "file://artifacts/glamr/public/looks/style-douyin.png"
+type = "image"
+title = "style-douyin"
+
+[[generated]]
+id = "GPuJ-oY0IzyAY-Fz93EUF"
+uri = "file://artifacts/glamr/public/looks/style-drag.png"
+type = "image"
+title = "style-drag"
+
+[[generated]]
+id = "esCi52QbUtNQM-OSme-p1"
+uri = "file://artifacts/glamr/public/looks/style-editorial.png"
+type = "image"
+title = "style-editorial"
+
+[[generated]]
+id = "wzgAEI-kmxJyuPia0C02H"
+uri = "file://artifacts/glamr/public/looks/style-espresso.png"
+type = "image"
+title = "style-espresso"
+
+[[generated]]
+id = "pxt787qM56DJb_kBqKphv"
+uri = "file://artifacts/glamr/public/looks/style-indie-sleaze.png"
+type = "image"
+title = "style-indie-sleaze"
+
+[[generated]]
+id = "5_HYFru01iQ-2t17toU3t"
+uri = "file://artifacts/glamr/public/looks/style-latte.png"
+type = "image"
+title = "style-latte"
+
+[[generated]]
+id = "iCiY4RrDm6Qeq5ICR9D8n"
+uri = "file://artifacts/glamr/public/looks/style-strawberry-girl.png"
+type = "image"
+title = "style-strawberry-girl"
+
+[[generated]]
+id = "tM2LV-l0Zwi0SD-lrOe8b"
+uri = "file://artifacts/glamr/public/looks/style-tinted-spice.png"
+type = "image"
+title = "style-tinted-spice"
+
+[[generated]]
+id = "pVUau93JbuZcuXMxJlbhr"
+uri = "file://artifacts/glamr/public/looks/style-tomato-girl.png"
+type = "image"
+title = "style-tomato-girl"
+
+[[generated]]
+id = "M4zWpfJjWieJK2p73JYEX"
+uri = "file://artifacts/glamr/public/looks/style-twilight.png"
+type = "image"
+title = "style-twilight"
+
+[[generated]]
+id = "f8mT-qjGzDTX3m0T4Zgk2"
+uri = "file://artifacts/glamr/public/looks/style-underpainting.png"
+type = "image"
+title = "style-underpainting"
+
+[[generated]]
+id = "-7GfclQ1dbUnOqEJFscAZ"
+uri = "file://artifacts/glamr/public/looks/sunset-citrus.png"
+type = "image"
+title = "sunset-citrus"
+
+[[generated]]
+id = "7XB3MzLJ-RU6snTrCQQDv"
+uri = "file://artifacts/glamr/public/looks/tropical-monoi.png"
+type = "image"
+title = "tropical-monoi"
+
+[[generated]]
+id = "A5Wd7RsHf54ImBK0-jWbX"
+uri = "file://artifacts/glamr/public/looks/watermelon-sugar.png"
+type = "image"
+title = "watermelon-sugar"
+
+[[generated]]
+id = "tLFokkd0pG3eNhnTWoKd6"
+uri = "file://artifacts/glamr/public/looks/wisteria-dreams.png"
+type = "image"
+title = "wisteria-dreams"

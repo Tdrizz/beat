@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useParams, Link, useLocation, useSearch } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks, type Look } from "../lib/looks";
+import { ALL_LOOKS_FLAT, type Look } from "../lib/looks";
 import { wigStyles, wigSwatchGradient, NO_WIG_ID, type WigStyle, type WigColor } from "../lib/wigs";
 import { getLookImage } from "../lib/lookImages";
 import { useCamera } from "../hooks/useCamera";
@@ -29,10 +29,9 @@ import { api, type SavedCombo } from "@/lib/api";
 import { comboHref } from "@/lib/savedCombos";
 import { useToast } from "@/hooks/use-toast";
 
-const ALL_LOOKS = [
-  ...allLooks, ...eyeLooks, ...lipLooks,
-  ...trendLooks, ...moreEyeLooks, ...moreLipLooks,
-];
+// Source from the master flat catalogue so EVERY look — including Halloween,
+// Goth, Pageant, Drag and Style Expansion — is openable in the try-on flow.
+const ALL_LOOKS = ALL_LOOKS_FLAT;
 
 const STEP_ORDER = ["base", "brows", "eyes", "cheeks", "lips"] as const;
 type StepKey = typeof STEP_ORDER[number];
