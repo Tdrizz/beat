@@ -17,7 +17,7 @@ const PRIMARY = [
   { href: "/",          label: "Home",   icon: HomeIcon },
   { href: "/feed",      label: "Feed",   icon: Sparkles },
   { href: "/classes",   label: "Classes", icon: GraduationCap },
-  { href: "/archetype", label: "Iola",   icon: Wand2 },
+  { href: "/ask",       label: "Iola",   icon: Wand2 },
   { href: "/upload",    label: "Share",  icon: UploadIcon },
   { href: "/messages",  label: "DMs",    icon: MessageCircle },
   { href: "/friends",   label: "Friends", icon: Users },
@@ -34,6 +34,7 @@ type NavItem = {
   authed?: boolean;
 };
 const SECONDARY: NavItem[] = [
+  { href: "/archetype", label: "Iola quiz",       icon: Sparkles },
   { href: "/tutorials", label: "Tutorials",       icon: GraduationCap },
   { href: "/tools",     label: "Brushes & tools", icon: Brush },
   { href: "/nutrition", label: "Skin nutrition",  icon: Apple },

@@ -24,6 +24,7 @@ import Brands from "@/pages/Brands";
 import UserProfile from "@/pages/UserProfile";
 import AffiliateStats from "@/pages/AffiliateStats";
 import Archetype from "@/pages/Archetype";
+import AskIola from "@/pages/AskIola";
 import Tools from "@/pages/Tools";
 import Nutrition from "@/pages/Nutrition";
 import SocialLinksSettings from "@/pages/SocialLinksSettings";
@@ -67,6 +68,7 @@ function Router() {
       <Route path="/skincare" component={Skincare} />
       <Route path="/diary" component={SkinDiary} />
       <Route path="/special-products" component={SpecialProducts} />
+      <Route path="/ask" component={AskIola} />
       <Route path="/archetype" component={Archetype} />
       <Route path="/tools" component={Tools} />
       <Route path="/nutrition" component={Nutrition} />
