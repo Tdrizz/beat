@@ -49,6 +49,13 @@ export const profilesTable = pgTable("profiles", {
   // Linked social accounts — see SOCIAL_PLATFORMS / socialLinksSchema above.
   socialLinks: jsonb("social_links").$type<SocialLinks>().default({}).notNull(),
   isCreator: boolean("is_creator").default(false).notNull(),     // affiliate-eligible
+  // Subscription expiry timestamp set by the Stripe webhook. The user is
+  // "Premium" iff this is in the future. Drives both the host-class gate
+  // and the watch-premium-class gate. Null = never subscribed.
+  premiumUntil: timestamp("premium_until", { withTimezone: true }),
+  // Stripe customer id, set lazily on first checkout to keep one customer
+  // per user across renewals/upgrades.
+  stripeCustomerId: varchar("stripe_customer_id", { length: 64 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

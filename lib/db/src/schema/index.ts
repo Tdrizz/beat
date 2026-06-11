@@ -4,3 +4,4 @@ export * from "./messages";
 export * from "./affiliate";
 export * from "./notifications";
 export * from "./tutorials";
+export * from "./classes";

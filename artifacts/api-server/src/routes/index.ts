@@ -10,6 +10,8 @@ import brandsRouter from "./brands";
 import affiliateRouter from "./affiliate";
 import notificationsRouter from "./notifications";
 import tutorialsRouter from "./tutorials";
+import classesRouter from "./classes";
+import premiumRouter from "./premium";
 
 const router: IRouter = Router();
 
@@ -28,5 +30,7 @@ router.use(brandsRouter);
 router.use(affiliateRouter);
 router.use(notificationsRouter);
 router.use(tutorialsRouter);
+router.use(classesRouter);
+router.use(premiumRouter);
 
 export default router;

@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Home as HomeIcon, Sparkles, Plus, Wand2, MessageCircle } from "lucide-react";
+import { Home as HomeIcon, Sparkles, Plus, GraduationCap, MessageCircle } from "lucide-react";
 import { useAuth } from "@clerk/react";
 
 // Auth + onboarding screens get the full viewport — no bottom bar.
@@ -21,7 +21,7 @@ const TABS: Tab[] = [
   { href: "/",         label: "Home",  icon: HomeIcon },
   { href: "/feed",     label: "Feed",  icon: Sparkles },
   { href: "/upload",   label: "Share", icon: Plus,           primary: true },
-  { href: "/archetype",label: "Iola",  icon: Wand2 },
+  { href: "/classes",  label: "Classes", icon: GraduationCap },
   { href: "/messages", label: "DMs",   icon: MessageCircle,  authed: true },
 ];
 

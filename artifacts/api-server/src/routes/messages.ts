@@ -5,6 +5,7 @@ import { requireAuth } from "../middlewares/requireAuth";
 import { rateLimit } from "../middlewares/rateLimit";
 import { notify } from "../lib/notify";
 import { p } from "../lib/params";
+import { publicProfileOrNull } from "../lib/publicProfile";
 
 const router: IRouter = Router();
 
@@ -40,7 +41,7 @@ router.get("/conversations", requireAuth, async (req, res) => {
   const byId = new Map(profiles.map((pr) => [pr.userId, pr]));
   res.json(rows.map((r) => {
     const otherId = r.userA === me ? r.userB : r.userA;
-    return { ...r, other: byId.get(otherId) ?? null };
+    return { ...r, other: publicProfileOrNull(byId.get(otherId) ?? null) };
   }));
 });
 
@@ -71,7 +72,7 @@ router.get("/conversations/:other/messages", requireAuth, async (req, res) => {
     .limit(limit);
   rows.reverse();
   const other = await db.select().from(profilesTable).where(eq(profilesTable.userId, otherId)).limit(1);
-  res.json({ conversation: conv, other: other[0] ?? null, messages: rows });
+  res.json({ conversation: conv, other: publicProfileOrNull(other[0] ?? null), messages: rows });
 });
 
 router.post("/conversations/:other/messages", requireAuth, rateLimit({ scope: "message", max: 30, windowMs: 60_000 }), async (req, res) => {

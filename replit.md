@@ -46,6 +46,8 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - **Esthetician Hub (Premium)**: `artifacts/glamr/src/pages/EstheticianHub.tsx`
 - **Kindness Prompt**: `artifacts/glamr/src/components/KindnessPrompt.tsx`
 - **Period/Cycle Tracker**: `artifacts/glamr/src/pages/PeriodTracker.tsx`
+- **Live Classes**: `artifacts/glamr/src/pages/{Classes,ClassDetail,HostClass}.tsx`, `artifacts/api-server/src/routes/classes.ts`, schema `lib/db/src/schema/classes.ts`, seed `artifacts/api-server/src/lib/seedClasses.ts`
+- **Premium (Stripe)**: `artifacts/glamr/src/pages/Premium.tsx`, hook `artifacts/glamr/src/hooks/usePremium.ts`, server `artifacts/api-server/src/{routes/premium.ts,lib/stripeClient.ts,lib/stripeWebhook.ts,lib/premium.ts,middlewares/requirePremium.ts}` — `premium_until` + `stripe_customer_id` columns on `profiles`
 
 ## Architecture decisions
 
@@ -105,6 +107,10 @@ Storage limits / authoring guidance (enforced by both the in-app uploader and th
 - `POST /ai-tryon` is auth + rate-limited (10 calls / 5 min / user). Never remove either guard — the route hits Gemini image generation on every call (paid, unbounded cost if left open).
 - `socialRouter` must remain mounted **before** `profilesRouter` in `routes/index.ts`, otherwise `/profiles/:handle` swallows `/profiles/featured`, `/profiles/search`, and `/profiles/me/friends`.
 - `GET /storage/objects/*` is ACL-gated: objects with `visibility: "public"` are world-readable, everything else requires the caller's Clerk userId to match the ACL owner, and objects with no policy at all return 401/403. Uploaders MUST call `POST /storage/uploads/finalize` after their PUT — without it the object is permanently unreadable through this route.
+- Stripe webhook (`/api/stripe/webhook`) must be mounted **before** `express.json()` in `app.ts` so the raw body is preserved for signature verification.
+- `POST /classes` is gated by `requirePremium` — host-class form must hide/disable for non-premium users (handled by `usePremium()` in `HostClass.tsx`).
+- Classes seed (`seedClassesIfEmpty`) inserts placeholder instructor profiles with `userId` like `seed_creator_*` — these are not real Clerk users; do not assume `profiles.userId` always maps to a Clerk identity.
+- **publicProfile Redaction**: `lib/publicProfile.ts` provides `publicProfile` and `publicProfileOrNull` helpers that strip sensitive billing fields (`stripeCustomerId`, `premiumUntil`) from profile objects. These MUST be used in any route returning profile data to other users (e.g., feed, comments, instructor profiles) to avoid leaking PII/billing status.
 
 ### Health sweep — May 2026
 

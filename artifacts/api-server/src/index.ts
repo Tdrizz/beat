@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedBrandsIfEmpty } from "./lib/seedBrands";
+import { seedClassesIfEmpty } from "./lib/seedClasses";
 
 const rawPort = process.env["PORT"];
 
@@ -26,6 +27,7 @@ app.listen(port, async (err) => {
 
   try {
     await seedBrandsIfEmpty();
+    await seedClassesIfEmpty();
   } catch (e) {
     logger.error({ err: e }, "Brand seed failed");
   }

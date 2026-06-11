@@ -39,6 +39,10 @@ import TutorialDetail from "@/pages/TutorialDetail";
 import TutorialSubmit from "@/pages/TutorialSubmit";
 import MySubmittedTutorials from "@/pages/MySubmittedTutorials";
 import TutorialModeration from "@/pages/TutorialModeration";
+import Classes from "@/pages/Classes";
+import ClassDetail from "@/pages/ClassDetail";
+import HostClass from "@/pages/HostClass";
+import Premium from "@/pages/Premium";
 import { SplashPositivity } from "@/components/SplashPositivity";
 
 const queryClient = new QueryClient();
@@ -80,6 +84,11 @@ function Router() {
       <Route path="/tutorials/mine" component={MySubmittedTutorials} />
       <Route path="/tutorials/moderation" component={TutorialModeration} />
       <Route path="/tutorials/:id" component={TutorialDetail} />
+
+      <Route path="/classes" component={Classes} />
+      <Route path="/classes/:id" component={ClassDetail} />
+      <Route path="/host-class" component={HostClass} />
+      <Route path="/premium" component={Premium} />
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>

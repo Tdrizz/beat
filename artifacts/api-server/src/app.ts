@@ -12,6 +12,7 @@ import {
 } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { stripeWebhookRouter } from "./lib/stripeWebhook";
 
 const app: Express = express();
 
@@ -90,6 +91,10 @@ app.use(
   }),
 );
 
+// Stripe webhook handler must be mounted *before* express.json() so its
+// internal raw-body parser can verify the request signature against the
+// untouched bytes. The router itself uses express.raw() per-route.
+app.use("/api", stripeWebhookRouter);
 // 15mb covers full-resolution camera frames sent to /api/ai-tryon.
 // Anything larger is rejected at parse time so we never allocate the
 // full buffer for an oversize request.

@@ -128,6 +128,37 @@ export interface ProfileWithFollowers extends Profile {
   followedAt?: string;
 }
 
+export const CLASS_DIFFICULTIES = ["beginner", "intermediate", "advanced"] as const;
+export type ClassDifficulty = typeof CLASS_DIFFICULTIES[number];
+export const CLASS_MOODS = ["everyday", "soft", "bold", "editorial", "bridal", "drag", "pageant", "party"] as const;
+export type ClassMood = typeof CLASS_MOODS[number];
+
+export interface ClassRow {
+  id: string;
+  instructorId: string;
+  title: string;
+  description: string;
+  learnings: string[];
+  scheduledFor: string;
+  durationMin: number;
+  difficulty: ClassDifficulty;
+  moodTag: ClassMood;
+  coverUrl: string | null;
+  videoUrl: string | null;
+  isPremium: boolean;
+  status: string;
+  createdAt: string;
+  instructor: Profile | null;
+  reservationCount: number;
+  reservedByMe: boolean;
+  canWatch: boolean;
+}
+
+export interface PremiumStatus {
+  active: boolean;
+  until: string | null;
+}
+
 export interface AffiliateStatsResponse {
   totalClicks: number;
   totalEstCents: number;

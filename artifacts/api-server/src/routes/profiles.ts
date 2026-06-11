@@ -3,6 +3,7 @@ import { db, profilesTable, insertProfileSchema, socialLinksSchema } from "@work
 import { eq } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
+import { publicProfile } from "../lib/publicProfile";
 
 const router: IRouter = Router();
 
@@ -12,7 +13,7 @@ router.get("/me", requireAuth, async (req, res) => {
     res.status(404).json({ error: "Profile not created" });
     return;
   }
-  res.json(rows[0]);
+  res.json(publicProfile(rows[0]));
 });
 
 import { rateLimit } from "../middlewares/rateLimit";
@@ -33,7 +34,7 @@ router.post("/profiles", requireAuth, rateLimit({ scope: "profile-create", max: 
     return;
   }
   const inserted = await db.insert(profilesTable).values({ ...parsed.data, userId: req.userId! }).returning();
-  res.status(201).json(inserted[0]);
+  res.status(201).json(publicProfile(inserted[0]));
 });
 
 router.put("/profiles/me", requireAuth, async (req, res) => {
@@ -51,7 +52,7 @@ router.put("/profiles/me", requireAuth, async (req, res) => {
     res.status(404).json({ error: "Profile not found" });
     return;
   }
-  res.json(updated[0]);
+  res.json(publicProfile(updated[0]));
 });
 
 // Lightweight endpoint just for syncing the on-device archetype quiz result
@@ -80,7 +81,7 @@ router.put("/profiles/me/archetype", requireAuth, async (req, res) => {
     res.status(204).end();
     return;
   }
-  res.json(updated[0]);
+  res.json(publicProfile(updated[0]));
 });
 
 // Linked social accounts. Kept as a focused PUT (not part of the wide
@@ -105,7 +106,7 @@ router.put("/profiles/me/social-links", requireAuth, async (req, res) => {
     res.status(404).json({ error: "Profile not found" });
     return;
   }
-  res.json(updated[0]);
+  res.json(publicProfile(updated[0]));
 });
 
 router.get("/profiles/:handle", optionalAuth, async (_req, res) => {
@@ -115,7 +116,7 @@ router.get("/profiles/:handle", optionalAuth, async (_req, res) => {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  res.json(rows[0]);
+  res.json(publicProfile(rows[0]));
 });
 
 export default router;

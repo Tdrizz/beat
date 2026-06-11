@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, notificationsTable, profilesTable } from "@workspace/db";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
+import { publicProfileOrNull } from "../lib/publicProfile";
 
 const router: IRouter = Router();
 
@@ -30,7 +31,7 @@ router.get("/notifications", requireAuth, async (req, res) => {
     ? []
     : await db.select().from(profilesTable).where(inArray(profilesTable.userId, actorIds));
   const byId = new Map(actors.map((a) => [a.userId, a]));
-  res.json(rows.map((r) => ({ ...r, actor: r.actorId ? byId.get(r.actorId) ?? null : null })));
+  res.json(rows.map((r) => ({ ...r, actor: r.actorId ? publicProfileOrNull(byId.get(r.actorId) ?? null) : null })));
 });
 
 router.get("/notifications/unread-count", requireAuth, async (req, res) => {

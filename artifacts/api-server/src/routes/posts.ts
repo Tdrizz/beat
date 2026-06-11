@@ -7,6 +7,7 @@ import { notify } from "../lib/notify";
 import { rateLimit } from "../middlewares/rateLimit";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { ARCHETYPE_MOOD_MATCHERS, ARCHETYPE_CHALLENGES, postMatchesArchetype } from "../lib/archetypeMatch";
+import { publicProfileOrNull } from "../lib/publicProfile";
 
 const objectStorage = new ObjectStorageService();
 
@@ -25,7 +26,7 @@ async function hydratePosts(rows: typeof postsTable.$inferSelect[], viewerId?: s
       .where(and(eq(likesTable.userId, viewerId), inArray(likesTable.postId, rows.map((r) => r.id))));
     likedSet = new Set(myLikes.map((l) => l.postId));
   }
-  return rows.map((r) => ({ ...r, author: byId.get(r.authorId) ?? null, likedByMe: likedSet.has(r.id) }));
+  return rows.map((r) => ({ ...r, author: publicProfileOrNull(byId.get(r.authorId) ?? null), likedByMe: likedSet.has(r.id) }));
 }
 
 router.get("/feed", optionalAuth, async (req, res) => {
@@ -280,7 +281,7 @@ router.get("/posts/:id/comments", async (req, res) => {
   }
   const authors = await db.select().from(profilesTable).where(inArray(profilesTable.userId, Array.from(new Set(rows.map((r) => r.authorId)))));
   const byId = new Map(authors.map((a) => [a.userId, a]));
-  res.json(rows.map((c) => ({ ...c, author: byId.get(c.authorId) ?? null })));
+  res.json(rows.map((c) => ({ ...c, author: publicProfileOrNull(byId.get(c.authorId) ?? null) })));
 });
 
 router.post("/posts/:id/comments", requireAuth, rateLimit({ scope: "comment", max: 20, windowMs: 60_000 }), async (req, res) => {

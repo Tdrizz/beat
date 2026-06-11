@@ -8,7 +8,7 @@ import {
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
   Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, CalendarDays, Brush, Apple, Link2, Users,
-  Coffee, BookHeart, Gem, GraduationCap,
+  Coffee, BookHeart, Gem, GraduationCap, Crown,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
@@ -16,6 +16,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 const PRIMARY = [
   { href: "/",          label: "Home",   icon: HomeIcon },
   { href: "/feed",      label: "Feed",   icon: Sparkles },
+  { href: "/classes",   label: "Classes", icon: GraduationCap },
   { href: "/archetype", label: "Iola",   icon: Wand2 },
   { href: "/upload",    label: "Share",  icon: UploadIcon },
   { href: "/messages",  label: "DMs",    icon: MessageCircle },
@@ -44,6 +45,7 @@ const SECONDARY: NavItem[] = [
   { href: "/teapot",     label: "The Teapot",    icon: Coffee },
   { href: "/cycle",           label: "Cycle tracker",    icon: CalendarDays },
   { href: "/esthetician-hub", label: "Esthetician Hub", icon: Gem },
+  { href: "/premium",   label: "Premium",       icon: Crown },
   { href: "/affiliate", label: "Creator stats", icon: BarChart3, authed: true },
   { href: "/settings/social", label: "Linked accounts", icon: Link2, authed: true },
 ];
