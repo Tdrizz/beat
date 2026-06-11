@@ -66,6 +66,10 @@ function UploadInner() {
           body: blob,
         });
         if (!put.ok) throw new Error(`Upload failed (${put.status})`);
+        await api.post("/storage/uploads/finalize", {
+          objectPath: presigned.objectPath,
+          visibility: "public",
+        });
         if (cancelled) return;
         setObjectPath(presigned.objectPath);
         setImageUrl(`/api/storage${presigned.objectPath}`);
@@ -80,7 +84,10 @@ function UploadInner() {
 
   // Shared blob → presigned PUT pipeline. Used by both the AI try-on
   // prefill effect above and the live camera capture below so we have a
-  // single source of truth for storage upload behaviour.
+  // single source of truth for storage upload behaviour. Posts are shown
+  // on the public feed, so the resulting object is finalized as `public`
+  // — otherwise the ACL guard on `GET /api/storage/objects/*` would
+  // block other users from seeing the image.
   async function uploadBlob(blob: Blob, filenameHint: string) {
     const presigned = await api.post<{ uploadURL: string; objectPath: string }>(
       "/storage/uploads/request-url",
@@ -92,6 +99,10 @@ function UploadInner() {
       body: blob,
     });
     if (!put.ok) throw new Error(`Upload failed (${put.status})`);
+    await api.post("/storage/uploads/finalize", {
+      objectPath: presigned.objectPath,
+      visibility: "public",
+    });
     return presigned.objectPath;
   }
 
@@ -175,8 +186,19 @@ function UploadInner() {
                     setObjectPath(presigned.objectPath);
                     return { method: "PUT", url: presigned.uploadURL, headers: { "Content-Type": file.type ?? "application/octet-stream" } };
                   }}
-                  onComplete={() => {
-                    if (objectPath) setImageUrl(`/api/storage${objectPath}`);
+                  onComplete={async () => {
+                    if (!objectPath) return;
+                    try {
+                      await api.post("/storage/uploads/finalize", {
+                        objectPath,
+                        visibility: "public",
+                      });
+                    } catch {
+                      // Best-effort — image preview will still render via
+                      // the upload's session cookie even if finalize fails;
+                      // post creation will surface the broken URL.
+                    }
+                    setImageUrl(`/api/storage${objectPath}`);
                   }}
                 >
                   <ImagePlus className="w-4 h-4" /> From library

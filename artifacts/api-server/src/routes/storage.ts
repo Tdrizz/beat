@@ -4,10 +4,9 @@ import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
-import { getAuth } from "@clerk/express";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { ObjectPermission, getObjectAclPolicy, canAccessObject } from "../lib/objectAcl";
-import { requireAuth } from "../middlewares/requireAuth";
+import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
+import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -42,6 +41,59 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: Request, re
   } catch (error) {
     req.log.error({ err: error }, "Error generating upload URL");
     res.status(500).json({ error: "Failed to generate upload URL" });
+  }
+});
+
+/**
+ * POST /storage/uploads/finalize
+ *
+ * Apply an ACL policy to a freshly-uploaded object. Must be called by the
+ * uploader after the direct PUT to the presigned URL completes, otherwise
+ * the object will have no policy and be unreadable through
+ * `GET /storage/objects/*`.
+ *
+ * - `objectPath` must be a canonical entity path (`/objects/<id>`) as
+ *   returned by `/storage/uploads/request-url`.
+ * - `visibility: "public"` makes the object readable by anyone (used for
+ *   feed images and curated tutorial step clips).
+ * - `visibility: "private"` (default) restricts reads to the uploader.
+ *
+ * To prevent another signed-in user from hijacking an object whose path
+ * they happen to learn, finalize is single-shot: once a policy exists,
+ * subsequent calls are rejected.
+ */
+router.post("/storage/uploads/finalize", requireAuth, async (req: Request, res: Response) => {
+  const body = req.body as { objectPath?: unknown; visibility?: unknown };
+  const objectPath = typeof body.objectPath === "string" ? body.objectPath : "";
+  const visibility = body.visibility === "public" ? "public" : "private";
+  if (!objectPath.startsWith("/objects/")) {
+    res.status(400).json({ error: "Invalid objectPath" });
+    return;
+  }
+  try {
+    const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+    const existing = await getObjectAclPolicy(objectFile);
+    if (existing) {
+      // Already finalized — only the owner is allowed to no-op confirm.
+      if (existing.owner !== req.userId) {
+        res.status(403).json({ error: "Object already finalized" });
+        return;
+      }
+      res.json({ objectPath, visibility: existing.visibility });
+      return;
+    }
+    await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
+      owner: req.userId!,
+      visibility,
+    });
+    res.json({ objectPath, visibility });
+  } catch (error) {
+    if (error instanceof ObjectNotFoundError) {
+      res.status(404).json({ error: "Object not found" });
+      return;
+    }
+    req.log.error({ err: error }, "Error finalizing object");
+    res.status(500).json({ error: "Failed to finalize object" });
   }
 });
 
@@ -82,57 +134,34 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
 /**
  * GET /storage/objects/*
  *
- * Serve object entities from PRIVATE_OBJECT_DIR.
- * These are served from a separate path from /public-objects and can optionally
- * be protected with authentication or ACL checks based on the use case.
+ * Serve object entities from PRIVATE_OBJECT_DIR, gated by the ACL policy
+ * stored on the object (set via `/storage/uploads/finalize`).
+ *
+ * - Objects with `visibility: "public"` are readable by anyone.
+ * - All other objects require the caller's Clerk userId to match the ACL
+ *   owner (or one of the ACL rule groups).
+ * - Objects with no ACL policy at all are treated as private and return
+ *   401/403 — uploaders MUST call `/storage/uploads/finalize` after
+ *   their PUT, otherwise their file is unreadable.
  */
-router.get("/storage/objects/*path", async (req: Request, res: Response) => {
+router.get("/storage/objects/*path", optionalAuth, async (req: Request, res: Response) => {
   try {
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
-    /**
-     * ACL enforcement.
-     *
-     * Current rule:
-     *  • If an object has an explicit ACL policy attached as custom
-     *    metadata (`custom:aclPolicy`) we enforce it via `canAccessObject`.
-     *  • If no policy is attached, we fall back to READ-allowed. This is
-     *    a deliberate backwards-compat default — every object uploaded
-     *    before per-object ACLs were wired into the upload flow lives
-     *    here, and gating them all behind auth would 401 every avatar
-     *    and post image in production.
-     *
-     * Migration plan to close the gap:
-     *  1. Update the upload flow (POST /posts, profile avatar setter,
-     *     anything that calls `request-url`) to call
-     *     `objectStorageService.trySetObjectEntityAclPolicy(path, { owner, visibility })`
-     *     once the upload completes. Use `visibility: "public"` for posts /
-     *     avatars and `"private"` for drafts / DMs.
-     *  2. Backfill ACLs on legacy objects via a one-shot script.
-     *  3. THEN flip the `policyMissing` branch below from "allow" to
-     *     "deny" and document the change in replit.md.
-     */
-    const auth = getAuth(req);
-    const policy = await getObjectAclPolicy(objectFile);
-    if (policy) {
-      const canRead = await canAccessObject({
-        userId: auth.userId ?? undefined,
-        objectFile,
-        requestedPermission: ObjectPermission.READ,
+    const canAccess = await objectStorageService.canAccessObjectEntity({
+      userId: req.userId,
+      objectFile,
+      requestedPermission: ObjectPermission.READ,
+    });
+    if (!canAccess) {
+      res.status(req.userId ? 403 : 401).json({
+        error: req.userId ? "Forbidden" : "Unauthorized",
       });
-      if (!canRead) {
-        if (!auth.userId) {
-          res.status(401).json({ error: "Unauthorized" });
-          return;
-        }
-        res.status(403).json({ error: "Forbidden" });
-        return;
-      }
+      return;
     }
-    // policy missing → legacy-public fallback (see comment above).
 
     const response = await objectStorageService.downloadObject(objectFile);
 

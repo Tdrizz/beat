@@ -76,13 +76,14 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 
 1. From an authenticated session, `POST /api/storage/uploads/request-url` with `{ name, size, contentType: "video/mp4" }` to get a presigned `uploadURL` + canonical `objectPath`.
 2. `PUT` the file directly to `uploadURL`.
-3. Paste the returned `objectPath` (e.g. `/objects/uploads/<uuid>`) — or a fully-qualified CDN URL — into the step's `videoUrl` in `artifacts/glamr/src/lib/tutorials.ts`. The same flow works for a still-frame `videoPoster`. The detail page resolves `/objects/...` to the served `/api/storage/objects/...` route automatically (see `resolveTutorialMediaUrl`), so you can store the canonical entity path verbatim.
+3. `POST /api/storage/uploads/finalize` with `{ objectPath, visibility: "public" }` — this is **required** for curated clips. The `GET /storage/objects/*` route is ACL-gated, so without a `public` finalize the clip will 401 for everyone except you.
+4. Paste the returned `objectPath` (e.g. `/objects/uploads/<uuid>`) — or a fully-qualified CDN URL — into the step's `videoUrl` in `artifacts/glamr/src/lib/tutorials.ts`. The same flow works for a still-frame `videoPoster`. The detail page resolves `/objects/...` to the served `/api/storage/objects/...` route automatically (see `resolveTutorialMediaUrl`), so you can store the canonical entity path verbatim.
 
 Storage limits / authoring guidance for the curated set:
 - **Length**: 10-30 seconds per clip. Anything longer belongs in a full tutorial.
 - **Size**: keep each clip ≤ 8 MB. H.264 MP4, 720p, ~1.5 Mbps, AAC audio (or muted) hits this comfortably.
 - **Aspect**: 16:9 to match the inline player's `aspect-video` frame; vertical clips will be letterboxed.
-- **Privacy**: served via the existing `GET /api/storage/objects/*` route, which is currently public (see the "Gotchas" note). Do not put user-private content behind a tutorial `videoUrl` until that route's ACL guard is enabled.
+- **Privacy**: served via the ACL-gated `GET /api/storage/objects/*` route. Curated tutorial clips must be finalized as `public` (step 3 above) so signed-out and other users can play them; user-private uploads should be finalized as `private` so only the uploader can read them.
 
 ## User preferences
 
@@ -96,7 +97,7 @@ Storage limits / authoring guidance for the curated set:
 - Rate limiting is in-memory; horizontal scaling would require Redis.
 - `POST /ai-tryon` is auth + rate-limited (10 calls / 5 min / user). Never remove either guard — the route hits Gemini image generation on every call (paid, unbounded cost if left open).
 - `socialRouter` must remain mounted **before** `profilesRouter` in `routes/index.ts`, otherwise `/profiles/:handle` swallows `/profiles/featured`, `/profiles/search`, and `/profiles/me/friends`.
-- `GET /storage/objects/*` currently has no auth/ACL guard (placeholder). If/when private user uploads start being stored there, uncomment the auth + ACL block in `storage.ts` first.
+- `GET /storage/objects/*` is ACL-gated: objects with `visibility: "public"` are world-readable, everything else requires the caller's Clerk userId to match the ACL owner, and objects with no policy at all return 401/403. Uploaders MUST call `POST /storage/uploads/finalize` after their PUT — without it the object is permanently unreadable through this route.
 
 ### Health sweep — May 2026
 
