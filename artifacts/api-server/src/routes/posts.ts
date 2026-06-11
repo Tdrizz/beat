@@ -306,6 +306,41 @@ router.post("/posts/:id/comments", requireAuth, rateLimit({ scope: "comment", ma
   res.status(201).json(inserted[0]);
 });
 
+router.delete("/posts/:id/comments/:commentId", requireAuth, async (req, res) => {
+  const postId = p(req.params.id);
+  const commentId = p(req.params.commentId);
+  const rows = await db
+    .select()
+    .from(commentsTable)
+    .where(and(eq(commentsTable.id, commentId), eq(commentsTable.postId, postId)))
+    .limit(1);
+  if (rows.length === 0) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  // Only the comment's author or the post's author may delete a comment.
+  let canDelete = rows[0].authorId === req.userId;
+  if (!canDelete) {
+    const post = await db
+      .select({ authorId: postsTable.authorId })
+      .from(postsTable)
+      .where(eq(postsTable.id, postId))
+      .limit(1);
+    canDelete = post[0]?.authorId === req.userId;
+  }
+  if (!canDelete) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  await db.delete(commentsTable).where(eq(commentsTable.id, commentId));
+  // GREATEST guards against the counter ever going negative if a count drifts.
+  await db
+    .update(postsTable)
+    .set({ commentCount: sql`GREATEST(${postsTable.commentCount} - 1, 0)` })
+    .where(eq(postsTable.id, postId));
+  res.status(204).end();
+});
+
 router.get("/profiles/:handle/posts", optionalAuth, async (req, res) => {
   const handle = p(req.params.handle);
   const profile = await db.select().from(profilesTable).where(eq(profilesTable.handle, handle)).limit(1);

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, ArrowLeft } from "lucide-react";
+import { Heart, MessageCircle, ArrowLeft, Trash2 } from "lucide-react";
 import { api, type Post, type Profile } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export default function PostDetail() {
   const params = useParams<{ id: string }>();
   const postId = params.id;
   const qc = useQueryClient();
+  const { userId } = useAuth();
   const { showOverlay, checkText, dismiss } = useKindnessCheck();
   const [body, setBody] = useState("");
 
@@ -51,6 +53,16 @@ export default function PostDetail() {
       api.post<CommentRow>(`/posts/${postId}/comments`, { body: text }),
     onSuccess: () => {
       setBody("");
+      qc.invalidateQueries({ queryKey: ["post", postId, "comments"] });
+      qc.invalidateQueries({ queryKey: ["post", postId] });
+      qc.invalidateQueries({ queryKey: ["feed"] });
+    },
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: (commentId: string) =>
+      api.del(`/posts/${postId}/comments/${commentId}`),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["post", postId, "comments"] });
       qc.invalidateQueries({ queryKey: ["post", postId] });
       qc.invalidateQueries({ queryKey: ["feed"] });
@@ -200,6 +212,19 @@ export default function PostDetail() {
                     )}
                     <p className="text-sm whitespace-pre-wrap break-words">{c.body}</p>
                   </div>
+                  {userId && c.authorId === userId && (
+                    <button
+                      onClick={() => {
+                        if (deleteComment.isPending) return;
+                        deleteComment.mutate(c.id);
+                      }}
+                      disabled={deleteComment.isPending}
+                      className="shrink-0 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
+                      aria-label="Delete comment"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
