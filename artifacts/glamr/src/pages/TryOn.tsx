@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useParams, Link, useLocation } from "wouter";
+import { useParams, Link, useLocation, useSearch } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { allLooks, eyeLooks, lipLooks, trendLooks, moreEyeLooks, moreLipLooks, type Look } from "../lib/looks";
 import { wigStyles, wigSwatchGradient, NO_WIG_ID, type WigStyle, type WigColor } from "../lib/wigs";
@@ -21,9 +21,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Loader2, Camera as CameraIcon, ChevronLeft, ChevronRight,
   CheckCircle2, Play, User, ShoppingBag, ChevronDown, ChevronUp,
-  ExternalLink, Youtube, Sparkles, Image as ImageIcon, Info, PanelRightClose
+  ExternalLink, Youtube, Sparkles, Image as ImageIcon, Info, PanelRightClose,
+  Bookmark, BookmarkCheck
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { api, type SavedCombo } from "@/lib/api";
+import { comboHref } from "@/lib/savedCombos";
+import { useToast } from "@/hooks/use-toast";
 
 const ALL_LOOKS = [
   ...allLooks, ...eyeLooks, ...lipLooks,
@@ -388,6 +392,28 @@ function WigRail({
 export default function TryOn() {
   const { lookId: paramLookId } = useParams();
   const [, navigate] = useLocation();
+  const search = useSearch();
+  const { toast } = useToast();
+
+  // Selections deep-linked in from a saved combo (`/try-on/:lookId?wig=…&
+  // color=…&intensity=…`). Parsed once on mount to seed initial state; the
+  // values are validated against the catalogue so a stale link degrades
+  // gracefully to "my hair" / default intensity rather than rendering blank.
+  const deepLink = useMemo(() => {
+    const params = new URLSearchParams(search);
+    const wigParam = params.get("wig");
+    const wig = wigParam && wigStyles.some((w) => w.id === wigParam) ? wigParam : null;
+    const colorParam = params.get("color");
+    const wigStyle = wig ? wigStyles.find((w) => w.id === wig)! : null;
+    const color = wig && colorParam && wigStyle?.colors.some((c) => c.id === colorParam) ? colorParam : null;
+    const intensityRaw = Number(params.get("intensity"));
+    const intensity = Number.isFinite(intensityRaw) && intensityRaw >= 0 && intensityRaw <= 100
+      ? Math.round(intensityRaw)
+      : null;
+    return { wig, color, intensity };
+    // Parse only on mount — subsequent in-page selection changes own the state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Look + wig selections drive the dual-scroll carousels below.
   // `paramLookId` seeds the initial look; tapping a card in the carousel
@@ -398,8 +424,10 @@ export default function TryOn() {
     [paramLookId],
   );
   const [selectedLookId, setSelectedLookId] = useState<string | null>(initialLookId);
-  const [selectedWigId, setSelectedWigId] = useState<string>(NO_WIG_ID);
-  const [selectedColorIdByWig, setSelectedColorIdByWig] = useState<Record<string, string>>({});
+  const [selectedWigId, setSelectedWigId] = useState<string>(deepLink.wig ?? NO_WIG_ID);
+  const [selectedColorIdByWig, setSelectedColorIdByWig] = useState<Record<string, string>>(
+    deepLink.wig && deepLink.color ? { [deepLink.wig]: deepLink.color } : {},
+  );
 
   useEffect(() => {
     if (paramLookId && paramLookId !== selectedLookId && ALL_LOOKS.some((l) => l.id === paramLookId)) {
@@ -442,7 +470,7 @@ export default function TryOn() {
   // and the look's per-step shades.
   const { archetype: userArchetype } = useArchetype();
   const [aiTryonOpen, setAiTryonOpen] = useState(false);
-  const [aiIntensity, setAiIntensity] = useState(60);
+  const [aiIntensity, setAiIntensity] = useState(deepLink.intensity ?? 60);
   // Collapsed state for the right-hand "About this look" panel — when on,
   // the camera area uses the entire viewport. Defaults to collapsed on mobile
   // so the camera dominates from the first frame.
@@ -454,6 +482,44 @@ export default function TryOn() {
   // whether they've already generated something for this look — the
   // indicator shouldn't regress when they swipe back through old angles.
   const lastResultUrl = aiTryon.lastGenerated?.imageUrl ?? null;
+
+  // Save the current look + wig + colour + intensity to the user's profile so
+  // they can revisit it from "My combos". Idempotent server-side (re-saving
+  // the same combo returns the existing row), so we flip to a "saved" state
+  // and let the user keep exploring. Reset whenever the combination changes.
+  const [savingCombo, setSavingCombo] = useState(false);
+  const [comboSaved, setComboSaved] = useState(false);
+  useEffect(() => {
+    setComboSaved(false);
+  }, [selectedLookId, selectedWigId, selectedColor?.id, aiIntensity]);
+
+  const saveCombo = async () => {
+    if (!baseLook || savingCombo) return;
+    setSavingCombo(true);
+    try {
+      await api.post<SavedCombo>("/profiles/me/combos", {
+        lookId: baseLook.id,
+        wigStyleId: selectedWigId,
+        wigColorId: selectedWigId === NO_WIG_ID ? null : selectedColor?.id ?? null,
+        intensity: aiIntensity,
+      });
+      setComboSaved(true);
+      toast({
+        title: "Combo saved",
+        description: selectedWig
+          ? `${baseLook.name} + ${selectedWig.name}${selectedColor ? ` / ${selectedColor.name}` : ""}`
+          : `${baseLook.name} · My hair`,
+      });
+    } catch (e) {
+      toast({
+        title: "Couldn't save combo",
+        description: e instanceof Error ? e.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingCombo(false);
+    }
+  };
 
   const runAITryon = (angleLabel?: string) => {
     if (!baseLook) return;
@@ -625,6 +691,22 @@ export default function TryOn() {
           </div>
 
           <div className="flex gap-2">
+            <Button
+              variant="ghost" size="icon"
+              className={`rounded-full text-white hover:bg-white/20 ${comboSaved ? "bg-primary/30" : ""}`}
+              onClick={saveCombo}
+              disabled={savingCombo}
+              title={comboSaved ? "Combo saved — view in My combos" : "Save this look + wig combo"}
+              aria-label={comboSaved ? "Combo saved" : "Save this makeup and wig combo"}
+            >
+              {savingCombo ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : comboSaved ? (
+                <BookmarkCheck className="w-5 h-5" />
+              ) : (
+                <Bookmark className="w-5 h-5" />
+              )}
+            </Button>
             <Button
               variant="ghost" size="icon"
               className="rounded-full text-white hover:bg-white/20"

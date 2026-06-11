@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { ARCHETYPES, pickFg, type ArchetypeId } from "@/lib/archetypes";
 import { SocialLinkChips } from "@/components/SocialLinkChips";
+import { MyCombos } from "@/components/MyCombos";
 
 export default function UserProfile() {
   const [, params] = useRoute<{ handle: string }>("/u/:handle");
@@ -82,6 +83,7 @@ export default function UserProfile() {
                 </div>
               );
             })()}
+            {isMe && <MyCombos />}
             <div className="grid grid-cols-3 gap-1">
               {posts?.map((p) => (
                 <Link key={p.id} href={`/posts/${p.id}`}>

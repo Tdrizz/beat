@@ -1,1 +1,2 @@
 - [Presigned upload verification](presigned-upload-verification.md) — presigned URLs enforce nothing; re-verify real GCS object type/size + `/objects/` prefix server-side at write-back.
+- [Glamr AuthedRoute e2e limitation](glamr-authed-route-e2e.md) — runTest can't reliably render authed Glamr pages (Clerk re-hydration); verify authed flows via API+curl+code review, not UI.

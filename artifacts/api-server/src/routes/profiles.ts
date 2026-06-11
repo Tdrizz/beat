@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, profilesTable, insertProfileSchema, socialLinksSchema } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, profilesTable, insertProfileSchema, socialLinksSchema, savedCombosTable, insertSavedComboSchema } from "@workspace/db";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
 import { publicProfile } from "../lib/publicProfile";
@@ -107,6 +107,91 @@ router.put("/profiles/me/social-links", requireAuth, async (req, res) => {
     return;
   }
   res.json(publicProfile(updated[0]));
+});
+
+// ── Saved makeup + wig combos ────────────────────────────────────────────────
+//
+// A user's favourited { lookId, wigStyleId, wigColorId, intensity } pairings
+// explored in try-on. Server-side so they survive across devices. All routes
+// are scoped to the signed-in user; there is no way to read another user's
+// combos. Kept under `/profiles/me/combos` (two-segment paths) so they sit
+// safely above the `/profiles/:handle` catch-all below.
+const MAX_COMBOS_PER_USER = 100;
+
+router.get("/profiles/me/combos", requireAuth, async (req, res) => {
+  const rows = await db
+    .select()
+    .from(savedCombosTable)
+    .where(eq(savedCombosTable.userId, req.userId!))
+    .orderBy(desc(savedCombosTable.createdAt));
+  res.json(rows);
+});
+
+router.post(
+  "/profiles/me/combos",
+  requireAuth,
+  rateLimit({ scope: "combo-create", max: 30, windowMs: 60_000 }),
+  async (req, res) => {
+    const parsed = insertSavedComboSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid", details: parsed.error.flatten() });
+      return;
+    }
+    // Normalise: "own hair" (or any missing wig) clears the colour so the
+    // dedupe key and stored row stay consistent.
+    const wigStyleId = parsed.data.wigStyleId;
+    const wigColorId = wigStyleId === "none" ? null : parsed.data.wigColorId ?? null;
+    const intensity = parsed.data.intensity ?? 60;
+
+    // Dedupe — saving the same exact combo again just returns the existing
+    // row (idempotent), so the "My combos" list never fills with duplicates.
+    const existing = await db
+      .select()
+      .from(savedCombosTable)
+      .where(
+        and(
+          eq(savedCombosTable.userId, req.userId!),
+          eq(savedCombosTable.lookId, parsed.data.lookId),
+          eq(savedCombosTable.wigStyleId, wigStyleId),
+          wigColorId === null
+            ? isNull(savedCombosTable.wigColorId)
+            : eq(savedCombosTable.wigColorId, wigColorId),
+        ),
+      )
+      .limit(1);
+    if (existing.length > 0) {
+      res.status(200).json(existing[0]);
+      return;
+    }
+
+    const count = await db
+      .select()
+      .from(savedCombosTable)
+      .where(eq(savedCombosTable.userId, req.userId!));
+    if (count.length >= MAX_COMBOS_PER_USER) {
+      res.status(409).json({ error: `You can save up to ${MAX_COMBOS_PER_USER} combos.` });
+      return;
+    }
+
+    const inserted = await db
+      .insert(savedCombosTable)
+      .values({ userId: req.userId!, lookId: parsed.data.lookId, wigStyleId, wigColorId, intensity })
+      .returning();
+    res.status(201).json(inserted[0]);
+  },
+);
+
+router.delete("/profiles/me/combos/:id", requireAuth, async (req, res) => {
+  const id = p(req.params.id);
+  const deleted = await db
+    .delete(savedCombosTable)
+    .where(and(eq(savedCombosTable.id, id), eq(savedCombosTable.userId, req.userId!)))
+    .returning();
+  if (deleted.length === 0) {
+    res.status(404).json({ error: "Combo not found" });
+    return;
+  }
+  res.status(204).end();
 });
 
 router.get("/profiles/:handle", optionalAuth, async (_req, res) => {

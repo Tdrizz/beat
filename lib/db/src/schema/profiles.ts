@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, varchar, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, varchar, boolean, jsonb, uuid, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -73,3 +73,37 @@ export const insertProfileSchema = createInsertSchema(profilesTable, {
 
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type Profile = typeof profilesTable.$inferSelect;
+
+// A favourited makeup-look + wig pairing the user explored in try-on, saved
+// so they can revisit and re-run the AI try-on later. The catalogue ids
+// (lookId / wigStyleId / wigColorId) are stored verbatim — they're stable
+// string keys defined in the frontend `looks`/`wigs` catalogues. We keep the
+// row deliberately denormalised (no FKs to a wigs/looks table, which live in
+// code) so the catalogue can evolve without migrations; a combo whose ids no
+// longer resolve is simply skipped on render. `wigStyleId` of "none" means
+// "my own hair", in which case `wigColorId` is null.
+export const savedCombosTable = pgTable(
+  "saved_combos",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: varchar("user_id", { length: 64 }).notNull(),     // Clerk userId
+    lookId: varchar("look_id", { length: 64 }).notNull(),
+    wigStyleId: varchar("wig_style_id", { length: 48 }).notNull(), // "none" ⇒ own hair
+    wigColorId: varchar("wig_color_id", { length: 48 }),           // null when no wig
+    intensity: integer("intensity").notNull().default(60),         // 0–100 AI strength
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    byUser: index("saved_combos_user_idx").on(t.userId, t.createdAt),
+  }),
+);
+
+export const insertSavedComboSchema = createInsertSchema(savedCombosTable, {
+  lookId: z.string().min(1).max(64),
+  wigStyleId: z.string().min(1).max(48),
+  wigColorId: z.string().min(1).max(48).nullable().optional(),
+  intensity: z.number().int().min(0).max(100).optional(),
+}).omit({ id: true, userId: true, createdAt: true });
+
+export type InsertSavedCombo = z.infer<typeof insertSavedComboSchema>;
+export type SavedCombo = typeof savedCombosTable.$inferSelect;

@@ -159,6 +159,18 @@ export interface PremiumStatus {
   until: string | null;
 }
 
+/* A saved makeup-look + wig pairing, scoped to the signed-in user.
+ * `wigStyleId` of "none" means own hair, in which case `wigColorId` is null. */
+export interface SavedCombo {
+  id: string;
+  userId: string;
+  lookId: string;
+  wigStyleId: string;
+  wigColorId: string | null;
+  intensity: number;
+  createdAt: string;
+}
+
 export interface AffiliateStatsResponse {
   totalClicks: number;
   totalEstCents: number;
