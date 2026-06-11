@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import type { Profile } from "@/lib/api";
 import NotFound from "@/pages/not-found";
+import { TutorialStepVideoUploader } from "@/components/TutorialStepVideoUploader";
 import {
   getTutorial,
   resolveTutorialMediaUrl,
@@ -23,6 +24,12 @@ import {
 // submissions are UUIDs. We use the shape of the id to skip the
 // server round-trip for curated tutorials.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+interface StepVideoOverride {
+  stepIndex: number;
+  videoUrl: string;
+  videoPoster: string | null;
+}
 
 interface Review {
   id: string;
@@ -91,6 +98,23 @@ export default function TutorialDetail() {
     onError: (e: Error) => toast({ title: "Couldn't remove", description: e.message, variant: "destructive" }),
   });
   const bookmarkPending = saveBookmark.isPending || removeBookmark.isPending;
+
+  const { data: stepVideoData } = useQuery({
+    queryKey: ["tutorial-step-videos", tutorialId],
+    queryFn: () => api.get<{ stepVideos: StepVideoOverride[] }>(`/tutorials/${tutorialId}/step-videos`),
+    enabled: !!tutorial,
+  });
+
+  const { data: curatorData } = useQuery({
+    queryKey: ["curator-status"],
+    queryFn: () => api.get<{ isCurator: boolean }>("/tutorials/curator/status"),
+    enabled: isSignedIn,
+  });
+
+  const isCurator = curatorData?.isCurator ?? false;
+  const stepVideoByIndex = new Map(
+    (stepVideoData?.stepVideos ?? []).map((o) => [o.stepIndex, o]),
+  );
 
   if (isSubmittedId && submittedLoading) {
     return <div className="min-h-screen vanity-bg p-8 text-sm text-muted-foreground">Loading…</div>;
@@ -194,30 +218,45 @@ export default function TutorialDetail() {
         <section className="space-y-3">
           <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Step by step</h2>
           <ol className="space-y-3">
-            {tutorial.steps.map((s, i) => (
-              <li key={i} className="bg-card border border-border rounded-2xl p-4 flex gap-3">
-                <div className="shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{s.title}</p>
-                  {s.videoUrl && (
-                    <div className="mt-2 rounded-xl overflow-hidden bg-black aspect-video">
-                      <video
-                        src={resolveTutorialMediaUrl(s.videoUrl)}
-                        poster={resolveTutorialMediaUrl(s.videoPoster)}
-                        controls
-                        preload="metadata"
-                        playsInline
-                        className="w-full h-full object-cover"
-                        aria-label={`Demo clip for step ${i + 1}: ${s.title}`}
+            {tutorial.steps.map((s, i) => {
+              const override = stepVideoByIndex.get(i);
+              const videoUrl = override?.videoUrl ?? s.videoUrl;
+              const videoPoster = override?.videoPoster ?? s.videoPoster;
+              return (
+                <li key={i} className="bg-card border border-border rounded-2xl p-4 flex gap-3">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">{s.title}</p>
+                    {videoUrl && (
+                      <div className="mt-2 rounded-xl overflow-hidden bg-black aspect-video">
+                        <video
+                          src={resolveTutorialMediaUrl(videoUrl)}
+                          poster={resolveTutorialMediaUrl(videoPoster ?? undefined)}
+                          controls
+                          preload="metadata"
+                          playsInline
+                          className="w-full h-full object-cover"
+                          aria-label={`Demo clip for step ${i + 1}: ${s.title}`}
+                        />
+                      </div>
+                    )}
+                    {isCurator && (
+                      <TutorialStepVideoUploader
+                        tutorialId={tutorialId}
+                        stepIndex={i}
+                        hasClip={!!override}
+                        onChanged={() =>
+                          qc.invalidateQueries({ queryKey: ["tutorial-step-videos", tutorialId] })
+                        }
                       />
-                    </div>
-                  )}
-                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.body}</p>
-                </div>
-              </li>
-            ))}
+                    )}
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.body}</p>
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </section>
 

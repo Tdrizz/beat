@@ -1,0 +1,1 @@
+- [Presigned upload verification](presigned-upload-verification.md) — presigned URLs enforce nothing; re-verify real GCS object type/size + `/objects/` prefix server-side at write-back.

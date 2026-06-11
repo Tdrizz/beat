@@ -3,20 +3,25 @@ import {
   db,
   tutorialReviewsTable,
   tutorialBookmarksTable,
+  tutorialStepVideosTable,
   profilesTable,
   insertTutorialReviewSchema,
+  upsertTutorialStepVideoSchema,
   isKnownTutorialId,
   submittedTutorialsTable,
   submitTutorialSchema,
   SUBMITTED_TUTORIAL_STATUSES,
   type SubmittedTutorialStatus,
+  isValidStepIndex,
 } from "@workspace/db";
 import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
+import { requireCurator, isCurator } from "../middlewares/requireCurator";
 import { rateLimit } from "../middlewares/rateLimit";
 import { isAdmin } from "../lib/admin";
 import { p } from "../lib/params";
+import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 
 const moderateSchema = z.object({
   status: z.enum(SUBMITTED_TUTORIAL_STATUSES),
@@ -24,6 +29,43 @@ const moderateSchema = z.object({
 });
 
 const router: IRouter = Router();
+const objectStorageService = new ObjectStorageService();
+
+// Curator step-clip limits. These mirror the authoring guidance in replit.md
+// and are enforced against the *actual* stored object (a presigned upload URL
+// can't constrain what the client PUTs, so the claimed size/type at
+// request-url time is advisory only).
+const MAX_VIDEO_BYTES = 8 * 1024 * 1024;
+const MAX_POSTER_BYTES = 4 * 1024 * 1024;
+
+// Verify a just-uploaded object actually matches the expected media kind/size
+// by reading its real GCS metadata. Returns a structured error so the route
+// can surface a clear 4xx instead of writing a bad reference to the step.
+async function verifyUploadedObject(
+  objectPath: string,
+  expect: { prefix: "video/" | "image/"; maxBytes: number; label: string },
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  let metadata;
+  try {
+    const file = await objectStorageService.getObjectEntityFile(objectPath);
+    [metadata] = await file.getMetadata();
+  } catch (err) {
+    if (err instanceof ObjectNotFoundError) {
+      return { ok: false, status: 400, error: "Uploaded file could not be found" };
+    }
+    throw err;
+  }
+  const contentType = String(metadata.contentType ?? "");
+  const size = Number(metadata.size ?? 0);
+  if (!contentType.startsWith(expect.prefix)) {
+    return { ok: false, status: 400, error: `The ${expect.label} must be a ${expect.prefix.slice(0, -1)} file` };
+  }
+  if (!size || size > expect.maxBytes) {
+    const mb = Math.round(expect.maxBytes / (1024 * 1024));
+    return { ok: false, status: 400, error: `The ${expect.label} is too large (max ${mb} MB)` };
+  }
+  return { ok: true };
+}
 
 // Aggregated rating stats across every tutorial. Used by the listing page
 // so it can sort/badge cards by their average score without N round-trips.
@@ -497,5 +539,134 @@ async function isValidReviewableId(id: string): Promise<boolean> {
   const row = rows[0];
   return !!row && (row.status === "published" || row.status === "featured");
 }
+
+// --- Curator step demo clips -------------------------------------------------
+
+// Whether the signed-in viewer is a curator. Anonymous => false. The frontend
+// uses this to decide whether to render the per-step uploader controls.
+router.get("/tutorials/curator/status", optionalAuth, (req, res) => {
+  res.json({ isCurator: isCurator(req.userId) });
+});
+
+// Curator-uploaded demo clips for a tutorial's steps. Public — the detail page
+// merges these over the static catalogue for every viewer.
+router.get("/tutorials/:id/step-videos", async (req, res) => {
+  const tutorialId = p(req.params.id);
+  if (!isKnownTutorialId(tutorialId)) {
+    res.status(404).json({ error: "Tutorial not found" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(tutorialStepVideosTable)
+    .where(eq(tutorialStepVideosTable.tutorialId, tutorialId));
+  res.json({
+    stepVideos: rows.map((r) => ({
+      stepIndex: r.stepIndex,
+      videoUrl: r.videoUrl,
+      videoPoster: r.videoPoster,
+    })),
+  });
+});
+
+// Attach (or replace) the demo clip on a step. Curator-only. The body carries
+// canonical object paths from the upload flow; we verify each object's real
+// content-type/size before persisting and mark them public so the served route
+// sends a cacheable, publicly readable response.
+router.put("/tutorials/:id/steps/:stepIndex/video", requireCurator, async (req, res) => {
+  const tutorialId = p(req.params.id);
+  const stepIndex = Number(p(req.params.stepIndex));
+  if (!isValidStepIndex(tutorialId, stepIndex)) {
+    res.status(404).json({ error: "Tutorial step not found" });
+    return;
+  }
+  const parsed = upsertTutorialStepVideoSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid", details: parsed.error.flatten() });
+    return;
+  }
+  const { videoUrl, videoPoster } = parsed.data;
+
+  const videoCheck = await verifyUploadedObject(videoUrl, {
+    prefix: "video/",
+    maxBytes: MAX_VIDEO_BYTES,
+    label: "clip",
+  });
+  if (!videoCheck.ok) {
+    res.status(videoCheck.status).json({ error: videoCheck.error });
+    return;
+  }
+  if (videoPoster) {
+    const posterCheck = await verifyUploadedObject(videoPoster, {
+      prefix: "image/",
+      maxBytes: MAX_POSTER_BYTES,
+      label: "poster",
+    });
+    if (!posterCheck.ok) {
+      res.status(posterCheck.status).json({ error: posterCheck.error });
+      return;
+    }
+  }
+
+  // Tutorials render on a public page, so the served clip must be publicly
+  // readable (and cacheable). Mark the objects public; best-effort.
+  await objectStorageService.trySetObjectEntityAclPolicy(videoUrl, {
+    owner: req.userId!,
+    visibility: "public",
+  });
+  if (videoPoster) {
+    await objectStorageService.trySetObjectEntityAclPolicy(videoPoster, {
+      owner: req.userId!,
+      visibility: "public",
+    });
+  }
+
+  const values = {
+    tutorialId,
+    stepIndex,
+    videoUrl,
+    videoPoster: videoPoster ?? null,
+    updatedBy: req.userId!,
+    updatedAt: new Date(),
+  };
+  const inserted = await db
+    .insert(tutorialStepVideosTable)
+    .values(values)
+    .onConflictDoUpdate({
+      target: [tutorialStepVideosTable.tutorialId, tutorialStepVideosTable.stepIndex],
+      set: {
+        videoUrl: values.videoUrl,
+        videoPoster: values.videoPoster,
+        updatedBy: values.updatedBy,
+        updatedAt: values.updatedAt,
+      },
+    })
+    .returning();
+  res.status(200).json({
+    stepIndex: inserted[0].stepIndex,
+    videoUrl: inserted[0].videoUrl,
+    videoPoster: inserted[0].videoPoster,
+  });
+});
+
+// Remove a curator clip from a step. The step falls back to whatever the
+// static catalogue ships (often nothing). Curator-only.
+router.delete("/tutorials/:id/steps/:stepIndex/video", requireCurator, async (req, res) => {
+  const tutorialId = p(req.params.id);
+  const stepIndex = Number(p(req.params.stepIndex));
+  if (!isValidStepIndex(tutorialId, stepIndex)) {
+    res.status(404).json({ error: "Tutorial step not found" });
+    return;
+  }
+  await db
+    .delete(tutorialStepVideosTable)
+    .where(
+      and(
+        eq(tutorialStepVideosTable.tutorialId, tutorialId),
+        eq(tutorialStepVideosTable.stepIndex, stepIndex),
+      ),
+    );
+  res.status(204).end();
+});
 
 export default router;

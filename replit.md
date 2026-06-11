@@ -12,6 +12,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 
 **Environment Variables:**
 - `VITE_CLERK_PUBLISHABLE_KEY`: For Clerk authentication.
+- `CURATOR_USER_IDS`: Comma-separated Clerk user IDs allowed to upload/manage tutorial step demo clips (fail-closed; unset ⇒ no curators). See "Tutorial step video clips".
 
 ## Stack
 
@@ -28,7 +29,8 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 ## Where things live
 
 - **Design System**: `artifacts/glamr/src/index.css` (theme), `src/index.css` (comments for key decisions)
-- **Database Schema**: `lib/db/src/schema/{profiles,posts,messages,affiliate}.ts`
+- **Database Schema**: `lib/db/src/schema/{profiles,posts,messages,affiliate,tutorials}.ts`
+- **Tutorial step clips (curator)**: schema + step counts `lib/db/src/schema/tutorials.ts`; routes `artifacts/api-server/src/routes/tutorials.ts`; curator gate `artifacts/api-server/src/middlewares/requireCurator.ts`; uploader UI `artifacts/glamr/src/components/TutorialStepVideoUploader.tsx`; detail page `artifacts/glamr/src/pages/TutorialDetail.tsx`
 - **API Routes**: `artifacts/api-server/src/routes/{profiles,posts,social,messages,brands,affiliate,storage}.ts` (`social.ts` includes `/profiles/me/friends`, `/profiles/featured`, `/profiles/search`, `/follows/status` — must mount **before** `profilesRouter`)
 - **Friends page**: `artifacts/glamr/src/pages/Friends.tsx`
 - **Archetype Definitions**: `lib/archetypes.ts`, `lib/archetypeQuiz.ts`
@@ -72,16 +74,21 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 
 ### Tutorial step video clips
 
-`TutorialStep` supports an optional `videoUrl` (and optional `videoPoster`) for a short demo clip rendered inline above the written body on `TutorialDetail`. Curated upload flow:
+`TutorialStep` supports an optional `videoUrl` (and optional `videoPoster`) for a short demo clip rendered inline above the written body on `TutorialDetail`. There are two ways a clip gets onto a step:
 
-1. From an authenticated session, `POST /api/storage/uploads/request-url` with `{ name, size, contentType: "video/mp4" }` to get a presigned `uploadURL` + canonical `objectPath`.
-2. `PUT` the file directly to `uploadURL`.
-3. `POST /api/storage/uploads/finalize` with `{ objectPath, visibility: "public" }` — this is **required** for curated clips. The `GET /storage/objects/*` route is ACL-gated, so without a `public` finalize the clip will 401 for everyone except you.
-4. Paste the returned `objectPath` (e.g. `/objects/uploads/<uuid>`) — or a fully-qualified CDN URL — into the step's `videoUrl` in `artifacts/glamr/src/lib/tutorials.ts`. The same flow works for a still-frame `videoPoster`. The detail page resolves `/objects/...` to the served `/api/storage/objects/...` route automatically (see `resolveTutorialMediaUrl`), so you can store the canonical entity path verbatim.
+1. **In-app curator uploader (preferred).** Signed-in **curators** see an inline "Add clip / Replace clip / Remove" control under each step on `TutorialDetail` (`artifacts/glamr/src/components/TutorialStepVideoUploader.tsx`). It validates type/size/duration client-side, uploads the clip (and a best-effort auto-captured poster frame) via the presigned-URL flow, then writes the object paths back to `PUT /api/tutorials/:id/steps/:stepIndex/video`. These uploads are stored per `(tutorialId, stepIndex)` in the `tutorial_step_videos` table and **override** the static catalogue entry for that step; removing the row falls back to whatever the catalogue ships. The server re-verifies each uploaded object's **real** GCS content-type/size before persisting (a presigned URL can't constrain what the client PUTs), and marks the objects public so the served route is readable.
 
-Storage limits / authoring guidance for the curated set:
+2. **Static catalogue (defaults shipped in code).** Paste an `objectPath` (e.g. `/objects/uploads/<uuid>`) — or a fully-qualified CDN URL — into a step's `videoUrl` in `artifacts/glamr/src/lib/tutorials.ts` (same for `videoPoster`). Use the manual presigned flow to get the path:
+   - `POST /api/storage/uploads/request-url` with `{ name, size, contentType: "video/mp4" }` to get a presigned `uploadURL` + canonical `objectPath`.
+   - `PUT` the file directly to `uploadURL`.
+   - `POST /api/storage/uploads/finalize` with `{ objectPath, visibility: "public" }` — this is **required** for curated clips. The `GET /storage/objects/*` route is ACL-gated, so without a `public` finalize the clip will 401 for everyone except you.
+   - Paste the returned `objectPath` (e.g. `/objects/uploads/<uuid>`) into the catalogue.
+
+The detail page resolves `/objects/...` to the served `/api/storage/objects/...` route automatically (see `resolveTutorialMediaUrl`), so you can store the canonical entity path verbatim.
+
+Storage limits / authoring guidance (enforced by both the in-app uploader and the server):
 - **Length**: 10-30 seconds per clip. Anything longer belongs in a full tutorial.
-- **Size**: keep each clip ≤ 8 MB. H.264 MP4, 720p, ~1.5 Mbps, AAC audio (or muted) hits this comfortably.
+- **Size**: keep each clip ≤ 8 MB (poster ≤ 4 MB). H.264 MP4, 720p, ~1.5 Mbps, AAC audio (or muted) hits this comfortably.
 - **Aspect**: 16:9 to match the inline player's `aspect-video` frame; vertical clips will be letterboxed.
 - **Privacy**: served via the ACL-gated `GET /api/storage/objects/*` route. Curated tutorial clips must be finalized as `public` (step 3 above) so signed-out and other users can play them; user-private uploads should be finalized as `private` so only the uploader can read them.
 

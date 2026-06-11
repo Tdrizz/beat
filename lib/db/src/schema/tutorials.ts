@@ -55,6 +55,37 @@ export function isKnownTutorialId(id: string): id is TutorialId {
   return tutorialIdSet.has(id);
 }
 
+// Number of steps in each tutorial, mirrored from the static catalogue in
+// `artifacts/glamr/src/lib/tutorials.ts`. Kept here (like TUTORIAL_IDS) so the
+// API server can validate the step index when a curator attaches a demo clip,
+// without importing frontend code or letting orphan rows accumulate for a step
+// that doesn't exist. If you add/remove a step in a tutorial there, update the
+// matching count here too.
+export const TUTORIAL_STEP_COUNTS: Record<TutorialId, number> = {
+  "soft-glam-smokey": 6,
+  "everyday-no-makeup": 5,
+  "classic-red-lip": 5,
+  "snatched-contour": 5,
+  "fluffy-laminated-brows": 4,
+  "glass-skin-routine": 5,
+  "ombre-lip": 4,
+  "winged-eyeliner": 5,
+  "barely-there-skin": 5,
+  "cut-crease-glam": 6,
+  "monochromatic-glow": 3,
+  "evening-skincare-recovery": 5,
+};
+
+// True only for a known tutorial id paired with an in-range, integer step index.
+export function isValidStepIndex(tutorialId: string, stepIndex: number): boolean {
+  if (!isKnownTutorialId(tutorialId)) return false;
+  return (
+    Number.isInteger(stepIndex) &&
+    stepIndex >= 0 &&
+    stepIndex < TUTORIAL_STEP_COUNTS[tutorialId]
+  );
+}
+
 // Tutorial reviews. Tutorials themselves live in the static catalogue
 // (`artifacts/glamr/src/lib/tutorials.ts`) — we only persist user-generated
 // ratings + reviews here, keyed by the static tutorial id.
@@ -164,3 +195,40 @@ export const tutorialBookmarksTable = pgTable(
 );
 
 export type TutorialBookmark = typeof tutorialBookmarksTable.$inferSelect;
+
+// Curator-managed demo clips for individual tutorial steps. The tutorials
+// themselves (and any default media shipped in the catalogue) live in the
+// static file; this table only stores curator uploads — a short clip plus an
+// optional poster frame — keyed by (tutorialId, stepIndex). The detail page
+// merges these over the static step, so removing a row falls back to whatever
+// the catalogue ships. `videoUrl`/`videoPoster` are canonical object-storage
+// entity paths (`/objects/<id>`) that resolve to the served `/api/storage`
+// route on the client.
+export const tutorialStepVideosTable = pgTable(
+  "tutorial_step_videos",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tutorialId: varchar("tutorial_id", { length: 80 }).notNull(),
+    stepIndex: integer("step_index").notNull(),
+    videoUrl: text("video_url").notNull(),
+    videoPoster: text("video_poster"),
+    updatedBy: varchar("updated_by", { length: 64 }).notNull(), // -> profiles.userId
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    // One clip per (tutorial, step) — upsert semantics.
+    pk: uniqueIndex("tutorial_step_video_pk_idx").on(t.tutorialId, t.stepIndex),
+  }),
+);
+
+// Body for PUT /tutorials/:id/steps/:stepIndex/video. Both URLs must be
+// canonical object-storage entity paths (the `/objects/` prefix is enforced so
+// arbitrary/`javascript:` URLs can't be injected into a publicly rendered page;
+// the route additionally verifies the stored object's real content-type/size).
+export const upsertTutorialStepVideoSchema = z.object({
+  videoUrl: z.string().min(1).startsWith("/objects/"),
+  videoPoster: z.string().startsWith("/objects/").optional(),
+});
+
+export type UpsertTutorialStepVideo = z.infer<typeof upsertTutorialStepVideoSchema>;
+export type TutorialStepVideo = typeof tutorialStepVideosTable.$inferSelect;
