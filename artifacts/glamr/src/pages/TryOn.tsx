@@ -533,47 +533,6 @@ export default function TryOn() {
     });
   };
 
-  // Auto-fire AI try-on as soon as the camera is ready. We only auto-fire
-  // once per look (tracked via a ref so re-renders don't re-trigger). The
-  // user can still tap the FAB to regenerate. We also wait for the video to
-  // actually have frame data so we don't capture a black first-frame.
-  const autoFiredForLook = useRef<string | null>(null);
-  useEffect(() => {
-    if (!isReady || !baseLook) return;
-    if (autoFiredForLook.current === baseLook.id) return;
-    autoFiredForLook.current = baseLook.id;
-    const t = window.setTimeout(() => {
-      const v = videoRef.current;
-      // readyState >= 2 (HAVE_CURRENT_DATA) means at least one frame is
-      // decoded. Avoids capturing a black/exposure-warming-up first frame.
-      if (!v || v.readyState < 2 || v.videoWidth === 0) {
-        autoFiredForLook.current = null; // allow another attempt on next render
-        return;
-      }
-      setAiTryonOpen(true);
-      aiTryon.run({
-        video: v,
-        look: baseLook,
-        intensity: aiIntensity,
-        angleLabel: "Front",
-        archetype: userArchetype,
-        wig: wigArg,
-      });
-    }, 900);
-    return () => window.clearTimeout(t);
-    // aiTryon / videoRef are stable enough; we deliberately key off camera
-    // readiness and the current (look + wig + colour) combination so any
-    // change in the dual-scroll switcher re-fires the auto-generate once.
-    // The combo-key reset effect below clears `autoFiredForLook` so this
-    // effect sees a fresh value on swap.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady, baseLook?.id, selectedWigId, selectedColor?.id]);
-
-  // When the user swaps look, wig, or colour mid-session, clear the latch
-  // so the auto-fire effect above re-runs for the new combination.
-  useEffect(() => {
-    autoFiredForLook.current = null;
-  }, [selectedLookId, selectedWigId, selectedColor?.id]);
   const closeAITryon = () => {
     // Don't reset() — we keep the last result so the user can re-open it
     // via the image button in the top bar. A subsequent run() will overwrite
@@ -751,8 +710,7 @@ export default function TryOn() {
           </div>
         )}
 
-        {/* AI Try-On FAB — fires automatically on camera-ready, but stays
-            available so the user can regenerate if they didn't love the result. */}
+        {/* AI Try-On FAB — captures only after the user explicitly taps it. */}
         {!guidedMode && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1">
             <Button
@@ -774,7 +732,7 @@ export default function TryOn() {
                 ? "Hold still — generating your photoreal preview"
                 : lastResultUrl
                   ? "Tap to generate a fresh take"
-                  : "Auto-generating as soon as the camera is ready…"}
+                  : "Tap when you’re ready to capture"}
             </p>
           </div>
         )}

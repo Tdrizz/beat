@@ -89,9 +89,9 @@ function sampleSkinTone(
  *
  * This is how we deliver the "see the look from every angle" UX without
  * doing real-time video diffusion (which is neither fast nor cheap):
- * the user turns their head, taps "capture this angle", and the gallery
- * grows. Skin-tone is re-sampled each capture so lighting changes are
- * still respected.
+  * the user turns their head, explicitly taps "capture this angle", and
+  * the gallery grows. Skin-tone is re-sampled each capture so lighting
+  * changes are still respected.
  */
 export function useAITryOn() {
   const [state, setState] = useState<"idle" | "capturing" | "generating" | "done" | "error">("idle");
@@ -224,7 +224,7 @@ export function useAITryOn() {
     }
     // We intentionally don't list `gallery` in deps — we read it via the
     // functional setter above, and we want `run`'s identity stable so the
-    // auto-fire effect in TryOn.tsx isn't re-triggered on every capture.
+    // caller effects aren't re-triggered on every capture.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
