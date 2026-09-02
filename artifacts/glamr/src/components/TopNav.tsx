@@ -8,7 +8,7 @@ import {
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
   Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, CalendarDays, Brush, Apple, Link2, Users,
-  Coffee, BookHeart, Gem, GraduationCap, Crown, Scissors,
+  Coffee, BookHeart, Gem, GraduationCap, Crown, Scissors, Mail,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
@@ -51,6 +51,7 @@ const SECONDARY: NavItem[] = [
   { href: "/premium",   label: "Premium",       icon: Crown },
   { href: "/affiliate", label: "Creator stats", icon: BarChart3, authed: true },
   { href: "/settings/social", label: "Linked accounts", icon: Link2, authed: true },
+  { href: "/settings/email", label: "Email preferences", icon: Mail, authed: true },
 ];
 
 // Routes that should render fully-chromeless — no global header.

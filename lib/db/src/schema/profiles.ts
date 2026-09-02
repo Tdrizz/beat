@@ -91,6 +91,8 @@ export const savedCombosTable = pgTable(
     wigStyleId: varchar("wig_style_id", { length: 48 }).notNull(), // "none" ⇒ own hair
     wigColorId: varchar("wig_color_id", { length: 48 }),           // null when no wig
     intensity: integer("intensity").notNull().default(60),         // 0–100 AI strength
+    name: varchar("name", { length: 80 }).notNull().default("Untitled combo"),
+    sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => ({
@@ -103,6 +105,7 @@ export const insertSavedComboSchema = createInsertSchema(savedCombosTable, {
   wigStyleId: z.string().min(1).max(48),
   wigColorId: z.string().min(1).max(48).nullable().optional(),
   intensity: z.number().int().min(0).max(100).optional(),
+  name: z.string().trim().min(1).max(80).optional(),
 }).omit({ id: true, userId: true, createdAt: true });
 
 export type InsertSavedCombo = z.infer<typeof insertSavedComboSchema>;

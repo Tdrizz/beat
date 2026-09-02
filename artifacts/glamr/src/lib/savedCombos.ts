@@ -24,6 +24,12 @@ export interface ResolvedCombo {
   href: string;
 }
 
+export function comboDisplayName(resolved: ResolvedCombo): string {
+  return resolved.combo.name && resolved.combo.name !== "Untitled combo"
+    ? resolved.combo.name
+    : comboLabel(resolved);
+}
+
 /** Build the `/try-on/:lookId?…` deep link for a combo's selections. */
 export function comboHref(combo: Pick<SavedCombo, "lookId" | "wigStyleId" | "wigColorId" | "intensity">): string {
   const params = new URLSearchParams();

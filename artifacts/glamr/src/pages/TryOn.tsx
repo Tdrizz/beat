@@ -9,6 +9,7 @@ import { useAITryOn } from "../hooks/useAITryOn";
 import { useStreak } from "../hooks/useStreak";
 import { useArchetype } from "../hooks/useArchetype";
 import { AITryOnModal } from "../components/AITryOnModal";
+import { SavedComboRail } from "../components/SavedComboRail";
 import { AffiliateProductsForLook } from "../components/AffiliateProductsForLook";
 import { VoiceGuide } from "../components/VoiceGuide";
 import { AvatarSelector, AvatarFace, type Avatar } from "../components/AvatarSelector";
@@ -227,7 +228,7 @@ function GuidedOverlayPanel({
 //
 // Two horizontally-scrolling, snap-aligned rails sit at the bottom of the
 // camera area. Tapping a card updates the selection used for the next AI
-// generation (and auto-re-fires so the user sees the swap immediately).
+// generation.
 //
 // We deliberately use native CSS scroll-snap rather than a JS carousel — it
 // matches mobile users' muscle memory, requires no extra deps, and stays
@@ -686,17 +687,19 @@ export default function TryOn() {
           </div>
         </div>
 
-        {/* Dual-scroll switcher — sits above the FAB inside the camera area.
+        {/* Saved combos and the dual-scroll switcher sit above the FAB inside
+            the camera area.
             Hidden during the guided walkthrough so it doesn't compete with
             the step-by-step overlay for the user's attention. */}
         {!guidedMode && (
           <div className="absolute bottom-28 left-0 right-0 z-30 space-y-1.5 bg-gradient-to-t from-black/70 via-black/40 to-transparent pt-3 pb-1">
+            <SavedComboRail />
             <LookRail
               looks={ALL_LOOKS}
               selectedId={selectedLookId}
               onSelect={(id) => {
                 setSelectedLookId(id);
-                navigate(`/looks/${id}/try-on`, { replace: true });
+                navigate(`/try-on/${id}`, { replace: true });
               }}
             />
             <WigRail

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Loader2, Trash2, Sparkles, Heart } from "lucide-react";
+import { Loader2, Trash2, Sparkles, Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 import {
   listWigTryons, deleteWigTryon, resolveWigImageUrl, type WigTryon,
 } from "../lib/saveWigTryOn";
@@ -14,6 +15,7 @@ export default function MyWigs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sharingId, setSharingId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -37,6 +39,22 @@ export default function MyWigs() {
       });
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleShare = async (tryon: WigTryon) => {
+    setSharingId(tryon.id);
+    try {
+      await api.post(`/wig-tryons/${tryon.id}/share`, {});
+      toast({ title: "Shared to the community", description: "Your saved wig look is now on the feed." });
+    } catch (e) {
+      toast({
+        title: "Couldn't share this look",
+        description: e instanceof Error ? e.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSharingId(null);
     }
   };
 
@@ -109,6 +127,16 @@ export default function MyWigs() {
                       <Sparkles className="w-3 h-3" />Try again
                     </Button>
                   </Link>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     className="w-full mt-1.5 rounded-full text-xs gap-1 h-7"
+                     disabled={sharingId === t.id}
+                     onClick={() => handleShare(t)}
+                   >
+                     {sharingId === t.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Share2 className="w-3 h-3" />}
+                     Share to feed
+                   </Button>
                 </div>
               </div>
             ))}

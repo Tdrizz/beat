@@ -102,7 +102,7 @@ export default function TutorialDetail() {
   const { data: stepVideoData } = useQuery({
     queryKey: ["tutorial-step-videos", tutorialId],
     queryFn: () => api.get<{ stepVideos: StepVideoOverride[] }>(`/tutorials/${tutorialId}/step-videos`),
-    enabled: !!tutorial,
+    enabled: !!tutorial && !!isSignedIn,
   });
 
   const { data: curatorData } = useQuery({

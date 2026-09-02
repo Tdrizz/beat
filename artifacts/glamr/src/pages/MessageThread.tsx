@@ -5,7 +5,7 @@ import { AuthedRoute } from "@/components/AuthedRoute";
 import { api, type Profile, type Message } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Paperclip, X, Loader2 } from "lucide-react";
 
 interface ThreadResponse {
   conversation: { id: string };
@@ -41,13 +41,40 @@ function ThreadInner() {
   }, [thread?.messages.length]);
 
   const [body, setBody] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const send = useMutation({
-    mutationFn: () => api.post<Message>(`/conversations/${otherId}/messages`, { body: body.trim() }),
+    mutationFn: async () => {
+      if (!otherId) throw new Error("Conversation unavailable");
+      let imageUrl: string | undefined;
+      if (photo) {
+        setUploading(true);
+        const upload = await api.post<{ uploadURL: string; objectPath: string }>("/storage/uploads/request-url", {
+          name: photo.name || "dm-photo.jpg",
+          size: photo.size,
+          contentType: photo.type,
+        });
+        const put = await fetch(upload.uploadURL, {
+          method: "PUT",
+          headers: { "Content-Type": photo.type },
+          body: photo,
+        });
+        if (!put.ok) throw new Error(`Photo upload failed (${put.status})`);
+        await api.post("/storage/uploads/finalize", { objectPath: upload.objectPath, visibility: "private" });
+        imageUrl = upload.objectPath;
+      }
+      return api.post<Message>(`/conversations/${otherId}/messages`, {
+        body: body.trim(),
+        imageUrl,
+      });
+    },
     onSuccess: () => {
       setBody("");
+      setPhoto(null);
       qc.invalidateQueries({ queryKey: ["thread", otherId] });
       qc.invalidateQueries({ queryKey: ["conversations"] });
     },
+    onSettled: () => setUploading(false),
   });
 
   return (
@@ -67,7 +94,14 @@ function ThreadInner() {
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                {m.body}
+                {m.imageUrl && (
+                  <img
+                    src={m.imageUrl}
+                    alt="Photo shared in this conversation"
+                    className="mb-1 max-h-64 w-full rounded-xl object-cover"
+                  />
+                )}
+                {m.body && <p>{m.body}</p>}
               </div>
             </div>
           );
@@ -83,9 +117,27 @@ function ThreadInner() {
           if (body.trim() && otherId) send.mutate();
         }}
       >
-        <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Message…" />
-        <Button type="submit" size="sm" className="rounded-full" disabled={!body.trim() || send.isPending}>
-          <Send className="w-4 h-4" />
+        <label className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-input hover:bg-muted has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
+          <Paperclip className="h-4 w-4" />
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="sr-only"
+            disabled={send.isPending}
+            onChange={(event) => setPhoto(event.target.files?.[0] ?? null)}
+          />
+        </label>
+        <div className="min-w-0 flex-1">
+          {photo && (
+            <div className="mb-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className="truncate">{photo.name}</span>
+              <button type="button" aria-label="Remove photo" onClick={() => setPhoto(null)}><X className="h-3 w-3" /></button>
+            </div>
+          )}
+          <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Message…" />
+        </div>
+        <Button type="submit" size="sm" className="rounded-full" disabled={(!body.trim() && !photo) || send.isPending}>
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </form>
     </div>

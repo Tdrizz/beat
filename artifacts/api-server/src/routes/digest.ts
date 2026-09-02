@@ -2,14 +2,42 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db, emailPreferencesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
+import { z } from "zod/v4";
 import { clerkClient } from "@clerk/express";
 import { runWeeklyDigest, type EmailLookup } from "../lib/digest";
 import { sendEmail } from "../lib/email";
 import { rateLimit } from "../middlewares/rateLimit";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+router.get("/digest/preferences", requireAuth, async (req, res) => {
+  const [preference] = await db
+    .select({ weeklyDigest: emailPreferencesTable.weeklyDigest })
+    .from(emailPreferencesTable)
+    .where(eq(emailPreferencesTable.userId, req.userId!))
+    .limit(1);
+  res.json({ weeklyDigest: preference?.weeklyDigest ?? true });
+});
+
+router.put("/digest/preferences", requireAuth, async (req, res) => {
+  const parsed = z.object({ weeklyDigest: z.boolean() }).strict().safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid preferences" });
+    return;
+  }
+  const [preference] = await db
+    .insert(emailPreferencesTable)
+    .values({ userId: req.userId!, weeklyDigest: parsed.data.weeklyDigest })
+    .onConflictDoUpdate({
+      target: emailPreferencesTable.userId,
+      set: { weeklyDigest: parsed.data.weeklyDigest, updatedAt: new Date() },
+    })
+    .returning({ weeklyDigest: emailPreferencesTable.weeklyDigest });
+  res.json(preference);
+});
 
 // Public origin used to build absolute links in emails + unsubscribe pages.
 // Production exposes the app on REPLIT_DOMAINS; dev uses REPLIT_DEV_DOMAIN.

@@ -100,6 +100,7 @@ export interface Message {
   conversationId: string;
   senderId: string;
   body: string;
+  imageUrl: string | null;
   createdAt: string;
 }
 
@@ -168,6 +169,8 @@ export interface SavedCombo {
   wigStyleId: string;
   wigColorId: string | null;
   intensity: number;
+  name: string;
+  sortOrder: number;
   createdAt: string;
 }
 

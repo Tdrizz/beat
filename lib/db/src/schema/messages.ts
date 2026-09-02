@@ -28,6 +28,7 @@ export const messagesTable = pgTable(
     conversationId: uuid("conversation_id").notNull(),
     senderId: varchar("sender_id", { length: 64 }).notNull(),
     body: text("body").notNull(),
+    imageUrl: text("image_url"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => ({
@@ -35,7 +36,11 @@ export const messagesTable = pgTable(
   }),
 );
 export const insertMessageSchema = createInsertSchema(messagesTable, {
-  body: z.string().min(1).max(2000),
-}).omit({ id: true, createdAt: true, senderId: true, conversationId: true });
+  body: z.string().max(2000).optional().default(""),
+  imageUrl: z.string().min(1).startsWith("/objects/").optional().nullable(),
+}).omit({ id: true, createdAt: true, senderId: true, conversationId: true }).refine(
+  (value) => Boolean(value.body?.trim() || value.imageUrl),
+  { message: "A message needs text or a photo" },
+);
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messagesTable.$inferSelect;

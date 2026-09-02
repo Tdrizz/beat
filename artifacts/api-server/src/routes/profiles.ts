@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, profilesTable, insertProfileSchema, socialLinksSchema, savedCombosTable, insertSavedComboSchema } from "@workspace/db";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, asc, desc, isNull } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
 import { publicProfile } from "../lib/publicProfile";
@@ -123,7 +123,7 @@ router.get("/profiles/me/combos", requireAuth, async (req, res) => {
     .select()
     .from(savedCombosTable)
     .where(eq(savedCombosTable.userId, req.userId!))
-    .orderBy(desc(savedCombosTable.createdAt));
+    .orderBy(asc(savedCombosTable.sortOrder), desc(savedCombosTable.createdAt));
   res.json(rows);
 });
 
@@ -164,22 +164,84 @@ router.post(
       return;
     }
 
-    const count = await db
+    const existingRows = await db
       .select()
       .from(savedCombosTable)
       .where(eq(savedCombosTable.userId, req.userId!));
-    if (count.length >= MAX_COMBOS_PER_USER) {
+    if (existingRows.length >= MAX_COMBOS_PER_USER) {
       res.status(409).json({ error: `You can save up to ${MAX_COMBOS_PER_USER} combos.` });
       return;
     }
 
     const inserted = await db
       .insert(savedCombosTable)
-      .values({ userId: req.userId!, lookId: parsed.data.lookId, wigStyleId, wigColorId, intensity })
+      .values({
+        userId: req.userId!,
+        lookId: parsed.data.lookId,
+        wigStyleId,
+        wigColorId,
+        intensity,
+        name: parsed.data.name ?? "Untitled combo",
+        sortOrder: existingRows.length,
+      })
       .returning();
     res.status(201).json(inserted[0]);
   },
 );
+
+const updateComboSchema = z.object({
+  name: z.string().trim().min(1).max(80).optional(),
+}).strict();
+
+router.put("/profiles/me/combos/order", requireAuth, async (req, res) => {
+  const parsed = z.object({ ids: z.array(z.string().uuid()).min(1).max(MAX_COMBOS_PER_USER) }).safeParse(req.body);
+  if (!parsed.success || new Set(parsed.data?.ids ?? []).size !== parsed.data?.ids.length) {
+    res.status(400).json({ error: "Invalid combo order" });
+    return;
+  }
+  const rows = await db
+    .select({ id: savedCombosTable.id })
+    .from(savedCombosTable)
+    .where(eq(savedCombosTable.userId, req.userId!));
+  const ownedIds = new Set(rows.map((row) => row.id));
+  if (ownedIds.size !== parsed.data.ids.length || parsed.data.ids.some((id) => !ownedIds.has(id))) {
+    res.status(400).json({ error: "Combo order does not match your saved combos" });
+    return;
+  }
+  await db.transaction(async (tx) => {
+    for (const [sortOrder, id] of parsed.data.ids.entries()) {
+      await tx
+        .update(savedCombosTable)
+        .set({ sortOrder })
+        .where(and(eq(savedCombosTable.id, id), eq(savedCombosTable.userId, req.userId!)));
+    }
+  });
+  const updated = await db
+    .select()
+    .from(savedCombosTable)
+    .where(eq(savedCombosTable.userId, req.userId!))
+    .orderBy(asc(savedCombosTable.sortOrder), desc(savedCombosTable.createdAt));
+  res.json(updated);
+});
+
+router.put("/profiles/me/combos/:id", requireAuth, async (req, res) => {
+  const id = z.string().uuid().safeParse(req.params.id);
+  const parsed = updateComboSchema.safeParse(req.body);
+  if (!id.success || !parsed.success || !parsed.data.name) {
+    res.status(400).json({ error: "A combo name is required" });
+    return;
+  }
+  const updated = await db
+    .update(savedCombosTable)
+    .set({ name: parsed.data.name })
+    .where(and(eq(savedCombosTable.id, id.data), eq(savedCombosTable.userId, req.userId!)))
+    .returning();
+  if (updated.length === 0) {
+    res.status(404).json({ error: "Combo not found" });
+    return;
+  }
+  res.json(updated[0]);
+});
 
 router.delete("/profiles/me/combos/:id", requireAuth, async (req, res) => {
   const id = p(req.params.id);

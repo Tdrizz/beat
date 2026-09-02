@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Sparkles, Heart, Filter, X } from "lucide-react";
+import { Sparkles, Heart, Filter, X, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  wigStyles, wigSwatchGradient, getWigColor,
+  wigStyles, wigSwatchGradient, getWigColor, shopWigHref,
   WIG_LENGTHS, WIG_TEXTURES,
   type WigStyle, type WigLength, type WigTexture,
 } from "../lib/wigs";
@@ -84,6 +84,11 @@ function WigCard({ style }: { style: WigStyle }) {
           <Link href={`/wigs/${style.id}`}>
             <Button size="sm" variant="outline" className="rounded-full text-xs">Details</Button>
           </Link>
+          <a href={shopWigHref(style, color)} target="_blank" rel="noreferrer">
+            <Button size="sm" variant="outline" className="rounded-full px-2" aria-label={`Shop ${style.name}`}>
+              <ShoppingBag className="h-3.5 w-3.5" />
+            </Button>
+          </a>
         </div>
       </div>
     </div>

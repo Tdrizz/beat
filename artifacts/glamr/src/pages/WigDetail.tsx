@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useParams, useLocation } from "wouter";
-import { ArrowLeft, Sparkles, Heart } from "lucide-react";
+import { ArrowLeft, Sparkles, Heart, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getWigStyle, getWigColor, wigSwatchGradient } from "../lib/wigs";
+import { getWigStyle, getWigColor, wigSwatchGradient, shopWigHref } from "../lib/wigs";
 
 const DEFAULT_TRYON_LOOK = "trend-no-makeup";
 
@@ -114,9 +114,15 @@ export default function WigDetail() {
                   <Heart className="w-4 h-4" />
                 </Button>
               </Link>
+              <a href={shopWigHref(style, color)} target="_blank" rel="noreferrer">
+                <Button size="lg" variant="outline" className="rounded-full gap-1.5">
+                  <ShoppingBag className="w-4 h-4" />
+                  Shop similar
+                </Button>
+              </a>
             </div>
             <p className="text-[11px] text-center text-muted-foreground mt-2">
-              Photoreal AI render with hairline blending matched to your skin tone
+              Shop links open an external marketplace search; Beat does not sell or fulfil wigs.
             </p>
           </div>
         </div>

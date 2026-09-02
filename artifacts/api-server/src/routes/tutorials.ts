@@ -13,6 +13,8 @@ import {
   SUBMITTED_TUTORIAL_STATUSES,
   type SubmittedTutorialStatus,
   isValidStepIndex,
+  TUTORIAL_IDS,
+  TUTORIAL_STEP_COUNTS,
 } from "@workspace/db";
 import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -548,9 +550,10 @@ router.get("/tutorials/curator/status", optionalAuth, (req, res) => {
   res.json({ isCurator: isCurator(req.userId) });
 });
 
-// Curator-uploaded demo clips for a tutorial's steps. Public — the detail page
-// merges these over the static catalogue for every viewer.
-router.get("/tutorials/:id/step-videos", async (req, res) => {
+// Curator-uploaded demo clips for a tutorial's steps. Clips are private to the
+// curator who uploaded them; the detail page only receives the current
+// viewer's own overrides.
+router.get("/tutorials/:id/step-videos", requireAuth, async (req, res) => {
   const tutorialId = p(req.params.id);
   if (!isKnownTutorialId(tutorialId)) {
     res.status(404).json({ error: "Tutorial not found" });
@@ -559,7 +562,12 @@ router.get("/tutorials/:id/step-videos", async (req, res) => {
   const rows = await db
     .select()
     .from(tutorialStepVideosTable)
-    .where(eq(tutorialStepVideosTable.tutorialId, tutorialId));
+    .where(
+      and(
+        eq(tutorialStepVideosTable.tutorialId, tutorialId),
+        eq(tutorialStepVideosTable.updatedBy, req.userId!),
+      ),
+    );
   res.json({
     stepVideos: rows.map((r) => ({
       stepIndex: r.stepIndex,
@@ -569,10 +577,41 @@ router.get("/tutorials/:id/step-videos", async (req, res) => {
   });
 });
 
+// Curator dashboard data: show clip coverage for every curated tutorial in a
+// single request, including the exact missing step indexes.
+router.get("/tutorials/curator/coverage", requireCurator, async (_req, res) => {
+  const rows = await db
+    .select({
+      tutorialId: tutorialStepVideosTable.tutorialId,
+      stepIndex: tutorialStepVideosTable.stepIndex,
+    })
+    .from(tutorialStepVideosTable);
+  const byTutorial = new Map<string, Set<number>>();
+  for (const row of rows) {
+    const indexes = byTutorial.get(row.tutorialId) ?? new Set<number>();
+    indexes.add(row.stepIndex);
+    byTutorial.set(row.tutorialId, indexes);
+  }
+  res.json({
+    tutorials: TUTORIAL_IDS.map((tutorialId) => {
+      const attached = byTutorial.get(tutorialId) ?? new Set<number>();
+      const stepCount = TUTORIAL_STEP_COUNTS[tutorialId];
+      const missingSteps = Array.from({ length: stepCount }, (_, i) => i)
+        .filter((stepIndex) => !attached.has(stepIndex));
+      return {
+        tutorialId,
+        stepCount,
+        clipCount: attached.size,
+        missingSteps,
+      };
+    }),
+  });
+});
+
 // Attach (or replace) the demo clip on a step. Curator-only. The body carries
 // canonical object paths from the upload flow; we verify each object's real
-// content-type/size before persisting and mark them public so the served route
-// sends a cacheable, publicly readable response.
+// content-type/size before persisting and keep the objects private to the
+// uploader.
 router.put("/tutorials/:id/steps/:stepIndex/video", requireCurator, async (req, res) => {
   const tutorialId = p(req.params.id);
   const stepIndex = Number(p(req.params.stepIndex));
@@ -608,16 +647,16 @@ router.put("/tutorials/:id/steps/:stepIndex/video", requireCurator, async (req, 
     }
   }
 
-  // Tutorials render on a public page, so the served clip must be publicly
-  // readable (and cacheable). Mark the objects public; best-effort.
+  // Clips are private to their uploader. The storage route enforces the ACL
+  // when the video element requests the object.
   await objectStorageService.trySetObjectEntityAclPolicy(videoUrl, {
     owner: req.userId!,
-    visibility: "public",
+    visibility: "private",
   });
   if (videoPoster) {
     await objectStorageService.trySetObjectEntityAclPolicy(videoPoster, {
       owner: req.userId!,
-      visibility: "public",
+      visibility: "private",
     });
   }
 

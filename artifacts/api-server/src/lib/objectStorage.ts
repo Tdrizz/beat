@@ -204,6 +204,46 @@ export class ObjectStorageService {
       requestedPermission: requestedPermission ?? ObjectPermission.READ,
     });
   }
+
+  /**
+   * Publish a private entity by copying it to a separately named object and
+   * applying a public ACL policy. The source remains private and unchanged.
+   */
+  async copyObjectEntityToPublic(sourcePath: string, owner: string): Promise<string> {
+    const source = await this.getObjectEntityFile(sourcePath);
+    const privateDir = this.getPrivateObjectDir().replace(/\/+$/, "");
+    const objectId = randomUUID();
+    const destination = objectStorageClient
+      .bucket(parseObjectPath(`${privateDir}/shared/${objectId}`).bucketName)
+      .file(parseObjectPath(`${privateDir}/shared/${objectId}`).objectName);
+    await source.copy(destination);
+    await setObjectAclPolicy(destination, { owner, visibility: "public" });
+    return `/objects/shared/${objectId}`;
+  }
+
+  /**
+   * Remove upload objects which were never finalized with an ACL policy.
+   * Presigned uploads land only under uploads/, so finalized shared/public
+   * objects are not candidates for this cleanup.
+   */
+  async cleanupAbandonedUploads(olderThanMs = 24 * 60 * 60 * 1000): Promise<number> {
+    const privateDir = this.getPrivateObjectDir().replace(/\/+$/, "");
+    const { bucketName, objectName } = parseObjectPath(`${privateDir}/uploads`);
+    const bucket = objectStorageClient.bucket(bucketName);
+    const [files] = await bucket.getFiles({ prefix: `${objectName}/` });
+    const cutoff = Date.now() - olderThanMs;
+    let deleted = 0;
+    for (const file of files) {
+      const [metadata] = await file.getMetadata();
+      const createdAt = Date.parse(String(metadata.timeCreated ?? metadata.updated ?? ""));
+      if (!Number.isFinite(createdAt) || createdAt > cutoff) continue;
+      const policy = await getObjectAclPolicy(file);
+      if (policy) continue;
+      await file.delete();
+      deleted += 1;
+    }
+    return deleted;
+  }
 }
 
 function parseObjectPath(path: string): {

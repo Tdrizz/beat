@@ -549,3 +549,9 @@ export function getWigColor(style: WigStyle, colorId: string | null | undefined)
 export function wigSwatchGradient(color: WigColor): string {
   return `linear-gradient(180deg, ${color.rootHex} 0%, ${color.rootHex} 35%, ${color.tipHex} 100%)`;
 }
+
+/** Opens a buyer-facing shopping search without pretending Beat is the seller. */
+export function shopWigHref(style: WigStyle, color: WigColor | null): string {
+  const query = `${style.name} wig ${color?.name ?? ""}`.trim();
+  return `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query)}`;
+}

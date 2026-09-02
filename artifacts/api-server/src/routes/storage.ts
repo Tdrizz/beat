@@ -7,9 +7,34 @@ import {
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
+import { timingSafeEqual } from "node:crypto";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
+
+function cronSecretOk(provided: string | undefined): boolean {
+  const expected = process.env.CRON_SECRET;
+  if (!expected || !provided) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// Called by a Replit scheduled deployment. Never run this as an in-process
+// timer because the autoscale API can sleep between requests.
+router.post("/storage/uploads/cleanup", async (req: Request, res: Response) => {
+  if (!cronSecretOk(req.get("x-cron-secret"))) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  try {
+    const deleted = await objectStorageService.cleanupAbandonedUploads();
+    res.json({ deleted });
+  } catch (error) {
+    req.log.error({ err: error }, "Error cleaning abandoned uploads");
+    res.status(500).json({ error: "Failed to clean abandoned uploads" });
+  }
+});
 
 /**
  * POST /storage/uploads/request-url
@@ -55,7 +80,7 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: Request, re
  * - `objectPath` must be a canonical entity path (`/objects/<id>`) as
  *   returned by `/storage/uploads/request-url`.
  * - `visibility: "public"` makes the object readable by anyone (used for
- *   feed images and curated tutorial step clips).
+ *   public feed images).
  * - `visibility: "private"` (default) restricts reads to the uploader.
  *
  * To prevent another signed-in user from hijacking an object whose path

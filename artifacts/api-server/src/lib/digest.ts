@@ -10,6 +10,7 @@ import {
   type TutorialDifficulty,
 } from "@workspace/db";
 import { and, desc, eq, gte, inArray, or, sql } from "drizzle-orm";
+import { notify } from "./notify";
 
 // ---------------------------------------------------------------------------
 // Weekly "new tutorials you'd love" digest.
@@ -284,6 +285,18 @@ export async function runWeeklyDigest(
       result.skippedNoMatch += 1;
       continue;
     }
+
+    // Keep the recommendation useful for members who opted out of email (or
+    // whose account has no email address): surface one in-app alert per
+    // weekly run. The claim below still makes the overall run idempotent.
+    await notify({
+      recipientId: userId,
+      kind: "system",
+      body: picks.length === 1
+        ? `A new tutorial matches your taste: ${picks[0].title}`
+        : `${picks.length} fresh tutorials match your taste`,
+    });
+
     const email = emailMap.get(userId);
     if (!email) {
       result.skippedNoEmail += 1;

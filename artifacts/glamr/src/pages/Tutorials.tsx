@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Star, Clock, GraduationCap, Search, ImageOff, Plus, ShieldCheck, FileEdit, Bookmark } from "lucide-react";
+import { Star, Clock, GraduationCap, Search, ImageOff, Plus, ShieldCheck, FileEdit, Bookmark, Video, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -79,6 +79,24 @@ export default function Tutorials() {
     queryKey: ["tutorial-admin-flag"],
     queryFn: () => api.get<{ isAdmin: boolean }>("/tutorials/me/admin"),
     enabled: !!isSignedIn,
+  });
+
+  const { data: curatorMeta } = useQuery({
+    queryKey: ["curator-status"],
+    queryFn: () => api.get<{ isCurator: boolean }>("/tutorials/curator/status"),
+    enabled: !!isSignedIn,
+  });
+  const { data: coverageData } = useQuery({
+    queryKey: ["curator-coverage"],
+    queryFn: () => api.get<{
+      tutorials: Array<{
+        tutorialId: string;
+        stepCount: number;
+        clipCount: number;
+        missingSteps: number[];
+      }>;
+    }>("/tutorials/curator/coverage"),
+    enabled: curatorMeta?.isCurator === true,
   });
 
   const { data: bookmarkData } = useQuery({
@@ -171,6 +189,49 @@ export default function Tutorials() {
             from {totals.quickest}-minute everyday looks to advanced cut creases. Sorted by what the community rated best.
           </p>
         </header>
+
+        {curatorMeta?.isCurator && coverageData && (
+          <section className="rounded-2xl border border-primary/25 bg-primary/5 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Video className="h-4 w-4 text-primary" />
+              <h2 className="font-semibold text-sm">Clip coverage</h2>
+              <span className="text-xs text-muted-foreground">Curator view</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {coverageData.tutorials.map((coverage) => {
+                const tutorial = allTutorials.find((item) => item.id === coverage.tutorialId);
+                if (!tutorial) return null;
+                const complete = coverage.clipCount === coverage.stepCount;
+                return (
+                  <Link
+                    key={coverage.tutorialId}
+                    href={`/tutorials/${coverage.tutorialId}`}
+                    className="rounded-xl border border-border bg-card p-3 hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-start gap-2">
+                      {complete ? (
+                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                      ) : (
+                        <Video className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold">{tutorial.title}</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {coverage.clipCount}/{coverage.stepCount} steps have clips
+                        </p>
+                        {!complete && (
+                          <p className="mt-1 text-[10px] text-primary">
+                            Missing: {coverage.missingSteps.map((step) => step + 1).join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Search */}
         <div className="relative">

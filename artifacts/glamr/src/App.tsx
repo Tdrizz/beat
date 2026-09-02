@@ -28,6 +28,7 @@ import AskIola from "@/pages/AskIola";
 import Tools from "@/pages/Tools";
 import Nutrition from "@/pages/Nutrition";
 import SocialLinksSettings from "@/pages/SocialLinksSettings";
+import EmailPreferencesSettings from "@/pages/EmailPreferencesSettings";
 import Friends from "@/pages/Friends";
 import Juicing from "@/pages/Juicing";
 import SlayBible from "@/pages/SlayBible";
@@ -100,6 +101,7 @@ function Router() {
       <Route path="/my-wigs"><AuthedRoute><MyWigs /></AuthedRoute></Route>
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
+      <Route path="/settings/email"><AuthedRoute><EmailPreferencesSettings /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
       <Route path="/posts/:id"><AuthedRoute><PostDetail /></AuthedRoute></Route>
       <Route path="/upload"><AuthedRoute><Upload /></AuthedRoute></Route>
