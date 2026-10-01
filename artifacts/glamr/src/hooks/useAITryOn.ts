@@ -6,8 +6,6 @@ import type { WigStyle, WigColor } from "../lib/wigs";
 interface RunArgs {
   video: HTMLVideoElement | null;
   look: Look;
-  /** 0–100 — controls how strongly the model paints the look. Default 60. */
-  intensity?: number;
   /** Optional label for this capture, e.g. "Front", "Left ¾". */
   angleLabel?: string;
   /** Optional beauty archetype from the on-device quiz. When present,
@@ -29,6 +27,33 @@ export interface AngleResult {
 
 type SkinCategory = "Fair" | "Light" | "Medium Light" | "Medium" | "Tan" | "Deep";
 type SkinUndertone = "Warm" | "Cool" | "Neutral";
+
+function canvasToBase64(canvas: HTMLCanvasElement): Promise<string> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Failed to encode camera frame"));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Failed to read encoded camera frame"));
+      reader.onload = () => {
+        if (typeof reader.result !== "string") {
+          reject(new Error("Failed to encode camera frame"));
+          return;
+        }
+        const comma = reader.result.indexOf(",");
+        if (comma < 0) {
+          reject(new Error("Failed to encode camera frame"));
+          return;
+        }
+        resolve(reader.result.slice(comma + 1));
+      };
+      reader.readAsDataURL(blob);
+    }, "image/jpeg", 0.86);
+  });
+}
 
 /**
  * Sample average skin colour from the central face region of an already-
@@ -110,7 +135,7 @@ export function useAITryOn() {
   // launching overlapping requests that would race on setState.
   const inFlight = useRef(false);
 
-  const run = useCallback(async ({ video, look, intensity = 60, angleLabel, archetype, wig }: RunArgs) => {
+  const run = useCallback(async ({ video, look, angleLabel, archetype, wig }: RunArgs) => {
     if (inFlight.current) return;
     if (!video || !video.videoWidth || !video.videoHeight) {
       setError("Camera not ready yet — try again in a moment.");
@@ -124,8 +149,11 @@ export function useAITryOn() {
 
     try {
       // 1. Capture the current camera frame, mirrored to match the on-screen preview.
-      const w = video.videoWidth;
-      const h = video.videoHeight;
+      const sourceWidth = video.videoWidth;
+      const sourceHeight = video.videoHeight;
+      const scale = Math.min(1, 1024 / Math.max(sourceWidth, sourceHeight));
+      const w = Math.max(1, Math.round(sourceWidth * scale));
+      const h = Math.max(1, Math.round(sourceHeight * scale));
       const snap = document.createElement("canvas");
       snap.width = w;
       snap.height = h;
@@ -135,11 +163,11 @@ export function useAITryOn() {
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0, w, h);
 
-      const dataUrl = snap.toDataURL("image/jpeg", 0.9);
-      const imageBase64 = dataUrl.split(",")[1];
+      const [imageBase64, skinTone] = await Promise.all([
+        canvasToBase64(snap),
+        Promise.resolve(sampleSkinTone(ctx, w, h)),
+      ]);
       if (!imageBase64) throw new Error("Failed to encode frame");
-
-      const skinTone = sampleSkinTone(ctx, w, h);
 
       const stepKeys = ["base", "brows", "eyes", "cheeks", "lips"] as const;
       const steps = stepKeys
@@ -164,7 +192,6 @@ export function useAITryOn() {
           mimeType: "image/jpeg",
           lookName: look.name,
           lookDescription: look.description,
-          intensity,
           steps,
           skinTone,
           archetype: archetype ?? null,

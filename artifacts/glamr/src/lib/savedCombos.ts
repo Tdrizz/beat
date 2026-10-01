@@ -1,5 +1,7 @@
 // Resolves a stored { lookId, wigStyleId, wigColorId, intensity } combo into
 // the catalogue objects needed to render a card and build a try-on deep link.
+// The legacy intensity field remains in stored records but no longer affects
+// the AI try-on render.
 //
 // Combos are stored denormalised (catalogue ids only). The catalogues live in
 // code and can change between when a combo was saved and when it's shown, so a
@@ -31,13 +33,12 @@ export function comboDisplayName(resolved: ResolvedCombo): string {
 }
 
 /** Build the `/try-on/:lookId?…` deep link for a combo's selections. */
-export function comboHref(combo: Pick<SavedCombo, "lookId" | "wigStyleId" | "wigColorId" | "intensity">): string {
+export function comboHref(combo: Pick<SavedCombo, "lookId" | "wigStyleId" | "wigColorId">): string {
   const params = new URLSearchParams();
   if (combo.wigStyleId && combo.wigStyleId !== NO_WIG_ID) {
     params.set("wig", combo.wigStyleId);
     if (combo.wigColorId) params.set("color", combo.wigColorId);
   }
-  if (typeof combo.intensity === "number") params.set("intensity", String(combo.intensity));
   const qs = params.toString();
   return `/try-on/${combo.lookId}${qs ? `?${qs}` : ""}`;
 }

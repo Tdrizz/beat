@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, X, Download, Sparkles, AlertCircle, RefreshCw, Camera, ChevronLeft, ChevronRight, Send, Heart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { saveWigTryOn } from "../lib/saveWigTryOn";
 import type { AngleResult } from "../hooks/useAITryOn";
@@ -28,8 +27,6 @@ interface Props {
   /** Optional look id, used so a "Post to feed" deep-link can prefill
    *  the catalogue dropdown on the upload composer. */
   lookId?: string;
-  intensity: number;
-  onIntensityChange: (value: number) => void;
   onClose: () => void;
   /** Capture a new angle — TryOn passes the angle label through to `run()`. */
   onCaptureAngle: (angleLabel: string) => void;
@@ -38,14 +35,6 @@ interface Props {
   videoRef: RefObject<HTMLVideoElement | null>;
   /** Present when a wig is active — enables the "Save to My Wigs" action. */
   wigSave?: WigSaveContext | null;
-}
-
-function intensityLabel(v: number) {
-  if (v <= 15) return "Barely there";
-  if (v <= 35) return "Soft";
-  if (v <= 60) return "Balanced";
-  if (v <= 85) return "Bold";
-  return "Full glam";
 }
 
 // Order chosen so a new user naturally rotates head left → centre → right
@@ -71,7 +60,7 @@ const ANGLE_PROMPTS = [
  */
 export function AITryOnModal({
   open, state, gallery, currentIndex, onSelectIndex,
-  error, lookName, lookId, intensity, onIntensityChange,
+  error, lookName, lookId,
   onClose, onCaptureAngle, videoRef, wigSave,
 }: Props) {
   const [, navigate] = useLocation();
@@ -332,37 +321,8 @@ export function AITryOnModal({
             </div>
           )}
 
-          {/* Bottom controls — intensity slider + actions */}
-          <div className="relative z-20 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-black via-black/85 to-black/40 text-white space-y-4">
-
-            {state !== "error" && (
-              <div>
-                <div className="flex items-baseline justify-between mb-2">
-                  <label className="text-xs uppercase tracking-[0.18em] font-bold text-white/60">
-                    Intensity
-                  </label>
-                  <span className="text-xs font-semibold text-primary">
-                    {intensityLabel(intensity)} · {intensity}%
-                  </span>
-                </div>
-                <Slider
-                  value={[intensity]}
-                  onValueChange={(v) => onIntensityChange(v[0] ?? 60)}
-                  min={0}
-                  max={100}
-                  step={5}
-                  disabled={isBusy}
-                  aria-label="Makeup intensity"
-                  className="cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-white/40 mt-1.5 px-0.5">
-                  <span>Barely there</span>
-                  <span>Balanced</span>
-                  <span>Full glam</span>
-                </div>
-              </div>
-            )}
-
+          {/* Bottom actions */}
+          <div className="relative z-20 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-black via-black/85 to-black/40 text-white">
             <div className="flex items-center gap-2">
               {!isBusy && state !== "error" && (
                 <Button

@@ -395,10 +395,8 @@ export default function TryOn() {
   const search = useSearch();
   const { toast } = useToast();
 
-  // Selections deep-linked in from a saved combo (`/try-on/:lookId?wig=…&
-  // color=…&intensity=…`). Parsed once on mount to seed initial state; the
-  // values are validated against the catalogue so a stale link degrades
-  // gracefully to "my hair" / default intensity rather than rendering blank.
+  // Look and wig selections can be deep-linked from a saved combo. Values are
+  // validated against the catalogue so stale links degrade gracefully.
   const deepLink = useMemo(() => {
     const params = new URLSearchParams(search);
     const wigParam = params.get("wig");
@@ -406,11 +404,7 @@ export default function TryOn() {
     const colorParam = params.get("color");
     const wigStyle = wig ? wigStyles.find((w) => w.id === wig)! : null;
     const color = wig && colorParam && wigStyle?.colors.some((c) => c.id === colorParam) ? colorParam : null;
-    const intensityRaw = Number(params.get("intensity"));
-    const intensity = Number.isFinite(intensityRaw) && intensityRaw >= 0 && intensityRaw <= 100
-      ? Math.round(intensityRaw)
-      : null;
-    return { wig, color, intensity };
+    return { wig, color };
     // Parse only on mount — subsequent in-page selection changes own the state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -470,7 +464,6 @@ export default function TryOn() {
   // and the look's per-step shades.
   const { archetype: userArchetype } = useArchetype();
   const [aiTryonOpen, setAiTryonOpen] = useState(false);
-  const [aiIntensity, setAiIntensity] = useState(deepLink.intensity ?? 60);
   // Collapsed state for the right-hand "About this look" panel — when on,
   // the camera area uses the entire viewport. Defaults to collapsed on mobile
   // so the camera dominates from the first frame.
@@ -483,7 +476,7 @@ export default function TryOn() {
   // indicator shouldn't regress when they swipe back through old angles.
   const lastResultUrl = aiTryon.lastGenerated?.imageUrl ?? null;
 
-  // Save the current look + wig + colour + intensity to the user's profile so
+  // Save the current look + wig + colour to the user's profile so
   // they can revisit it from "My combos". Idempotent server-side (re-saving
   // the same combo returns the existing row), so we flip to a "saved" state
   // and let the user keep exploring. Reset whenever the combination changes.
@@ -491,7 +484,7 @@ export default function TryOn() {
   const [comboSaved, setComboSaved] = useState(false);
   useEffect(() => {
     setComboSaved(false);
-  }, [selectedLookId, selectedWigId, selectedColor?.id, aiIntensity]);
+  }, [selectedLookId, selectedWigId, selectedColor?.id]);
 
   const saveCombo = async () => {
     if (!baseLook || savingCombo) return;
@@ -501,7 +494,6 @@ export default function TryOn() {
         lookId: baseLook.id,
         wigStyleId: selectedWigId,
         wigColorId: selectedWigId === NO_WIG_ID ? null : selectedColor?.id ?? null,
-        intensity: aiIntensity,
       });
       setComboSaved(true);
       toast({
@@ -527,7 +519,6 @@ export default function TryOn() {
     aiTryon.run({
       video: videoRef.current,
       look: baseLook,
-      intensity: aiIntensity,
       angleLabel,
       archetype: userArchetype,
       wig: wigArg,
@@ -749,8 +740,6 @@ export default function TryOn() {
           error={aiTryon.error}
           lookName={baseLook.name}
           lookId={baseLook.id}
-          intensity={aiIntensity}
-          onIntensityChange={setAiIntensity}
           onClose={closeAITryon}
           onCaptureAngle={(label) => runAITryon(label)}
           videoRef={videoRef}
