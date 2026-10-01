@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { Look } from "../lib/looks";
 import type { ArchetypeId } from "../lib/archetypes";
 import type { WigStyle, WigColor } from "../lib/wigs";
+import { getLookImage, lookImageMap } from "../lib/lookImages";
 
 interface RunArgs {
   video: HTMLVideoElement | null;
@@ -28,7 +29,7 @@ export interface AngleResult {
 type SkinCategory = "Fair" | "Light" | "Medium Light" | "Medium" | "Tan" | "Deep";
 type SkinUndertone = "Warm" | "Cool" | "Neutral";
 
-function canvasToBase64(canvas: HTMLCanvasElement): Promise<string> {
+function canvasToBase64(canvas: HTMLCanvasElement, quality = 0.86): Promise<string> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
@@ -51,8 +52,51 @@ function canvasToBase64(canvas: HTMLCanvasElement): Promise<string> {
         resolve(reader.result.slice(comma + 1));
       };
       reader.readAsDataURL(blob);
-    }, "image/jpeg", 0.86);
+    }, "image/jpeg", quality);
   });
+}
+
+async function captureLookReferenceBase64(lookId: string): Promise<string> {
+  if (!lookImageMap[lookId]) {
+    throw new Error("This look's reference thumbnail is unavailable. Choose another look and try again.");
+  }
+
+  const response = await fetch(getLookImage(lookId));
+  if (!response.ok) {
+    throw new Error("Couldn't load this look's thumbnail. Refresh the page and try again.");
+  }
+
+  const source = await createImageBitmap(await response.blob());
+  try {
+    // Match the 4:5 object-cover crop used by the selected-look thumbnails.
+    const targetAspect = 4 / 5;
+    const sourceAspect = source.width / source.height;
+    let sx = 0;
+    let sy = 0;
+    let sw = source.width;
+    let sh = source.height;
+
+    if (sourceAspect > targetAspect) {
+      sw = source.height * targetAspect;
+      sx = (source.width - sw) / 2;
+    } else if (sourceAspect < targetAspect) {
+      sh = source.width / targetAspect;
+      sy = (source.height - sh) / 2;
+    }
+
+    const scale = Math.min(1, 768 / Math.max(sw, sh));
+    const width = Math.max(1, Math.round(sw * scale));
+    const height = Math.max(1, Math.round(sh * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not prepare the look reference image");
+    ctx.drawImage(source, sx, sy, sw, sh, 0, 0, width, height);
+    return await canvasToBase64(canvas, 0.9);
+  } finally {
+    source.close();
+  }
 }
 
 /**
@@ -163,9 +207,10 @@ export function useAITryOn() {
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0, w, h);
 
-      const [imageBase64, skinTone] = await Promise.all([
+      const [imageBase64, skinTone, lookReferenceBase64] = await Promise.all([
         canvasToBase64(snap),
         Promise.resolve(sampleSkinTone(ctx, w, h)),
+        captureLookReferenceBase64(look.id),
       ]);
       if (!imageBase64) throw new Error("Failed to encode frame");
 
@@ -190,6 +235,7 @@ export function useAITryOn() {
         body: JSON.stringify({
           imageBase64,
           mimeType: "image/jpeg",
+          lookReferenceBase64,
           lookName: look.name,
           lookDescription: look.description,
           steps,

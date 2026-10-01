@@ -15,6 +15,7 @@ const router: IRouter = Router();
 const TryonBody = z.object({
   imageBase64: z.string().min(64),
   mimeType: z.string().default("image/jpeg"),
+  lookReferenceBase64: z.string().min(64).max(3_000_000),
   lookName: z.string().min(1).max(120),
   lookDescription: z.string().max(800).optional(),
   steps: z
@@ -100,10 +101,17 @@ const STEP_LABELS: Record<string, string> = {
 function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   const lines: string[] = [];
   lines.push(
-    `You are a professional makeup artist. Edit this photograph to apply a complete makeup look called "${parsed.lookName}" to the person in the image.`,
+    `You are a professional makeup artist. Edit the first image to apply the exact makeup look shown in the second image to the person in the first image.`,
   );
+  lines.push("");
+  lines.push("IMAGE ROLES AND REFERENCE PRIORITY:");
+  lines.push("- Image 1 is the user's photo and is the only source for identity, face, skin, pose, camera framing, background, and lighting.");
+  lines.push("- Image 2 is the selected catalogue thumbnail and is the primary visual source for the makeup. Match its actual colors, placement, shapes, blending, finish, and dramatic strength as closely as the user's facial anatomy allows.");
+  lines.push("- Transfer the makeup design only. Do not copy the thumbnail person's face, identity, skin tone, pose, background, or hair. Preserve the user's hair unless a separate wig is explicitly selected.");
+  lines.push("- Treat the thumbnail as more authoritative than text descriptions or shade labels if they differ; use those labels only to clarify details that are hard to see.");
+  lines.push(`LOOK NAME: "${parsed.lookName}".`);
   if (parsed.lookDescription) {
-    lines.push(`LOOK STORY: ${parsed.lookDescription}`);
+    lines.push(`Supporting look description: ${parsed.lookDescription}`);
   }
   lines.push("");
   lines.push("APPLY THESE PRODUCTS, in order, with photoreal pigment:");
@@ -138,6 +146,7 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
     const guidance = ARCHETYPE_GUIDANCE[parsed.archetype];
     if (guidance) {
       lines.push(guidance);
+      lines.push("The catalogue thumbnail takes priority over archetype preferences; use archetype guidance only when it does not change the referenced makeup.");
       lines.push("");
     }
   }
@@ -177,6 +186,7 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   );
   lines.push("- Do NOT smooth or airbrush the skin beyond what real makeup would do — pores and micro-texture must remain visible.");
   lines.push("- Apply makeup precisely to the correct facial regions: eyeshadow only on lids, lipstick only on lips, blush only on cheek apples, etc.");
+  lines.push("- Do not invent, omit, or substitute makeup colors, shapes, patterns, or products that are visible in the catalogue thumbnail.");
   lines.push("- Render makeup as real cosmetic layers that follow facial contours, with natural blending and crisp edges only where the product calls for them.");
   lines.push("- Match the photo's light direction, exposure, and white balance; preserve real highlights and shadows, with no flat painted-on color or mask-like edges.");
   lines.push("- Output a single photorealistic image of the same person wearing the look. No text, no watermark, no border.");
@@ -211,6 +221,12 @@ router.post("/ai-tryon", requireAuth, rateLimit({ scope: "ai-tryon", max: 10, wi
               inlineData: {
                 mimeType: body.mimeType,
                 data: body.imageBase64,
+              },
+            },
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: body.lookReferenceBase64,
               },
             },
           ],
