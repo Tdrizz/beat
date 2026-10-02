@@ -91,11 +91,11 @@ const ARCHETYPE_GUIDANCE: Record<string, string> = {
 };
 
 const STEP_LABELS: Record<string, string> = {
-  base:   "Foundation / complexion",
-  eyes:   "Eyeshadow & eyeliner",
+  base:   "Complexion coverage / finish",
+  eyes:   "Eyes",
   brows:  "Brows",
-  lips:   "Lipstick",
-  cheeks: "Blush",
+  lips:   "Lips",
+  cheeks: "Cheeks",
 };
 
 function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
@@ -108,19 +108,28 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   lines.push("- Image 1 is the user's photo and is the only source for identity, face, skin, pose, camera framing, background, and lighting.");
   lines.push("- Image 2 is the selected catalogue thumbnail and is the primary visual source for the makeup. Match its actual colors, placement, shapes, blending, finish, and dramatic strength as closely as the user's facial anatomy allows.");
   lines.push("- Transfer the makeup design only. Do not copy the thumbnail person's face, identity, skin tone, pose, background, or hair. Preserve the user's hair unless a separate wig is explicitly selected.");
+  lines.push("- The thumbnail person's complexion is never a target shade. Keep the user's own complexion; only apply an explicitly described full-face theatrical paint as a cosmetic layer, while preserving facial identity and skin texture.");
+  lines.push("- The thumbnail may be a close-up, collage, group, product shot, or instructional image. Ignore its layout, text, packaging, and other people; transfer only makeup clearly visible on a face. For areas not shown clearly, follow that area's written step instruction and do not invent details.");
   lines.push("- Treat the thumbnail as more authoritative than text descriptions or shade labels if they differ; use those labels only to clarify details that are hard to see.");
   lines.push(`LOOK NAME: "${parsed.lookName}".`);
   if (parsed.lookDescription) {
     lines.push(`Supporting look description: ${parsed.lookDescription}`);
   }
   lines.push("");
-  lines.push("APPLY THESE PRODUCTS, in order, with photoreal pigment:");
-  lines.push("Use the thumbnail's design and color palette as the guide; apply every product with a clearly noticeable increase in pigment strength and definition.");
+  lines.push("MATCH THE MAKEUP DESIGN, in order, with photoreal cosmetic layers:");
+  lines.push("Use the thumbnail to decide which products are actually present. Increase pigment strength and definition only for visible makeup, while respecting any explicit no-product, bare, or minimal instruction; never add a product just because a step exists.");
   for (const s of parsed.steps) {
     const label = STEP_LABELS[s.step] ?? s.step;
-    const piece = `• ${label} — shade "${s.name}" (${s.color})`;
-    lines.push(s.instruction ? `${piece}. ${s.instruction}` : piece);
+    if (s.step === "base") {
+      const piece = `• ${label} — use this as a coverage/finish cue, not as a complexion shade.`;
+      lines.push(s.instruction ? `${piece} ${s.instruction}` : piece);
+    } else {
+      const piece = `• ${label} — shade cue "${s.name}" (${s.color})`;
+      lines.push(s.instruction ? `${piece}. ${s.instruction}` : piece);
+    }
   }
+  lines.push("- For ordinary foundation, match the user's own complexion. Only follow an explicit instruction for theatrical face paint as visible makeup; do not infer a different skin tone from words like “porcelain”, a shade label, or a hex value.");
+  lines.push("- Preserve every visible makeup hue and its relative strength across skin tones. Do not recolor blush or lips to suit an undertone; make the selected colors readable with realistic layering instead.");
   lines.push("");
   if (parsed.wig) {
     const w = parsed.wig;
@@ -153,19 +162,19 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   if (parsed.skinTone) {
     lines.push("");
     lines.push(
-      `USER SKIN TONE (measured from the photo): ${parsed.skinTone.category} with ${parsed.skinTone.undertone} undertone (approx ${parsed.skinTone.hex}).`,
+      `APPROXIMATE SKIN-TONE SAMPLE: ${parsed.skinTone.category}, ${parsed.skinTone.undertone} undertone (approx ${parsed.skinTone.hex}). Treat this as rough guidance only; the user's visible skin in Image 1 overrides the sample if they disagree.`,
     );
     lines.push(
-      "Adapt every product to this skin so the result looks custom-mixed for this person:",
+      "Use the sample only to help preserve the user's complexion and render cosmetic layers naturally:",
     );
     lines.push(
-      "  • Foundation/complexion must match the measured tone exactly — no lightening, darkening, ashy cast, or orange cast.",
+      "  • Ordinary foundation/complexion must match the user's visible tone — no unintended lightening, darkening, ashy cast, or orange cast. Follow an explicit theatrical paint instruction only as a cosmetic layer.",
     );
     lines.push(
-      "  • Translate blush and lip shades through the user's undertone — warm undertones lean peach/coral/terracotta, cool undertones lean rose/berry/mauve, neutral can wear either.",
+      "  • Keep the look's named and pictured blush, lip, and eye hues; do not substitute a different color family based on undertone.",
     );
     lines.push(
-      "  • Eyeshadow and eyeliner pigments should keep their hue identity but render with the depth and translucency that flatters this skin (deeper skin → richer pigment payoff; fairer skin → softer wash).",
+      "  • Keep the same design and relative pigment strength on every skin tone. Adjust only the realistic layering needed for the selected colors to remain visible, without changing their hue or placement.",
     );
     lines.push(
       "  • Preserve the user's natural skin texture — pores, freckles, fine lines, scars, moles — visible THROUGH the makeup. Foundation should look skin-like, never plastic or heavily airbrushed.",
