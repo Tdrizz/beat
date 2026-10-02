@@ -470,11 +470,8 @@ export default function TryOn() {
   const [panelCollapsed, setPanelCollapsed] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
   );
-  // Most recent generated image (NOT the currently-selected angle), used
-  // for the top-bar thumbnail / FAB label so users can tell at a glance
-  // whether they've already generated something for this look — the
-  // indicator shouldn't regress when they swipe back through old angles.
-  const lastResultUrl = aiTryon.lastGenerated?.imageUrl ?? null;
+  // The single current result drives the top-bar thumbnail / FAB label.
+  const lastResultUrl = aiTryon.result?.imageUrl ?? null;
 
   // Save the current look + wig + colour to the user's profile so
   // they can revisit it from "My combos". Idempotent server-side (re-saving
@@ -513,13 +510,12 @@ export default function TryOn() {
     }
   };
 
-  const runAITryon = (angleLabel?: string) => {
+  const runAITryon = () => {
     if (!baseLook) return;
     setAiTryonOpen(true);
     aiTryon.run({
       video: videoRef.current,
       look: baseLook,
-      angleLabel,
       archetype: userArchetype,
       wig: wigArg,
     });
@@ -734,15 +730,12 @@ export default function TryOn() {
         <AITryOnModal
           open={aiTryonOpen}
           state={aiTryon.state}
-          gallery={aiTryon.gallery}
-          currentIndex={aiTryon.currentIndex}
-          onSelectIndex={aiTryon.setCurrentIndex}
+          result={aiTryon.result}
           error={aiTryon.error}
           lookName={baseLook.name}
           lookId={baseLook.id}
           onClose={closeAITryon}
-          onCaptureAngle={(label) => runAITryon(label)}
-          videoRef={videoRef}
+          onRegenerate={runAITryon}
           wigSave={selectedWig && selectedColor ? {
             styleId: selectedWig.id,
             styleName: selectedWig.name,

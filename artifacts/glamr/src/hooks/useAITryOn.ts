@@ -7,8 +7,6 @@ import { getLookImage, lookImageMap } from "../lib/lookImages";
 interface RunArgs {
   video: HTMLVideoElement | null;
   look: Look;
-  /** Optional label for this capture, e.g. "Front", "Left ¾". */
-  angleLabel?: string;
   /** Optional beauty archetype from the on-device quiz. When present,
    *  the server biases the finish (smokier / glowier / sharper / etc.)
    *  toward the archetype while preserving the look's signature shades. */
@@ -18,11 +16,10 @@ interface RunArgs {
   wig?: { style: WigStyle; color: WigColor } | null;
 }
 
-export interface AngleResult {
+export interface TryOnResult {
   id: string;
   imageUrl: string;
   mimeType: string;
-  angleLabel: string;
   createdAt: number;
 }
 
@@ -152,26 +149,17 @@ function sampleSkinTone(
 }
 
 /**
- * AI try-on hook with multi-angle gallery. Each call to `run()` captures
- * the current camera frame, sends it to gemini-2.5-flash-image, and
- * appends the generated image to a gallery the user can swipe through.
- *
- * This is how we deliver the "see the look from every angle" UX without
- * doing real-time video diffusion (which is neither fast nor cheap):
-  * the user turns their head, explicitly taps "capture this angle", and
-  * the gallery grows. Skin-tone is re-sampled each capture so lighting
-  * changes are still respected.
+ * AI try-on hook. Each explicit `run()` captures one camera frame and
+ * replaces the previous result with a single generated preview.
  */
 export function useAITryOn() {
   const [state, setState] = useState<"idle" | "capturing" | "generating" | "done" | "error">("idle");
-  const [gallery, setGallery] = useState<AngleResult[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [result, setResult] = useState<TryOnResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const reset = useCallback(() => {
     setState("idle");
-    setGallery([]);
-    setCurrentIndex(0);
+    setResult(null);
     setError(null);
   }, []);
 
@@ -179,7 +167,7 @@ export function useAITryOn() {
   // launching overlapping requests that would race on setState.
   const inFlight = useRef(false);
 
-  const run = useCallback(async ({ video, look, angleLabel, archetype, wig }: RunArgs) => {
+  const run = useCallback(async ({ video, look, archetype, wig }: RunArgs) => {
     if (inFlight.current) return;
     if (!video || !video.videoWidth || !video.videoHeight) {
       setError("Camera not ready yet — try again in a moment.");
@@ -266,26 +254,11 @@ export function useAITryOn() {
       }
 
       const data = (await resp.json()) as { imageBase64: string; mimeType: string };
-      // Append + jump to it. Use functional setState so we always pick up
-      // the latest gallery, even if multiple captures land near the same
-      // tick — and so the default "Angle N" label sequences correctly
-      // (the closure-captured `gallery` would always be stale here).
-      setGallery((g) => {
-        const next: AngleResult = {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          imageUrl: `data:${data.mimeType};base64,${data.imageBase64}`,
-          mimeType: data.mimeType,
-          angleLabel: angleLabel ?? `Angle ${g.length + 1}`,
-          createdAt: Date.now(),
-        };
-        // Cap the gallery so heavy users don't blow up browser memory with
-        // accumulating ~1MB base64 data URLs. 12 angles is more than enough
-        // and we always preserve the latest captures.
-        const MAX_GALLERY = 12;
-        const trimmed = g.length >= MAX_GALLERY ? g.slice(g.length - MAX_GALLERY + 1) : g;
-        const updated = [...trimmed, next];
-        setCurrentIndex(updated.length - 1);
-        return updated;
+      setResult({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        imageUrl: `data:${data.mimeType};base64,${data.imageBase64}`,
+        mimeType: data.mimeType,
+        createdAt: Date.now(),
       });
       setState("done");
     } catch (e) {
@@ -295,29 +268,13 @@ export function useAITryOn() {
     } finally {
       inFlight.current = false;
     }
-    // We intentionally don't list `gallery` in deps — we read it via the
-    // functional setter above, and we want `run`'s identity stable so the
-    // caller effects aren't re-triggered on every capture.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // The currently-displayed angle (driven by `currentIndex`).
-  const current: AngleResult | null = gallery[currentIndex] ?? null;
-  // The most recently-generated angle, regardless of which one the user is
-  // currently swiped to. Callers like the FAB / top-bar thumbnail want this
-  // (so navigating to an older angle doesn't make the indicator regress).
-  const lastGenerated: AngleResult | null =
-    gallery.length > 0 ? gallery[gallery.length - 1] : null;
 
   return {
     state,
     error,
     run,
     reset,
-    gallery,
-    currentIndex,
-    setCurrentIndex,
-    current,
-    lastGenerated,
+    result,
   };
 }

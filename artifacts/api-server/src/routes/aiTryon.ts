@@ -115,7 +115,7 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   }
   lines.push("");
   lines.push("APPLY THESE PRODUCTS, in order, with photoreal pigment:");
-  lines.push("Match the named look's intended strength: keep natural looks subtle and dramatic looks visibly dramatic.");
+  lines.push("Use the thumbnail's design and color palette as the guide; apply every product with a clearly noticeable increase in pigment strength and definition.");
   for (const s of parsed.steps) {
     const label = STEP_LABELS[s.step] ?? s.step;
     const piece = `• ${label} — shade "${s.name}" (${s.color})`;
@@ -187,6 +187,8 @@ function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   lines.push("- Do NOT smooth or airbrush the skin beyond what real makeup would do — pores and micro-texture must remain visible.");
   lines.push("- Apply makeup precisely to the correct facial regions: eyeshadow only on lids, lipstick only on lips, blush only on cheek apples, etc.");
   lines.push("- Do not invent, omit, or substitute makeup colors, shapes, patterns, or products that are visible in the catalogue thumbnail.");
+  lines.push("- Make the makeup one clear step bolder than the thumbnail: richer saturation, stronger pigment payoff, and more defined contrast, without changing its colors, design, or placement.");
+  lines.push("- Keep the bolder makeup photorealistic and visible in the final image; do not dilute it into a sheer or barely-there finish.");
   lines.push("- Render makeup as real cosmetic layers that follow facial contours, with natural blending and crisp edges only where the product calls for them.");
   lines.push("- Match the photo's light direction, exposure, and white balance; preserve real highlights and shadows, with no flat painted-on color or mask-like edges.");
   lines.push("- Output a single photorealistic image of the same person wearing the look. No text, no watermark, no border.");
