@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ALL_LOOKS_FLAT } from "../lib/looks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Camera, Clock, Star, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Clock, Star, Sparkles, WandSparkles } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { AffiliateProductsForLook } from "@/components/AffiliateProductsForLook";
 import { RemixCount } from "@/components/RemixCount";
@@ -70,6 +70,12 @@ export default function LookDetail() {
                 <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-8 h-14">
                   <Camera className="w-5 h-5 mr-2" />
                   Start Try-On Experience
+                </Button>
+              </Link>
+              <Link href={`/looks/${look.id}/process`} data-testid={`link-process-${look.id}`}>
+                <Button size="lg" variant="outline" className="h-14 px-6 rounded-full">
+                  <WandSparkles className="w-5 h-5 mr-2" />
+                  The Process
                 </Button>
               </Link>
               <ShareToDmButton

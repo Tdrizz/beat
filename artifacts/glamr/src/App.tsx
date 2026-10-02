@@ -8,6 +8,7 @@ import { TopNav } from "@/components/TopNav";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import LookDetail from "@/pages/LookDetail";
+import LookProcess from "@/pages/LookProcess";
 import TryOn from "@/pages/TryOn";
 import LookMatch from "@/pages/LookMatch";
 import Skincare from "@/pages/Skincare";
@@ -63,6 +64,7 @@ function Router() {
 
       <Route path="/" component={Home} />
       <Route path="/match" component={LookMatch} />
+      <Route path="/looks/:lookId/process" component={LookProcess} />
       <Route path="/looks/:lookId" component={LookDetail} />
       <Route path="/try-on/:lookId">
         <AuthedRoute>
