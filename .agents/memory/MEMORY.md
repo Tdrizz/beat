@@ -1,3 +1,4 @@
 - [Presigned upload verification](presigned-upload-verification.md) — presigned URLs enforce nothing; re-verify real GCS object type/size + `/objects/` prefix server-side at write-back.
 - [Glamr AuthedRoute e2e limitation](glamr-authed-route-e2e.md) — runTest can't reliably render authed Glamr pages (Clerk re-hydration); verify authed flows via API+curl+code review, not UI.
 - [Scheduled work & email](scheduled-work-and-email.md) — no in-process timers on autoscale; trigger periodic jobs via secret-guarded endpoint + Replit scheduled deployment; Resend domain caveat.
+- [Gemini try-on fidelity testing](gemini-tryon-fidelity.md) — explicit identity/scene constraints can still be ignored; verify outputs across looks and tones before claiming fidelity.
