@@ -98,7 +98,7 @@ const STEP_LABELS: Record<string, string> = {
   cheeks: "Cheeks",
 };
 
-function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
+export function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   const lines: string[] = [];
   lines.push(
     `You are a professional makeup artist. Edit the first image to apply the exact makeup look shown in the second image to the person in the first image.`,
