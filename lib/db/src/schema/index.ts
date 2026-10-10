@@ -8,3 +8,4 @@ export * from "./classes";
 export * from "./chat";
 export * from "./wigs";
 export * from "./emailPreferences";
+export * from "./objectAcls";
