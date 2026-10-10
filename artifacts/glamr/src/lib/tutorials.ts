@@ -40,7 +40,7 @@ export interface TutorialStep {
   // and paste either the returned `objectPath` (e.g.
   // `/objects/uploads/<id>` — it will be auto-resolved to the served
   // `/api/storage` route via `resolveTutorialMediaUrl`) or a
-  // fully-qualified URL. See `replit.md` → "Tutorial step video
+  // fully-qualified URL. See `docs/ARCHITECTURE.md` → "Tutorial step video
   // clips" for the curated upload flow and size guidance.
   videoUrl?: string;
   // Optional poster image for the video (recommended — shows before

@@ -3,7 +3,7 @@ import express from "express";
 import Stripe from "stripe";
 import { db, profilesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { getUncachableStripeClient } from "./stripeClient";
+import { getStripeClient } from "./stripeClient";
 import { logger } from "./logger";
 
 // Stripe webhooks must receive the *raw* request body so signature
@@ -13,9 +13,6 @@ import { logger } from "./logger";
 import { Router, type IRouter } from "express";
 export const stripeWebhookRouter: IRouter = Router();
 
-// Cached webhook secret. We can't reach it via the connector settings
-// today (the development sandbox doesn't expose it), so we fall back to
-// the STRIPE_WEBHOOK_SECRET env var if present.
 function getWebhookSecret(): string | undefined {
   return process.env.STRIPE_WEBHOOK_SECRET;
 }
@@ -66,8 +63,7 @@ stripeWebhookRouter.post(
     // on arbitrary profiles. Only an explicit `STRIPE_WEBHOOK_DEV_INSECURE=1`
     // flag *outside* production is allowed to bypass verification.
     const devInsecure = process.env.STRIPE_WEBHOOK_DEV_INSECURE === "1"
-      && process.env.NODE_ENV !== "production"
-      && process.env.REPLIT_DEPLOYMENT !== "1";
+      && process.env.NODE_ENV !== "production";
     if (!secret || typeof sig !== "string") {
       if (!devInsecure) {
         logger.error("Stripe webhook rejected — STRIPE_WEBHOOK_SECRET or signature header missing");
@@ -78,7 +74,7 @@ stripeWebhookRouter.post(
     }
 
     try {
-      const stripe = await getUncachableStripeClient();
+      const stripe = getStripeClient();
       if (secret && typeof sig === "string") {
         event = stripe.webhooks.constructEvent(req.body as Buffer, sig, secret);
       } else {
@@ -91,7 +87,7 @@ stripeWebhookRouter.post(
     }
 
     try {
-      const stripe = await getUncachableStripeClient();
+      const stripe = getStripeClient();
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object as Stripe.Checkout.Session;

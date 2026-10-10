@@ -33,7 +33,7 @@ const moderateSchema = z.object({
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 
-// Curator step-clip limits. These mirror the authoring guidance in replit.md
+// Curator step-clip limits. These mirror the authoring guidance in docs/ARCHITECTURE.md
 // and are enforced against the *actual* stored object (a presigned upload URL
 // can't constrain what the client PUTs, so the claimed size/type at
 // request-url time is advisory only).
@@ -41,7 +41,7 @@ const MAX_VIDEO_BYTES = 8 * 1024 * 1024;
 const MAX_POSTER_BYTES = 4 * 1024 * 1024;
 
 // Verify a just-uploaded object actually matches the expected media kind/size
-// by reading its real GCS metadata. Returns a structured error so the route
+// by reading its real storage metadata. Returns a structured error so the route
 // can surface a clear 4xx instead of writing a bad reference to the step.
 async function verifyUploadedObject(
   objectPath: string,
@@ -50,7 +50,7 @@ async function verifyUploadedObject(
   let metadata;
   try {
     const file = await objectStorageService.getObjectEntityFile(objectPath);
-    [metadata] = await file.getMetadata();
+    metadata = await file.getMetadata();
   } catch (err) {
     if (err instanceof ObjectNotFoundError) {
       return { ok: false, status: 400, error: "Uploaded file could not be found" };

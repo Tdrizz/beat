@@ -10,7 +10,7 @@ import { api } from "@/lib/api";
 // writes the resulting object paths back to the step via the curator API.
 //
 // Keep these limits aligned with the server (artifacts/api-server/src/routes/
-// tutorials.ts) and the authoring guidance in replit.md.
+// tutorials.ts) and the authoring guidance in docs/ARCHITECTURE.md.
 const MAX_BYTES = 8 * 1024 * 1024;
 const MIN_SECONDS = 10;
 const MAX_SECONDS = 30;

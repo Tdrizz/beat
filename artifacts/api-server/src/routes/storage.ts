@@ -5,7 +5,7 @@ import {
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { ObjectPermission, getObjectAclPolicy } from "../lib/objectAcl";
+import { ObjectPermission, claimObjectAclPolicy } from "../lib/objectAcl";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { timingSafeEqual } from "node:crypto";
 
@@ -20,8 +20,8 @@ function cronSecretOk(provided: string | undefined): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-// Called by a Replit scheduled deployment. Never run this as an in-process
-// timer because the autoscale API can sleep between requests.
+// Called by an external daily scheduler with the x-cron-secret header. Never
+// run this as an in-process timer: the API may sleep between requests.
 router.post("/storage/uploads/cleanup", async (req: Request, res: Response) => {
   if (!cronSecretOk(req.get("x-cron-secret"))) {
     res.status(401).json({ error: "Unauthorized" });
@@ -53,8 +53,7 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: Request, re
   try {
     const { name, size, contentType } = parsed.data;
 
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+    const { uploadURL, objectPath } = await objectStorageService.getObjectEntityUploadURL();
 
     res.json(
       RequestUploadUrlResponse.parse({
@@ -96,21 +95,20 @@ router.post("/storage/uploads/finalize", requireAuth, async (req: Request, res: 
     return;
   }
   try {
-    const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
-    const existing = await getObjectAclPolicy(objectFile);
-    if (existing) {
-      // Already finalized — only the owner is allowed to no-op confirm.
-      if (existing.owner !== req.userId) {
-        res.status(403).json({ error: "Object already finalized" });
-        return;
-      }
-      res.json({ objectPath, visibility: existing.visibility });
-      return;
-    }
-    await objectStorageService.trySetObjectEntityAclPolicy(objectPath, {
+    await objectStorageService.getObjectEntityFile(objectPath);
+    const { created, policy } = await claimObjectAclPolicy(objectPath, {
       owner: req.userId!,
       visibility,
     });
+    if (!created) {
+      // Already finalized — only the owner is allowed to no-op confirm.
+      if (policy.owner !== req.userId) {
+        res.status(403).json({ error: "Object already finalized" });
+        return;
+      }
+      res.json({ objectPath, visibility: policy.visibility });
+      return;
+    }
     res.json({ objectPath, visibility });
   } catch (error) {
     if (error instanceof ObjectNotFoundError) {
@@ -125,7 +123,7 @@ router.post("/storage/uploads/finalize", requireAuth, async (req: Request, res: 
 /**
  * GET /storage/public-objects/*
  *
- * Serve public assets from PUBLIC_OBJECT_SEARCH_PATHS.
+ * Serve public assets from STORAGE_BUCKET_PUBLIC.
  * These are unconditionally public — no authentication or ACL checks.
  * IMPORTANT: Always provide this endpoint when object storage is set up.
  */
@@ -159,8 +157,8 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
 /**
  * GET /storage/objects/*
  *
- * Serve object entities from PRIVATE_OBJECT_DIR, gated by the ACL policy
- * stored on the object (set via `/storage/uploads/finalize`).
+ * Serve object entities from STORAGE_BUCKET_PRIVATE, gated by the ACL policy
+ * recorded for the object (set via `/storage/uploads/finalize`).
  *
  * - Objects with `visibility: "public"` are readable by anyone.
  * - All other objects require the caller's Clerk userId to match the ACL
