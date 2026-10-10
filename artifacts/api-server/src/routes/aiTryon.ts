@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { ai, GEMINI_IMAGE_MODEL } from "@workspace/integrations-gemini-ai";
+import { aiBudget } from "../lib/aiBudget";
 import { z } from "zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { rateLimit } from "../middlewares/rateLimit";
@@ -208,8 +209,9 @@ export function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
 // invokes Gemini image generation on every call, which is metered and
 // expensive — leaving it open would let anonymous callers burn credits
 // at will. The 10/5min/user budget covers a reasonable session of
-// iteration on a look without enabling abuse.
-router.post("/ai-tryon", requireAuth, rateLimit({ scope: "ai-tryon", max: 10, windowMs: 5 * 60_000 }), async (req, res) => {
+// iteration on a look without enabling abuse; aiBudget adds a global
+// daily cap across all users.
+router.post("/ai-tryon", requireAuth, rateLimit({ scope: "ai-tryon", max: 10, windowMs: 5 * 60_000 }), aiBudget("tryon"), async (req, res) => {
   const log = req.log;
   const parseResult = TryonBody.safeParse(req.body);
   if (!parseResult.success) {

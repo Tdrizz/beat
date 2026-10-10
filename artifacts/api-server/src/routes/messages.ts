@@ -60,14 +60,19 @@ router.get("/conversations", requireAuth, async (req, res) => {
 
 // We accept either a Clerk userId or a @handle as the URL segment so the
 // frontend can deep-link by handle.
-async function resolveOtherId(raw: string): Promise<string | null> {
-  if (raw.startsWith("user_")) return raw;
-  const found = await db.select({ userId: profilesTable.userId }).from(profilesTable).where(eq(profilesTable.handle, raw)).limit(1);
-  return found[0]?.userId ?? null;
+// Only users with a profile can be messaged, and never yourself.
+async function resolveOtherId(raw: string, meId: string): Promise<string | null> {
+  const found = await db
+    .select({ userId: profilesTable.userId })
+    .from(profilesTable)
+    .where(raw.startsWith("user_") ? eq(profilesTable.userId, raw) : eq(profilesTable.handle, raw))
+    .limit(1);
+  const otherId = found[0]?.userId ?? null;
+  return otherId && otherId !== meId ? otherId : null;
 }
 
 router.get("/conversations/:other/messages", requireAuth, async (req, res) => {
-  const otherId = await resolveOtherId(p(req.params.other));
+  const otherId = await resolveOtherId(p(req.params.other), req.userId!);
   if (!otherId) {
     res.status(404).json({ error: "User not found" });
     return;
@@ -93,7 +98,7 @@ router.get("/conversations/:other/messages", requireAuth, async (req, res) => {
 });
 
 router.post("/conversations/:other/messages", requireAuth, rateLimit({ scope: "message", max: 30, windowMs: 60_000 }), async (req, res) => {
-  const otherId = await resolveOtherId(p(req.params.other));
+  const otherId = await resolveOtherId(p(req.params.other), req.userId!);
   if (!otherId) {
     res.status(404).json({ error: "User not found" });
     return;

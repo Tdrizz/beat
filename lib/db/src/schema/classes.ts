@@ -52,6 +52,11 @@ export const classReservationsTable = pgTable(
 );
 export type ClassReservation = typeof classReservationsTable.$inferSelect;
 
+const httpUrl = z.string().url().max(2000).refine(
+  (u) => { try { return /^https?:$/.test(new URL(u).protocol); } catch { return false; } },
+  { message: "Use an http:// or https:// URL" },
+);
+
 export const insertClassSchema = createInsertSchema(classesTable, {
   title: z.string().min(3).max(120),
   description: z.string().max(2000).optional(),
@@ -59,8 +64,10 @@ export const insertClassSchema = createInsertSchema(classesTable, {
   durationMin: z.number().int().min(5).max(240),
   difficulty: z.enum(CLASS_DIFFICULTIES),
   moodTag: z.enum(CLASS_MOODS),
-  coverUrl: z.string().url().nullable().optional(),
-  videoUrl: z.string().url().nullable().optional(),
+  // http(s) only: these render as a link and a CSS background, so a
+  // javascript: or data: URL would be stored XSS for every viewer.
+  coverUrl: httpUrl.nullable().optional(),
+  videoUrl: httpUrl.nullable().optional(),
   isPremium: z.boolean().optional(),
   scheduledFor: z.coerce.date(),
 }).omit({ id: true, instructorId: true, createdAt: true, status: true });

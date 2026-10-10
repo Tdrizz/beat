@@ -5,6 +5,7 @@ import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
 
 const router: IRouter = Router();
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 router.get("/affiliate/click/:productId", optionalAuth, async (req, res) => {
   const productId = p(req.params.productId);
@@ -13,14 +14,18 @@ router.get("/affiliate/click/:productId", optionalAuth, async (req, res) => {
     res.status(404).json({ error: "Product not found" });
     return;
   }
-  const creatorId = typeof req.query.creator === "string" ? req.query.creator : null;
-  const postId = typeof req.query.post === "string" ? req.query.post : null;
+  // Attribution params come from shared links, so treat them as untrusted:
+  // keep only well-formed values instead of failing the redirect.
+  const rawCreator = typeof req.query.creator === "string" ? req.query.creator : "";
+  const rawPost = typeof req.query.post === "string" ? req.query.post : "";
+  const creatorId = /^user_[A-Za-z0-9]{1,58}$/.test(rawCreator) ? rawCreator : null;
+  const postId = UUID_RE.test(rawPost) ? rawPost : null;
   await db.insert(affiliateClicksTable).values({
     productId: product[0].id,
     creatorId,
     postId,
     viewerId: req.userId ?? null,
-    referrer: req.headers.referer ?? null,
+    referrer: req.headers.referer?.slice(0, 500) ?? null,
   });
   res.redirect(302, product[0].affiliateUrl);
 });

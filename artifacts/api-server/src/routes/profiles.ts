@@ -256,6 +256,17 @@ router.delete("/profiles/me/combos/:id", requireAuth, async (req, res) => {
   res.status(204).end();
 });
 
+// The settings and profile pages request "/profiles/me"; without this the
+// catch-all below looks up a user whose handle is literally "me".
+router.get("/profiles/me", requireAuth, async (req, res) => {
+  const rows = await db.select().from(profilesTable).where(eq(profilesTable.userId, req.userId!)).limit(1);
+  if (rows.length === 0) {
+    res.status(404).json({ error: "Profile not created" });
+    return;
+  }
+  res.json(publicProfile(rows[0]));
+});
+
 router.get("/profiles/:handle", optionalAuth, async (_req, res) => {
   const handle = p(_req.params.handle);
   const rows = await db.select().from(profilesTable).where(eq(profilesTable.handle, handle)).limit(1);

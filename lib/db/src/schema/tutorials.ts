@@ -173,7 +173,11 @@ export const submitTutorialSchema = z.object({
   category: z.enum(TUTORIAL_CATEGORIES),
   difficulty: z.enum(TUTORIAL_DIFFICULTIES),
   minutes: z.number().int().min(1).max(180),
-  thumbnail: z.string().trim().min(1).max(2000),
+  // An uploaded object path or an http(s) URL; rejects javascript:/data: etc.
+  thumbnail: z.string().trim().min(1).max(2000).refine(
+    (u) => (u.startsWith("/") && !u.startsWith("//")) || /^https?:\/\//i.test(u),
+    { message: "Use an uploaded image or an http(s) URL" },
+  ),
   summary: z.string().trim().min(10).max(240),
   tools: z.array(z.string().trim().min(1).max(120)).min(1).max(20),
   steps: z.array(stepSchema).min(2).max(20),

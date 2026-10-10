@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -77,7 +77,7 @@ app.use(
       if (!origin) return cb(null, true);
       if (process.env["NODE_ENV"] !== "production") return cb(null, true);
       if (allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error("Origin not allowed by CORS policy"));
+      return cb(Object.assign(new Error("Origin not allowed by CORS policy"), { status: 403, expose: true }));
     },
   }),
 );
@@ -115,5 +115,24 @@ app.use(
 app.use(clerkMiddleware());
 
 app.use("/api", router);
+
+// Last-resort error handler: always answer JSON, never leak stack traces.
+// Malformed ids (e.g. "/posts/not-a-uuid") surface from Postgres as
+// invalid_text_representation (22P02); report those as 400 instead of 500.
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  if (res.headersSent) return;
+  const e = err as { status?: number; statusCode?: number; expose?: boolean; message?: string; code?: string; cause?: { code?: string } };
+  if (e?.code === "22P02" || e?.cause?.code === "22P02") {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+  const status = e?.status ?? e?.statusCode;
+  if (status && status >= 400 && status < 500) {
+    res.status(status).json({ error: e.expose && e.message ? e.message : "Bad request" });
+    return;
+  }
+  req.log?.error({ err }, "Unhandled error");
+  res.status(500).json({ error: "Something went wrong" });
+});
 
 export default app;

@@ -23,7 +23,9 @@ import { requireCurator, isCurator } from "../middlewares/requireCurator";
 import { rateLimit } from "../middlewares/rateLimit";
 import { isAdmin } from "../lib/admin";
 import { p } from "../lib/params";
+import { publicProfileOrNull, type PublicProfile } from "../lib/publicProfile";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { getObjectAclPolicy } from "../lib/objectAcl";
 
 const moderateSchema = z.object({
   status: z.enum(SUBMITTED_TUTORIAL_STATUSES),
@@ -96,11 +98,11 @@ router.get("/tutorials/stats", async (_req, res) => {
 // Hydrates a list of submitted tutorials with their author profile so the
 // UI can render an avatar/handle without a follow-up request.
 async function withAuthors<T extends { authorId: string }>(rows: T[]) {
-  if (rows.length === 0) return [] as Array<T & { author: typeof profilesTable.$inferSelect | null }>;
+  if (rows.length === 0) return [] as Array<T & { author: PublicProfile | null }>;
   const ids = Array.from(new Set(rows.map((r) => r.authorId)));
   const authors = await db.select().from(profilesTable).where(inArray(profilesTable.userId, ids));
   const byId = new Map(authors.map((a) => [a.userId, a]));
-  return rows.map((r) => ({ ...r, author: byId.get(r.authorId) ?? null }));
+  return rows.map((r) => ({ ...r, author: publicProfileOrNull(byId.get(r.authorId) ?? null) }));
 }
 
 // Public list of approved (published + featured) creator tutorials. Merged
@@ -446,7 +448,7 @@ router.get("/tutorials/:id/reviews", optionalAuth, async (req, res) => {
     : await db.select().from(profilesTable).where(inArray(profilesTable.userId, authorIds));
   const byId = new Map(authors.map((a) => [a.userId, a]));
 
-  const enriched = rows.map((r) => ({ ...r, author: byId.get(r.authorId) ?? null }));
+  const enriched = rows.map((r) => ({ ...r, author: publicProfileOrNull(byId.get(r.authorId) ?? null) }));
   const mine = req.userId ? enriched.find((r) => r.authorId === req.userId) ?? null : null;
   // Surface the viewer's own review at the top so they immediately see/edit
   // it, then the rest in recency order.
@@ -643,6 +645,17 @@ router.put("/tutorials/:id/steps/:stepIndex/video", requireCurator, async (req, 
     });
     if (!posterCheck.ok) {
       res.status(posterCheck.status).json({ error: posterCheck.error });
+      return;
+    }
+  }
+
+  // The curator may only attach objects they uploaded themselves;
+  // otherwise this would let them take over any user's file by path.
+  for (const path of [videoUrl, videoPoster]) {
+    if (!path || !path.startsWith("/")) continue;
+    const existing = await getObjectAclPolicy(path);
+    if (existing && existing.owner !== req.userId) {
+      res.status(403).json({ error: "You can only attach clips you uploaded" });
       return;
     }
   }
