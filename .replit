@@ -46,7 +46,8 @@ channel = "stable-25_05"
 [userenv]
 
 [userenv.shared]
-CRON_SECRET = "db9110b3f18e849ee7cc68c82b5ca871c958b6c6b163937ee3453fca5e6cdd10"
+# CRON_SECRET intentionally removed: it was committed to a public repo and is
+# treated as leaked. Set it only via Replit Secrets / the host environment.
 
 [objectStorage]
 defaultBucketID = "replit-objstore-63e5d478-8f45-4179-920b-4de5a4b3512a"
