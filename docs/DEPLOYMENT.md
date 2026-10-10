@@ -27,6 +27,13 @@ pnpm --filter @workspace/glamr run dev                   # SPA on :5173, proxies
 - For storage, point `SUPABASE_URL` at a dev Supabase project, or at a local stack (`supabase start`).
 - Outside production, the dev seed data (brands, classes) is inserted on API boot.
 
+API tests run the real app against a throwaway Postgres database whose name must contain `test`. Clerk is mocked: a test signs in by sending the header `x-test-user: <id>`. CI (`.github/workflows/ci.yml`) runs typecheck, build and these tests on every PR.
+
+```bash
+createdb glamr_test
+TEST_DATABASE_URL=postgres://localhost/glamr_test pnpm --filter @workspace/api-server test
+```
+
 ## 1. Supabase
 
 1. Create the project, then copy:
