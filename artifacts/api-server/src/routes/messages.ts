@@ -107,7 +107,7 @@ router.post("/conversations/:other/messages", requireAuth, rateLimit({ scope: "m
   if (imageUrl) {
     try {
       const file = await objectStorageService.getObjectEntityFile(imageUrl);
-      const metadata = (await file.getMetadata())[0];
+      const metadata = await file.getMetadata();
       if (!String(metadata.contentType ?? "").startsWith("image/")) {
         res.status(400).json({ error: "The attachment must be an image" });
         return;

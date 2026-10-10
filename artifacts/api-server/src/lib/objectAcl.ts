@@ -1,6 +1,10 @@
-import { File } from "@google-cloud/storage";
+import { db, objectAclsTable } from "@workspace/db";
+import { eq, inArray } from "drizzle-orm";
 
-const ACL_POLICY_METADATA_KEY = "custom:aclPolicy";
+// ACL policies live in the `object_acls` table, keyed by canonical entity
+// path ("/objects/<id>"). Supabase Storage can't update metadata on an
+// object after a client-side upload, and a table lets account deletion and
+// cleanup find objects by owner/status with one query.
 
 // Can be flexibly defined according to the use case.
 //
@@ -29,7 +33,6 @@ export interface ObjectAclRule {
   permission: ObjectPermission;
 }
 
-// Stored as object custom metadata under "custom:aclPolicy" (JSON string).
 export interface ObjectAclPolicy {
   owner: string;
   visibility: "public" | "private";
@@ -67,43 +70,99 @@ function createObjectAccessGroup(
   }
 }
 
+function toRow(objectPath: string, aclPolicy: ObjectAclPolicy) {
+  return {
+    objectPath,
+    ownerId: aclPolicy.owner,
+    visibility: aclPolicy.visibility,
+    aclRules: aclPolicy.aclRules ?? null,
+  };
+}
+
+/** Set (or overwrite) the policy for an object. */
 export async function setObjectAclPolicy(
-  objectFile: File,
+  objectPath: string,
   aclPolicy: ObjectAclPolicy,
 ): Promise<void> {
-  const [exists] = await objectFile.exists();
-  if (!exists) {
-    throw new Error(`Object not found: ${objectFile.name}`);
-  }
+  const row = toRow(objectPath, aclPolicy);
+  await db
+    .insert(objectAclsTable)
+    .values(row)
+    .onConflictDoUpdate({
+      target: objectAclsTable.objectPath,
+      set: { ownerId: row.ownerId, visibility: row.visibility, aclRules: row.aclRules },
+    });
+}
 
-  await objectFile.setMetadata({
-    metadata: {
-      [ACL_POLICY_METADATA_KEY]: JSON.stringify(aclPolicy),
-    },
-  });
+/**
+ * Set the policy only if the object has none yet. Returns the policy now in
+ * effect and whether this call created it. Atomic, so two concurrent
+ * finalize calls can't both claim the same object.
+ */
+export async function claimObjectAclPolicy(
+  objectPath: string,
+  aclPolicy: ObjectAclPolicy,
+): Promise<{ created: boolean; policy: ObjectAclPolicy }> {
+  const inserted = await db
+    .insert(objectAclsTable)
+    .values(toRow(objectPath, aclPolicy))
+    .onConflictDoNothing({ target: objectAclsTable.objectPath })
+    .returning({ objectPath: objectAclsTable.objectPath });
+  if (inserted.length > 0) {
+    return { created: true, policy: aclPolicy };
+  }
+  const existing = await getObjectAclPolicy(objectPath);
+  if (!existing) {
+    // Deleted between the insert and the read; treat as a fresh claim.
+    return claimObjectAclPolicy(objectPath, aclPolicy);
+  }
+  return { created: false, policy: existing };
 }
 
 export async function getObjectAclPolicy(
-  objectFile: File,
+  objectPath: string,
 ): Promise<ObjectAclPolicy | null> {
-  const [metadata] = await objectFile.getMetadata();
-  const aclPolicy = metadata?.metadata?.[ACL_POLICY_METADATA_KEY];
-  if (!aclPolicy) {
+  const [row] = await db
+    .select()
+    .from(objectAclsTable)
+    .where(eq(objectAclsTable.objectPath, objectPath))
+    .limit(1);
+  if (!row) {
     return null;
   }
-  return JSON.parse(aclPolicy as string);
+  return {
+    owner: row.ownerId,
+    visibility: row.visibility,
+    ...(row.aclRules ? { aclRules: row.aclRules as Array<ObjectAclRule> } : {}),
+  };
+}
+
+/** Returns the subset of `objectPaths` that have a policy. */
+export async function findObjectPathsWithPolicy(
+  objectPaths: string[],
+): Promise<Set<string>> {
+  if (objectPaths.length === 0) return new Set();
+  const rows = await db
+    .select({ objectPath: objectAclsTable.objectPath })
+    .from(objectAclsTable)
+    .where(inArray(objectAclsTable.objectPath, objectPaths));
+  return new Set(rows.map((r) => r.objectPath));
+}
+
+export async function deleteObjectAclPolicy(objectPath: string): Promise<void> {
+  await db.delete(objectAclsTable).where(eq(objectAclsTable.objectPath, objectPath));
 }
 
 export async function canAccessObject({
   userId,
-  objectFile,
+  objectPath,
   requestedPermission,
 }: {
   userId?: string;
-  objectFile: File;
+  objectPath: string;
   requestedPermission: ObjectPermission;
 }): Promise<boolean> {
-  const aclPolicy = await getObjectAclPolicy(objectFile);
+  const aclPolicy = await getObjectAclPolicy(objectPath);
   if (!aclPolicy) {
     return false;
   }
