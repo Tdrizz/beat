@@ -8,9 +8,11 @@ import {
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
   Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, CalendarDays, Brush, Apple, Link2, Users,
-  Coffee, BookHeart, Gem, GraduationCap, Crown, Scissors, Mail,
+  Coffee, BookHeart, Gem, GraduationCap, Crown, Scissors, Mail, Ban, ShieldAlert,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 // Primary nav — also rendered as bottom tab bar on mobile (subset).
 const PRIMARY = [
@@ -32,6 +34,8 @@ type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   authed?: boolean;
+  /** Only shown to ADMIN_USER_IDS. */
+  admin?: boolean;
 };
 const SECONDARY: NavItem[] = [
   { href: "/wigs",      label: "Wig Studio",      icon: Scissors },
@@ -52,6 +56,8 @@ const SECONDARY: NavItem[] = [
   { href: "/affiliate", label: "Creator stats", icon: BarChart3, authed: true },
   { href: "/settings/social", label: "Linked accounts", icon: Link2, authed: true },
   { href: "/settings/email", label: "Email preferences", icon: Mail, authed: true },
+  { href: "/settings/blocked", label: "Blocked accounts", icon: Ban, authed: true },
+  { href: "/admin/reports", label: "Reports queue", icon: ShieldAlert, authed: true, admin: true },
 ];
 
 // Routes that should render fully-chromeless — no global header.
@@ -64,6 +70,12 @@ export function TopNav() {
   const [loc] = useLocation();
   const { isSignedIn } = useAuth();
   const [open, setOpen] = useState(false);
+  const { data: adminMeta } = useQuery({
+    queryKey: ["admin-me"],
+    queryFn: () => api.get<{ isAdmin: boolean }>("/admin/me"),
+    enabled: !!isSignedIn,
+    staleTime: 5 * 60_000,
+  });
   if (HIDE_ON.some((p) => loc.startsWith(p))) return null;
 
   const isActive = (href: string) => (href === "/" ? loc === "/" : loc.startsWith(href));
@@ -96,7 +108,7 @@ export function TopNav() {
                 ))}
                 <p className="px-5 mt-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground py-2">More</p>
                 {SECONDARY
-                  .filter((l) => !l.authed || isSignedIn)
+                  .filter((l) => (!l.authed || isSignedIn) && (!l.admin || adminMeta?.isAdmin))
                   .map((l) => (
                     <DrawerItem key={l.href} {...l} active={isActive(l.href)} onClick={() => setOpen(false)} />
                   ))}

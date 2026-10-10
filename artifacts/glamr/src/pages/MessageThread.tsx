@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AuthedRoute } from "@/components/AuthedRoute";
-import { api, type Profile, type Message } from "@/lib/api";
+import { api, ApiError, type Profile, type Message } from "@/lib/api";
+import { ModerationMenu } from "@/components/moderation/ModerationMenu";
+import { ReportDialog } from "@/components/moderation/ReportDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, Paperclip, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Paperclip, X, Loader2, Flag } from "lucide-react";
 
 interface ThreadResponse {
   conversation: { id: string };
@@ -29,12 +31,16 @@ function ThreadInner() {
 
   const otherId = profile?.userId;
 
-  const { data: thread } = useQuery({
+  const { data: thread, error: threadError } = useQuery({
     queryKey: ["thread", otherId],
     queryFn: () => api.get<ThreadResponse>(`/conversations/${otherId}/messages`),
     enabled: !!otherId,
-    refetchInterval: 4_000,
+    refetchInterval: (q) => (q.state.error ? false : 4_000),
+    retry: (count, err) => !(err instanceof ApiError && err.status < 500) && count < 2,
   });
+  const blocked = threadError instanceof ApiError && threadError.code === "BLOCKED";
+  const blockedByMe = blocked && (threadError.body as { blockedByMe?: boolean }).blockedByMe === true;
+  const [reportingId, setReportingId] = useState<string | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -87,12 +93,30 @@ function ThreadInner() {
           <p className="font-semibold text-sm">{profile?.displayName ?? handle}</p>
           <p className="text-xs text-muted-foreground">@{handle}</p>
         </div>
+        {profile && !blocked && (
+          <ModerationMenu
+            targetType="user"
+            targetId={profile.userId}
+            author={profile}
+            onBlocked={() => navigate("/messages")}
+          />
+        )}
       </div>
       <div ref={scrollRef} className="flex-1 max-w-xl w-full mx-auto px-4 py-4 space-y-2 overflow-y-auto">
         {thread?.messages.map((m) => {
           const mine = m.senderId !== otherId;
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+              {!mine && (
+                <button
+                  type="button"
+                  onClick={() => setReportingId(m.id)}
+                  className="order-last self-center ml-1 p-1 text-muted-foreground/60 hover:text-foreground"
+                  aria-label="Report message"
+                >
+                  <Flag className="w-3 h-3" />
+                </button>
+              )}
               <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                 {m.imageUrl && (
                   <img
@@ -109,12 +133,27 @@ function ThreadInner() {
         {thread && thread.messages.length === 0 && (
           <p className="text-center text-xs text-muted-foreground py-12">Say hi 👋</p>
         )}
+        {blocked && (
+          <p className="text-center text-sm text-muted-foreground py-12">
+            {blockedByMe
+              ? "You blocked this account. Unblock them from their profile to message again."
+              : "This conversation isn't available."}
+          </p>
+        )}
       </div>
-      <form
+      {reportingId && (
+        <ReportDialog
+          open
+          onOpenChange={(open) => !open && setReportingId(null)}
+          targetType="message"
+          targetId={reportingId}
+        />
+      )}
+      {!blocked && <form
         className="max-w-xl w-full mx-auto px-4 py-3 flex gap-2 border-t border-border/50 bg-background/80"
         onSubmit={(e) => {
           e.preventDefault();
-          if (body.trim() && otherId) send.mutate();
+          if ((body.trim() || photo) && otherId) send.mutate();
         }}
       >
         <label className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-input hover:bg-muted has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
@@ -139,7 +178,7 @@ function ThreadInner() {
         <Button type="submit" size="sm" className="rounded-full" disabled={(!body.trim() && !photo) || send.isPending}>
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
-      </form>
+      </form>}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { rateLimit } from "../middlewares/rateLimit";
 import { notify } from "../lib/notify";
 import { p } from "../lib/params";
 import { publicProfileOrNull } from "../lib/publicProfile";
+import { hasBlocked, hiddenUserIds, isBlockedEitherWay } from "../lib/blocks";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { Readable } from "stream";
 
@@ -40,11 +41,13 @@ async function getOrCreateConversation(meId: string, otherId: string) {
 
 router.get("/conversations", requireAuth, async (req, res) => {
   const me = req.userId!;
-  const rows = await db
+  const allRows = await db
     .select()
     .from(conversationsTable)
     .where(or(eq(conversationsTable.userA, me), eq(conversationsTable.userB, me)))
     .orderBy(desc(conversationsTable.lastMessageAt));
+  const hidden = await hiddenUserIds(me);
+  const rows = allRows.filter((r) => !hidden.has(r.userA === me ? r.userB : r.userA));
   if (rows.length === 0) {
     res.json([]);
     return;
@@ -77,6 +80,16 @@ router.get("/conversations/:other/messages", requireAuth, async (req, res) => {
     res.status(404).json({ error: "User not found" });
     return;
   }
+  // Blocked either way: the thread is closed. Tell the blocker so the UI
+  // can offer "Unblock"; the blocked user just sees an unavailable thread.
+  if (await isBlockedEitherWay(req.userId!, otherId)) {
+    res.status(403).json({
+      error: "This conversation isn't available",
+      code: "BLOCKED",
+      blockedByMe: await hasBlocked(req.userId!, otherId),
+    });
+    return;
+  }
   const conv = await getOrCreateConversation(req.userId!, otherId);
   // Cap to a generous size so threads aren't silently truncated. We pull the
   // most recent N then reverse for ascending display. Clients can pass
@@ -101,6 +114,10 @@ router.post("/conversations/:other/messages", requireAuth, rateLimit({ scope: "m
   const otherId = await resolveOtherId(p(req.params.other), req.userId!);
   if (!otherId) {
     res.status(404).json({ error: "User not found" });
+    return;
+  }
+  if (await isBlockedEitherWay(req.userId!, otherId)) {
+    res.status(403).json({ error: "You can't message this account", code: "BLOCKED" });
     return;
   }
   const parsed = insertMessageSchema.safeParse(req.body);

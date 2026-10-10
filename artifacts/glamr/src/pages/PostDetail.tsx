@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@clerk/react";
+import { useMe } from "@/hooks/useMe";
+import { ModerationMenu } from "@/components/moderation/ModerationMenu";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, ArrowLeft, Trash2 } from "lucide-react";
 import { api, type Post, type Profile } from "@/lib/api";
@@ -24,7 +25,9 @@ export default function PostDetail() {
   const params = useParams<{ id: string }>();
   const postId = params.id;
   const qc = useQueryClient();
-  const { userId } = useAuth();
+  const [, navigate] = useLocation();
+  // Compare against the API's user id (see useMe), not Clerk's.
+  const userId = useMe().data?.userId;
   const { showOverlay, checkText, dismiss } = useKindnessCheck();
   const [body, setBody] = useState("");
 
@@ -140,6 +143,12 @@ export default function PostDetail() {
                 </div>
               )}
             </div>
+            <ModerationMenu
+              targetType="post"
+              targetId={post.id}
+              author={post.author}
+              onBlocked={() => navigate("/feed")}
+            />
           </div>
           <img src={post.imageUrl} alt="" className="w-full aspect-square object-cover bg-muted" />
           <div className="p-3 space-y-2">
@@ -212,7 +221,9 @@ export default function PostDetail() {
                     )}
                     <p className="text-sm whitespace-pre-wrap break-words">{c.body}</p>
                   </div>
-                  {userId && c.authorId === userId && (
+                  <ModerationMenu targetType="comment" targetId={c.id} author={c.author} className="shrink-0 -mr-2" />
+                  {/* Comment authors and the post's author can delete. */}
+                  {userId && (c.authorId === userId || post.authorId === userId) && (
                     <button
                       onClick={() => {
                         if (deleteComment.isPending) return;

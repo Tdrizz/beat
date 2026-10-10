@@ -1,4 +1,5 @@
 import { db, notificationsTable } from "@workspace/db";
+import { isBlockedEitherWay } from "./blocks";
 
 export type NotifyKind = "like" | "comment" | "follow" | "message" | "system" | "match";
 
@@ -17,6 +18,7 @@ interface NotifyArgs {
 export async function notify(args: NotifyArgs): Promise<void> {
   if (args.actorId && args.actorId === args.recipientId) return;
   try {
+    if (args.actorId && (await isBlockedEitherWay(args.actorId, args.recipientId))) return;
     await db.insert(notificationsTable).values({
       recipientId: args.recipientId,
       actorId: args.actorId ?? null,

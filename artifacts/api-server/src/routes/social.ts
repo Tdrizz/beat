@@ -2,10 +2,11 @@ import { Router, type IRouter } from "express";
 import { db, followsTable, profilesTable } from "@workspace/db";
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { clerkClient } from "@clerk/express";
-import { requireAuth } from "../middlewares/requireAuth";
+import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { rateLimit } from "../middlewares/rateLimit";
 import { notify } from "../lib/notify";
 import { p } from "../lib/params";
+import { hiddenUserIds, isBlockedEitherWay } from "../lib/blocks";
 
 const router: IRouter = Router();
 
@@ -32,6 +33,10 @@ router.post("/follows/:userId", requireAuth, rateLimit({ scope: "follow", max: 3
   const target = p(req.params.userId);
   if (target === req.userId) {
     res.status(400).json({ error: "Cannot follow yourself" });
+    return;
+  }
+  if (await isBlockedEitherWay(req.userId!, target)) {
+    res.status(403).json({ error: "You can't follow this account" });
     return;
   }
   const existing = await db
@@ -97,7 +102,8 @@ router.get("/profiles/me/friends", requireAuth, async (req, res) => {
  *   2) follower count desc (organic social proof).
  *   3) profile recency desc (so brand-new creators get a fair chance).
  * Capped at 12 to keep the carousel snappy. */
-router.get("/profiles/featured", async (_req, res) => {
+router.get("/profiles/featured", optionalAuth, async (req, res) => {
+  const hidden = await hiddenUserIds(req.userId);
   const rows = await db
     .select(profileWithFollowersCols)
     .from(profilesTable)
@@ -106,8 +112,8 @@ router.get("/profiles/featured", async (_req, res) => {
       desc(sql`follower_count`),
       desc(profilesTable.createdAt),
     )
-    .limit(12);
-  res.json({ featured: rows });
+    .limit(12 + hidden.size);
+  res.json({ featured: rows.filter((r) => !hidden.has(r.userId)).slice(0, 12) });
 });
 
 /* ── Search creators by handle / display name / email ────────────────────
@@ -163,7 +169,7 @@ router.get(
     }
 
     // Dedupe (handle/name match wins over email match for ordering).
-    const seen = new Set<string>();
+    const seen = await hiddenUserIds(req.userId);
     const merged: typeof baseRows = [];
     for (const row of [...baseRows, ...emailRows]) {
       if (row.userId === req.userId) continue; // never surface self
