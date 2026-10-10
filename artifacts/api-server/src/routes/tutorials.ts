@@ -33,7 +33,7 @@ const moderateSchema = z.object({
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 
-// Curator step-clip limits. These mirror the authoring guidance in replit.md
+// Curator step-clip limits. These mirror the authoring guidance in docs/ARCHITECTURE.md
 // and are enforced against the *actual* stored object (a presigned upload URL
 // can't constrain what the client PUTs, so the claimed size/type at
 // request-url time is advisory only).
