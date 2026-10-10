@@ -39,6 +39,7 @@ export async function api<T = any>(
       ...(opts.headers ?? {}),
     },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+    redirect: "manual",
   });
   const text = await res.text();
   let body: unknown = text;

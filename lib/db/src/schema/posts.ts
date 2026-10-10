@@ -68,9 +68,10 @@ export const commentsTable = pgTable(
     byPost: index("comments_post_idx").on(t.postId, t.createdAt),
   }),
 );
+// postId comes from the URL (/posts/:id/comments), not the body.
 export const insertCommentSchema = createInsertSchema(commentsTable, {
   body: z.string().min(1).max(500),
-}).omit({ id: true, createdAt: true, authorId: true });
+}).omit({ id: true, createdAt: true, authorId: true, postId: true });
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof commentsTable.$inferSelect;
 

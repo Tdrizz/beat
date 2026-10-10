@@ -6,10 +6,50 @@ import { p } from "../lib/params";
 import { notify } from "../lib/notify";
 import { rateLimit } from "../middlewares/rateLimit";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { getObjectAclPolicy } from "../lib/objectAcl";
 import { ARCHETYPE_MOOD_MATCHERS, ARCHETYPE_CHALLENGES, postMatchesArchetype } from "../lib/archetypeMatch";
 import { publicProfileOrNull } from "../lib/publicProfile";
 
 const objectStorage = new ObjectStorageService();
+const MAX_POST_IMAGE_BYTES = 15 * 1024 * 1024;
+
+// Posts may only reference images the author uploaded and finalized as
+// public. Accepts "/objects/<key>" or the served "/api/storage/objects/<key>"
+// form. Anything else (external URLs, other users' objects, private
+// uploads) is rejected so a post can't hotlink or later delete someone
+// else's file.
+async function validatePostImage(
+  imageUrl: string,
+  userId: string,
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const objectPath = imageUrl.replace(/^\/api\/storage(?=\/objects\/)/, "");
+  if (!objectPath.startsWith("/objects/")) {
+    return { ok: false, status: 400, error: "Upload the image first" };
+  }
+  try {
+    const file = await objectStorage.getObjectEntityFile(objectPath);
+    const policy = await getObjectAclPolicy(objectPath);
+    if (!policy || policy.owner !== userId) {
+      return { ok: false, status: 403, error: "You can only post images you uploaded" };
+    }
+    if (policy.visibility !== "public") {
+      return { ok: false, status: 400, error: "The image must be finalized as public" };
+    }
+    const metadata = await file.getMetadata();
+    if (!metadata.contentType.startsWith("image/")) {
+      return { ok: false, status: 400, error: "The post must be an image" };
+    }
+    if (metadata.size > MAX_POST_IMAGE_BYTES) {
+      return { ok: false, status: 400, error: "The image is too large (max 15 MB)" };
+    }
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof ObjectNotFoundError) {
+      return { ok: false, status: 400, error: "Uploaded image not found" };
+    }
+    throw e;
+  }
+}
 
 const router: IRouter = Router();
 
@@ -132,6 +172,11 @@ router.post("/posts", requireAuth, rateLimit({ scope: "post-create", max: 10, wi
     res.status(400).json({ error: "Invalid", details: parsed.error.flatten() });
     return;
   }
+  const imageCheck = await validatePostImage(parsed.data.imageUrl, req.userId!);
+  if (!imageCheck.ok) {
+    res.status(imageCheck.status).json({ error: imageCheck.error });
+    return;
+  }
   const inserted = await db.insert(postsTable).values({ ...parsed.data, authorId: req.userId! }).returning();
   // Cross-pollinate: notify followers whose archetype matches this post's
   // mood. Best-effort, capped to 50 to keep it cheap; ignored if author
@@ -214,8 +259,13 @@ router.delete("/posts/:id", requireAuth, async (req, res) => {
   if (imageUrl?.startsWith("/api/storage/objects/") || imageUrl?.startsWith("/objects/")) {
     const objectPath = imageUrl.replace(/^\/api\/storage/, "");
     try {
-      const file = await objectStorage.getObjectEntityFile(objectPath);
-      await file.delete();
+      // Only remove the file if the post's author owns it; a post must
+      // never be a handle for deleting someone else's upload.
+      const policy = await getObjectAclPolicy(objectPath);
+      if (policy?.owner === rows[0].authorId) {
+        const file = await objectStorage.getObjectEntityFile(objectPath);
+        await file.delete();
+      }
     } catch (e) {
       if (!(e instanceof ObjectNotFoundError)) {
         req.log.warn({ err: e, postId: id }, "Failed to delete object on post delete");
@@ -291,18 +341,20 @@ router.post("/posts/:id/comments", requireAuth, rateLimit({ scope: "comment", ma
     res.status(400).json({ error: "Invalid" });
     return;
   }
+  const post = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
+  if (!post[0]) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
   const inserted = await db.insert(commentsTable).values({ postId: id, authorId: req.userId!, body: parsed.data.body }).returning();
   await db.update(postsTable).set({ commentCount: sql`${postsTable.commentCount} + 1` }).where(eq(postsTable.id, id));
-  const post = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
-  if (post[0]) {
-    await notify({
-      recipientId: post[0].authorId,
-      actorId: req.userId!,
-      kind: "comment",
-      postId: id,
-      body: parsed.data.body.slice(0, 120),
-    });
-  }
+  await notify({
+    recipientId: post[0].authorId,
+    actorId: req.userId!,
+    kind: "comment",
+    postId: id,
+    body: parsed.data.body.slice(0, 120),
+  });
   res.status(201).json(inserted[0]);
 });
 

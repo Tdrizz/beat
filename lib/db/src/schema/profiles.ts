@@ -69,7 +69,17 @@ export const insertProfileSchema = createInsertSchema(profilesTable, {
   bio: z.string().max(280).optional(),
   archetype: z.enum(ARCHETYPE_IDS).nullable().optional(),
   socialLinks: socialLinksSchema.optional(),
-}).omit({ createdAt: true, updatedAt: true });
+}).omit({
+  createdAt: true,
+  updatedAt: true,
+  // Server-controlled: set only by the Stripe webhook / checkout flow and
+  // by admins. Accepting them from clients would let a user grant
+  // themselves Premium, creator status, or bind another user's Stripe
+  // customer to their profile.
+  premiumUntil: true,
+  stripeCustomerId: true,
+  isCreator: true,
+});
 
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
 export type Profile = typeof profilesTable.$inferSelect;

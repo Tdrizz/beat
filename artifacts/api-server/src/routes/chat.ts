@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { ai, GEMINI_CHAT_MODEL } from "@workspace/integrations-gemini-ai";
+import { aiBudget } from "../lib/aiBudget";
 import {
   db,
   chatThreadsTable,
@@ -182,6 +183,7 @@ router.post(
   "/chat/messages",
   requireAuth,
   rateLimit({ scope: "chat", max: 30, windowMs: 5 * 60_000 }),
+  aiBudget("chat"),
   async (req, res) => {
     const log = req.log;
     const userId = req.userId!;
