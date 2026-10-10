@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @workspace/glamr run build",
+  "outputDirectory": "artifacts/glamr/dist/public",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://REPLACE_WITH_RAILWAY_API_HOST/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

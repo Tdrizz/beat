@@ -1,6 +1,6 @@
 # Phase 1 audit: Replit dependencies and storage plan
 
-Status: Step 0 done. This document lists everything found, and proposes a storage design. No Phase 1 code changes yet.
+Status: **Phase 1 code implemented** on the `migration` branch (see "Decisions" at the end). This file is the original audit, kept for reference. Current setup: `docs/DEPLOYMENT.md`.
 
 ## Step 0: leaked `CRON_SECRET`
 
@@ -116,10 +116,10 @@ This also improves on today's behavior:
 
 **Tests.** Unit tests for `canAccessObject` and finalize semantics (single-shot, owner-only no-op, 404 on missing). Then a manual end-to-end pass on post image upload, DM image attach, wig try-on save to public, and tutorial video upload.
 
-## Decisions needed
+## Decisions (resolved: best practice)
 
-1. Approve the storage design, especially **ACLs moving to a Postgres table** and **native signed URLs (2h TTL) vs. the S3 endpoint**.
-2. Seeds in production: gate them or keep them?
-3. Delete `makeup-ar` and `mockup-sandbox` outright, or only exclude them?
-4. OK to delete the non-x64 platform overrides in `pnpm-workspace.yaml` and the `@clerk/*` release-age exclusion?
-5. Branch: CLAUDE.md says `migration`. This session is pinned to `snowbaby/keen-darwin-x07c4l`. Either way nothing goes to `main`. Say if you want it renamed.
+1. Storage: ACLs live in the Postgres `object_acls` table. Uploads use Supabase native signed URLs (2-hour TTL).
+2. Seeds run outside production only, unless `RUN_SEEDS=1`.
+3. `makeup-ar` and `mockup-sandbox` are deleted. They remain in git history.
+4. The non-x64 platform overrides and the `@clerk/*` release-age exclusion are removed. `minimumReleaseAge` is unchanged.
+5. The branch is renamed to `migration`.

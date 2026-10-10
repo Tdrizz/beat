@@ -1,5 +1,7 @@
 # Glamr
 
+> Originally written as `replit.md` by the Replit Agent. Hosting, env vars, migrations and scheduling now live in [`DEPLOYMENT.md`](./DEPLOYMENT.md) and [`.env.example`](../.env.example); where this file disagrees on those, they win.
+
 Glamr is a social platform focused on beauty and fashion, offering AI-powered try-ons, personalized recommendations, and community features.
 
 ## Run & Operate
@@ -7,15 +9,14 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 - `pnpm run typecheck`: Full typecheck across all packages.
 - `pnpm run build`: Typecheck + build all packages.
 - `pnpm --filter @workspace/api-spec run codegen`: Regenerate API hooks and Zod schemas from OpenAPI spec.
-- `pnpm --filter @workspace/db run push`: Push DB schema changes (dev only).
+- `pnpm --filter @workspace/db run generate`: Create a SQL migration after a schema change (commit it).
+- `pnpm --filter @workspace/db run migrate`: Apply migrations. Production never uses `push`.
 - `pnpm --filter @workspace/api-server run dev`: Run API server locally.
 
-**Environment Variables:**
-- `VITE_CLERK_PUBLISHABLE_KEY`: For Clerk authentication.
+**Environment Variables:** see `.env.example` (names) and `docs/DEPLOYMENT.md` (where each is set). Notable ones:
 - `CURATOR_USER_IDS`: Comma-separated Clerk user IDs allowed to upload/manage tutorial step demo clips (fail-closed; unset ⇒ no curators). See "Tutorial step video clips".
-- `CRON_SECRET`: Shared secret guarding `POST /api/digest/run` (the weekly digest trigger). Set; the endpoint denies all calls when unset.
-- `RESEND_API_KEY` (optional): If set, the digest sends mail with this key directly. Otherwise it falls back to the Replit-managed Resend connector. One of the two must be configured before emails will send.
-- `DIGEST_FROM_EMAIL` (optional): Overrides the digest "from" address (e.g. `Glamr <hello@yourdomain.com>`). Defaults to Resend's shared `onboarding@resend.dev` sender, which only delivers to the Resend account owner until a custom domain is verified.
+- `CRON_SECRET`: Shared secret guarding `POST /api/digest/run` and `POST /api/storage/uploads/cleanup`. Both endpoints deny all calls when unset.
+- `RESEND_API_KEY` + `DIGEST_FROM_EMAIL`: required to send the digest; the sender must be on a domain verified in Resend.
 
 ## Stack
 
@@ -85,7 +86,7 @@ Glamr is a social platform focused on beauty and fashion, offering AI-powered tr
 
 `TutorialStep` supports an optional `videoUrl` (and optional `videoPoster`) for a short demo clip rendered inline above the written body on `TutorialDetail`. There are two ways a clip gets onto a step:
 
-1. **In-app curator uploader (preferred).** Signed-in **curators** see an inline "Add clip / Replace clip / Remove" control under each step on `TutorialDetail` (`artifacts/glamr/src/components/TutorialStepVideoUploader.tsx`). It validates type/size/duration client-side, uploads the clip (and a best-effort auto-captured poster frame) via the presigned-URL flow, then writes the object paths back to `PUT /api/tutorials/:id/steps/:stepIndex/video`. These uploads are stored per `(tutorialId, stepIndex)` in the `tutorial_step_videos` table and **override** the static catalogue entry for that step; removing the row falls back to whatever the catalogue ships. The server re-verifies each uploaded object's **real** GCS content-type/size before persisting (a presigned URL can't constrain what the client PUTs), and marks the objects public so the served route is readable.
+1. **In-app curator uploader (preferred).** Signed-in **curators** see an inline "Add clip / Replace clip / Remove" control under each step on `TutorialDetail` (`artifacts/glamr/src/components/TutorialStepVideoUploader.tsx`). It validates type/size/duration client-side, uploads the clip (and a best-effort auto-captured poster frame) via the presigned-URL flow, then writes the object paths back to `PUT /api/tutorials/:id/steps/:stepIndex/video`. These uploads are stored per `(tutorialId, stepIndex)` in the `tutorial_step_videos` table and **override** the static catalogue entry for that step; removing the row falls back to whatever the catalogue ships. The server re-verifies each uploaded object's **real** stored content-type/size before persisting (a presigned URL can't constrain what the client PUTs), and marks the objects public so the served route is readable.
 
 2. **Static catalogue (defaults shipped in code).** Paste an `objectPath` (e.g. `/objects/uploads/<uuid>`) — or a fully-qualified CDN URL — into a step's `videoUrl` in `artifacts/glamr/src/lib/tutorials.ts` (same for `videoPoster`). Use the manual presigned flow to get the path:
    - `POST /api/storage/uploads/request-url` with `{ name, size, contentType: "video/mp4" }` to get a presigned `uploadURL` + canonical `objectPath`.
@@ -103,17 +104,15 @@ Storage limits / authoring guidance (enforced by both the in-app uploader and th
 
 ### Weekly tutorial digest
 
-How it runs: production deploys to **autoscale** (scales to zero), so there is **no in-process timer**. Instead the job is a secret-guarded endpoint triggered externally:
+How it runs: the API may scale to zero, so there is **no in-process timer**. Instead the job is a secret-guarded endpoint triggered externally:
 
 - **Trigger**: `POST /api/digest/run` with header `x-cron-secret: <CRON_SECRET>` (or `?secret=`). Runs the digest for the current ISO week. Idempotent — claims a `digest_sends` row per `(userId, weekStart)` before sending, so retries/overlapping triggers never double-send; a failed send releases the claim for a later retry.
 - **Selection**: candidates = users with ≥1 bookmark, minus opted-out (`email_preferences.weekly_digest = false`) and already-sent-this-week. Tastes are inferred from bookmarked tutorials' category/difficulty (curated from `CURATED_TUTORIAL_META`, creator ones from `submitted_tutorials`). Fresh pool = `submitted_tutorials` published/featured in the last 7 days.
 - **Opt-out**: one-click `GET/POST /api/digest/unsubscribe?token=<uuid>` (rate-limited per IP) flips `weekly_digest=false`; the confirmation page offers `/api/digest/resubscribe`.
 
-**Two setup steps remain before real emails send (deferred at user request):**
-1. **Connect a mailer**: either connect the Replit-managed **Resend** integration, or set a `RESEND_API_KEY` secret. To reach addresses other than the Resend account owner, verify a sending domain in Resend and set `DIGEST_FROM_EMAIL`.
-2. **Schedule it**: create a weekly **Scheduled Deployment** (deployment skill / Publishing UI) whose command POSTs to `https://<prod-domain>/api/digest/run` with the `x-cron-secret` header. Pick any day/time; the engine keys off the ISO week, so an extra run inside the same week is a safe no-op.
+Setup: set `RESEND_API_KEY` and `DIGEST_FROM_EMAIL`, and schedule the trigger (`.github/workflows/scheduled-jobs.yml`, see `docs/DEPLOYMENT.md`). The engine keys off the ISO week, so an extra run inside the same week is a safe no-op.
 
-Manual test (dev): `curl -XPOST localhost:80/api/digest/run -H "x-cron-secret: $CRON_SECRET"` returns a JSON summary (`sent`, `skipped*`, `failed`, …).
+Manual test (dev): `curl -XPOST localhost:8080/api/digest/run -H "x-cron-secret: $CRON_SECRET"` returns a JSON summary (`sent`, `skipped*`, `failed`, …).
 
 ## User preferences
 
@@ -124,23 +123,22 @@ Manual test (dev): `curl -XPOST localhost:80/api/digest/run -H "x-cron-secret: $
 - `TopNav` is globally mounted in `App.tsx`; pages must not render their own `TopNav`.
 - Conditional `return null` for `TopNav` must be **after** all hook calls to prevent "Rendered fewer hooks than expected" errors.
 - Selfies are mirrored on both preview and capture to ensure text reads correctly.
-- Rate limiting is in-memory; horizontal scaling would require Redis.
+- Rate limiting is in-memory; horizontal scaling would require Redis (see `docs/DEPLOYMENT.md`).
 - `POST /ai-tryon` is auth + rate-limited (10 calls / 5 min / user). Never remove either guard — the route hits Gemini image generation on every call (paid, unbounded cost if left open).
 - `socialRouter` must remain mounted **before** `profilesRouter` in `routes/index.ts`, otherwise `/profiles/:handle` swallows `/profiles/featured`, `/profiles/search`, and `/profiles/me/friends`.
-- `GET /storage/objects/*` is ACL-gated: objects with `visibility: "public"` are world-readable, everything else requires the caller's Clerk userId to match the ACL owner, and objects with no policy at all return 401/403. Uploaders MUST call `POST /storage/uploads/finalize` after their PUT — without it the object is permanently unreadable through this route.
+- Upload ACL policies live in the `object_acls` table (not object metadata). `GET /storage/objects/*` is ACL-gated: objects with `visibility: "public"` are world-readable, everything else requires the caller's Clerk userId to match the ACL owner, and objects with no policy at all return 401/403. Uploaders MUST call `POST /storage/uploads/finalize` after their PUT — without it the object is permanently unreadable through this route.
 - Stripe webhook (`/api/stripe/webhook`) must be mounted **before** `express.json()` in `app.ts` so the raw body is preserved for signature verification.
 - `POST /classes` is gated by `requirePremium` — host-class form must hide/disable for non-premium users (handled by `usePremium()` in `HostClass.tsx`).
 - Classes seed (`seedClassesIfEmpty`) inserts placeholder instructor profiles with `userId` like `seed_creator_*` — these are not real Clerk users; do not assume `profiles.userId` always maps to a Clerk identity.
 - **publicProfile Redaction**: `lib/publicProfile.ts` provides `publicProfile` and `publicProfileOrNull` helpers that strip sensitive billing fields (`stripeCustomerId`, `premiumUntil`) from profile objects. These MUST be used in any route returning profile data to other users (e.g., feed, comments, instructor profiles) to avoid leaking PII/billing status.
-- Weekly digest must be triggered externally (autoscale scales to zero — an in-process `setInterval` would never fire in prod). Never remove the `CRON_SECRET` guard on `POST /digest/run`; the endpoint loops every bookmarking user and sends mail.
+- Weekly digest must be triggered externally (the API may scale to zero — an in-process `setInterval` would never fire in prod). Never remove the `CRON_SECRET` guard on `POST /digest/run`; the endpoint loops every bookmarking user and sends mail.
 - `digest_sends` is the idempotency ledger — claim-first per `(userId, weekStart)`. Don't change the send to insert-after-send, or racing triggers will double-email.
-- Resend's default `onboarding@resend.dev` sender only delivers to the Resend account owner until a custom domain is verified; set `DIGEST_FROM_EMAIL` after verifying one.
 - `socialRouter`/`profilesRouter` ordering aside, `digestRouter` uses a clean `/digest` prefix so mount order doesn't matter for it.
 
 ### Health sweep — May 2026
 
 - **Typecheck**: green across all 5 workspace projects (`pnpm run typecheck`).
-- **Builds**: `@workspace/api-server` and `@workspace/glamr` both build cleanly when invoked through the configured workflows (which provide the `PORT` / `BASE_PATH` env vars Vite relies on); a bare `pnpm --filter ... run build` from a plain shell will fail without those vars set. Vite emits a "sourcemap reporting" notice on a few Radix-wrapping `ui/*` files (`tooltip`, `sheet`, `progress`, `avatar`, `dropdown-menu`); cosmetic, build still succeeds.
+- **Builds**: `@workspace/api-server` and `@workspace/glamr` both build from a plain shell (`PORT` / `BASE_PATH` now have defaults). Vite emits a "sourcemap reporting" notice on a few Radix-wrapping `ui/*` files (`tooltip`, `sheet`, `progress`, `avatar`, `dropdown-menu`); cosmetic, build still succeeds.
 - **Static**: zero `any`, `@ts-ignore`, `@ts-expect-error`, or `TODO/FIXME` left in app code. Only one `console.warn` (in `useFaceAnalysis` when `video.play()` rejects), which is intentional.
 - **Auth audit**: every mutating route is auth-gated except the now-fixed `POST /ai-tryon`, which was open to anonymous callers and burning Gemini credits. Added `requireAuth` + a 10/5-min token-bucket rate limit.
 - **A11y**: search input on `Friends.tsx` was relying on a placeholder for context — added `aria-label`. All `<img>` tags carry alt text. No `<button>` was rendering with neither text nor aria-label on any audited page.
