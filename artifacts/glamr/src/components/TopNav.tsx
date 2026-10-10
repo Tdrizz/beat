@@ -8,7 +8,7 @@ import {
 import {
   Home as HomeIcon, Sparkles, MessageCircle, Upload as UploadIcon,
   Store, BarChart3, Wand2, Menu, ScanFace, Heart, BookOpen, Calendar, CalendarDays, Brush, Apple, Link2, Users,
-  Coffee, BookHeart, Gem, GraduationCap, Crown, Scissors, Mail, Ban, ShieldAlert,
+  Coffee, BookHeart, Gem, GraduationCap, Crown, Scissors, Mail, Ban, ShieldAlert, UserCog,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { useQuery } from "@tanstack/react-query";
@@ -54,6 +54,7 @@ const SECONDARY: NavItem[] = [
   { href: "/esthetician-hub", label: "Esthetician Hub", icon: Gem },
   { href: "/premium",   label: "Premium",       icon: Crown },
   { href: "/affiliate", label: "Creator stats", icon: BarChart3, authed: true },
+  { href: "/settings/account", label: "Account & privacy", icon: UserCog, authed: true },
   { href: "/settings/social", label: "Linked accounts", icon: Link2, authed: true },
   { href: "/settings/email", label: "Email preferences", icon: Mail, authed: true },
   { href: "/settings/blocked", label: "Blocked accounts", icon: Ban, authed: true },

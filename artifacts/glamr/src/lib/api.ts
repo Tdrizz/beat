@@ -44,7 +44,8 @@ export const api = {
     request<T>(p, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
   put: <T = unknown>(p: string, body?: unknown) =>
     request<T>(p, { method: "PUT", body: body ? JSON.stringify(body) : undefined }),
-  del: <T = unknown>(p: string) => request<T>(p, { method: "DELETE" }),
+  del: <T = unknown>(p: string, body?: unknown) =>
+    request<T>(p, { method: "DELETE", body: body ? JSON.stringify(body) : undefined }),
 };
 
 // Shapes returned by the API. Kept loose since the social/messaging

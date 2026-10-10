@@ -16,6 +16,7 @@ import chatRouter from "./chat";
 import wigsRouter from "./wigs";
 import digestRouter from "./digest";
 import moderationRouter from "./moderation";
+import accountRouter from "./account";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(chatRouter);
 router.use(wigsRouter);
 router.use(digestRouter);
 router.use(moderationRouter);
+router.use(accountRouter);
 
 export default router;
