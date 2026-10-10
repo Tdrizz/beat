@@ -50,6 +50,9 @@ import Wigs from "@/pages/Wigs";
 import WigDetail from "@/pages/WigDetail";
 import MyWigs from "@/pages/MyWigs";
 import { SplashPositivity } from "@/components/SplashPositivity";
+import { SiteFooter } from "@/components/SiteFooter";
+import Privacy from "@/pages/legal/Privacy";
+import Terms from "@/pages/legal/Terms";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +64,8 @@ function Router() {
       <Route path="/sign-up" component={SignUp} />
       <Route path="/sign-up/:rest*" component={SignUp} />
       <Route path="/onboarding" component={ProfileSetup} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
 
       <Route path="/" component={Home} />
       <Route path="/match" component={LookMatch} />
@@ -130,6 +135,7 @@ function App() {
               the auth + onboarding routes. */}
           <TopNav />
           <Router />
+          <SiteFooter />
           <MobileTabBar />
           <SplashPositivity />
         </WouterRouter>
