@@ -101,6 +101,10 @@ export function TopNav() {
                     <DrawerItem key={l.href} {...l} active={isActive(l.href)} onClick={() => setOpen(false)} />
                   ))}
               </div>
+              <div className="px-5 py-2 flex gap-4 text-xs text-muted-foreground">
+                <Link href="/privacy" onClick={() => setOpen(false)} className="hover:underline underline-offset-4">Privacy</Link>
+                <Link href="/terms" onClick={() => setOpen(false)} className="hover:underline underline-offset-4">Terms</Link>
+              </div>
               <div className="p-4 border-t border-border/60 flex items-center justify-between">
                 {isSignedIn ? (
                   <>
