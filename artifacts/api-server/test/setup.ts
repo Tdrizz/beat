@@ -15,6 +15,7 @@ vi.mock("@clerk/express", () => {
       users: {
         getUserList: vi.fn(async () => ({ data: [], totalCount: 0 })),
         deleteUser: vi.fn(async () => ({})),
+        banUser: vi.fn(async () => ({})),
       },
     },
   };

@@ -7,6 +7,7 @@ import { api, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShareToDmButton } from "@/components/ShareToDmButton";
+import { ModerationMenu } from "@/components/moderation/ModerationMenu";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { WeeklyChallenge } from "@/components/WeeklyChallenge";
 import { ArchetypeBadge } from "@/components/ArchetypeBadge";
@@ -73,6 +74,7 @@ function PostCard({ post, onMeanComment }: { post: Post; onMeanComment: (text: s
             <Button size="sm" variant="ghost" className="rounded-full"><MessageCircle className="w-4 h-4" /></Button>
           </Link>
         )}
+        <ModerationMenu targetType="post" targetId={post.id} author={post.author} />
       </div>
       <Link href={`/posts/${post.id}`}>
         <img src={post.imageUrl} alt="" className="w-full aspect-square object-cover bg-muted" />

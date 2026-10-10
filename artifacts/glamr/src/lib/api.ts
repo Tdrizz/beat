@@ -2,6 +2,20 @@
 // the same-origin proxy, so we just need to set Content-Type and parse JSON.
 const BASE = "/api";
 
+/** Thrown for non-2xx responses; keeps the status and parsed body. */
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number, readonly body: unknown) {
+    super(message);
+    this.name = "ApiError";
+  }
+
+  /** The API's machine-readable `code`, when it sent one. */
+  get code(): string | undefined {
+    const b = this.body as { code?: unknown } | null;
+    return b && typeof b === "object" && typeof b.code === "string" ? b.code : undefined;
+  }
+}
+
 async function request<T = unknown>(
   path: string,
   init: RequestInit = {},
@@ -19,7 +33,7 @@ async function request<T = unknown>(
   const body = ct.includes("application/json") ? await res.json() : await res.text();
   if (!res.ok) {
     const msg = typeof body === "object" && body && "error" in body ? (body as { error: string }).error : `Request failed (${res.status})`;
-    throw new Error(msg);
+    throw new ApiError(msg, res.status, body);
   }
   return body as T;
 }
@@ -48,6 +62,8 @@ export interface Profile {
     string
   >> | null;
   createdAt: string;
+  /** Set on GET /profiles/:handle when the viewer has blocked this user. */
+  blockedByMe?: boolean;
 }
 
 export interface Post {

@@ -3,6 +3,7 @@ import { db, notificationsTable, profilesTable } from "@workspace/db";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import { publicProfileOrNull } from "../lib/publicProfile";
+import { hiddenUserIds } from "../lib/blocks";
 
 const router: IRouter = Router();
 
@@ -14,12 +15,14 @@ router.get("/notifications", requireAuth, async (req, res) => {
   const where = before
     ? and(eq(notificationsTable.recipientId, me), sql`${notificationsTable.createdAt} < ${before}`)
     : eq(notificationsTable.recipientId, me);
-  const rows = await db
+  const allRows = await db
     .select()
     .from(notificationsTable)
     .where(where)
     .orderBy(desc(notificationsTable.createdAt))
     .limit(limit);
+  const hidden = await hiddenUserIds(me);
+  const rows = allRows.filter((r) => !r.actorId || !hidden.has(r.actorId));
   if (rows.length === 0) {
     res.json([]);
     return;

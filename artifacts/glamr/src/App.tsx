@@ -53,6 +53,8 @@ import { SplashPositivity } from "@/components/SplashPositivity";
 import { SiteFooter } from "@/components/SiteFooter";
 import Privacy from "@/pages/legal/Privacy";
 import Terms from "@/pages/legal/Terms";
+import BlockedAccounts from "@/pages/BlockedAccounts";
+import AdminReports from "@/pages/AdminReports";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +111,8 @@ function Router() {
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/settings/email"><AuthedRoute><EmailPreferencesSettings /></AuthedRoute></Route>
+      <Route path="/settings/blocked"><AuthedRoute><BlockedAccounts /></AuthedRoute></Route>
+      <Route path="/admin/reports"><AuthedRoute><AdminReports /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
       <Route path="/posts/:id"><AuthedRoute><PostDetail /></AuthedRoute></Route>
       <Route path="/upload"><AuthedRoute><Upload /></AuthedRoute></Route>

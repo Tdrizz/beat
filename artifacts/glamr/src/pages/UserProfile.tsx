@@ -1,11 +1,13 @@
 import { useRoute, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Profile, type Post } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { ARCHETYPES, pickFg, type ArchetypeId } from "@/lib/archetypes";
 import { SocialLinkChips } from "@/components/SocialLinkChips";
 import { MyCombos } from "@/components/MyCombos";
+import { ModerationMenu } from "@/components/moderation/ModerationMenu";
+import { useMe } from "@/hooks/useMe";
 
 export default function UserProfile() {
   const [, params] = useRoute<{ handle: string }>("/u/:handle");
@@ -14,9 +16,11 @@ export default function UserProfile() {
     queryKey: ["profile", handle],
     queryFn: () => api.get<Profile>(`/profiles/${handle}`),
   });
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => api.get<Profile>("/profiles/me").catch(() => null),
+  const { data: me } = useMe();
+  const qc = useQueryClient();
+  const unblock = useMutation({
+    mutationFn: () => api.del(`/blocks/${profile!.userId}`),
+    onSuccess: () => qc.invalidateQueries(),
   });
   const isMe = !!profile && !!me && me.handle === profile.handle;
   const { data: posts } = useQuery({
@@ -50,10 +54,23 @@ export default function UserProfile() {
                 <Link href="/settings/social">
                   <Button size="sm" variant="outline" className="rounded-full">Edit links</Button>
                 </Link>
+              ) : profile.blockedByMe ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={unblock.isPending}
+                  onClick={() => unblock.mutate()}
+                >
+                  Unblock
+                </Button>
               ) : (
-                <Link href={`/messages/${profile.handle}`}>
-                  <Button size="sm" className="rounded-full gap-1.5"><MessageCircle className="w-4 h-4" /> Message</Button>
-                </Link>
+                <div className="flex items-center gap-1">
+                  <Link href={`/messages/${profile.handle}`}>
+                    <Button size="sm" className="rounded-full gap-1.5"><MessageCircle className="w-4 h-4" /> Message</Button>
+                  </Link>
+                  <ModerationMenu targetType="user" targetId={profile.userId} author={profile} />
+                </div>
               )}
             </div>
             {profile.socialLinks && Object.keys(profile.socialLinks).length > 0 && (
@@ -83,6 +100,11 @@ export default function UserProfile() {
                 </div>
               );
             })()}
+            {profile.blockedByMe && (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                You blocked @{profile.handle}. You won't see each other's posts or messages.
+              </p>
+            )}
             {isMe && <MyCombos />}
             <div className="grid grid-cols-3 gap-1">
               {posts?.map((p) => (

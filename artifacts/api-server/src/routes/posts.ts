@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, postsTable, profilesTable, likesTable, commentsTable, followsTable, insertPostSchema, insertCommentSchema, ARCHETYPE_IDS, type ArchetypeId } from "@workspace/db";
-import { and, desc, eq, sql, inArray, lt, or, ilike } from "drizzle-orm";
+import { and, desc, eq, sql, inArray, lt, or, ilike, notInArray } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
 import { notify } from "../lib/notify";
@@ -9,6 +9,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage"
 import { getObjectAclPolicy } from "../lib/objectAcl";
 import { ARCHETYPE_MOOD_MATCHERS, ARCHETYPE_CHALLENGES, postMatchesArchetype } from "../lib/archetypeMatch";
 import { publicProfileOrNull } from "../lib/publicProfile";
+import { hiddenUserIds, isBlockedEitherWay } from "../lib/blocks";
 
 const objectStorage = new ObjectStorageService();
 const MAX_POST_IMAGE_BYTES = 15 * 1024 * 1024;
@@ -83,6 +84,9 @@ router.get("/feed", optionalAuth, async (req, res) => {
   const cursor = rawCursor && !isNaN(rawCursor.getTime()) ? rawCursor : null;
 
   const conds = [];
+  // Hide posts from anyone the viewer blocked or who blocked the viewer.
+  const hidden = await hiddenUserIds(req.userId);
+  if (hidden.size > 0) conds.push(notInArray(postsTable.authorId, [...hidden]));
   if (season) conds.push(eq(postsTable.season, season));
   if (cursor) conds.push(lt(postsTable.createdAt, cursor));
 
@@ -151,8 +155,9 @@ router.get("/feed", optionalAuth, async (req, res) => {
 });
 
 // Quick stats for the LookDetail "X people tried this" widget.
-router.get("/looks/:lookId/remix-stats", async (req, res) => {
+router.get("/looks/:lookId/remix-stats", optionalAuth, async (req, res) => {
   const lookId = p(req.params.lookId);
+  const hidden = await hiddenUserIds(req.userId);
   const [count] = await db
     .select({ c: sql<number>`count(*)::int` })
     .from(postsTable)
@@ -160,10 +165,14 @@ router.get("/looks/:lookId/remix-stats", async (req, res) => {
   const recent = await db
     .select()
     .from(postsTable)
-    .where(eq(postsTable.lookId, lookId))
+    .where(
+      hidden.size > 0
+        ? and(eq(postsTable.lookId, lookId), notInArray(postsTable.authorId, [...hidden]))
+        : eq(postsTable.lookId, lookId),
+    )
     .orderBy(desc(postsTable.createdAt))
     .limit(6);
-  res.json({ count: count?.c ?? 0, recent: await hydratePosts(recent) });
+  res.json({ count: count?.c ?? 0, recent: await hydratePosts(recent, req.userId) });
 });
 
 router.post("/posts", requireAuth, rateLimit({ scope: "post-create", max: 10, windowMs: 60_000 }), async (req, res) => {
@@ -234,7 +243,7 @@ router.get("/archetype/challenge", optionalAuth, async (req, res) => {
 router.get("/posts/:id", optionalAuth, async (req, res) => {
   const id = p(req.params.id);
   const rows = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
-  if (rows.length === 0) {
+  if (rows.length === 0 || (req.userId && (await isBlockedEitherWay(req.userId, rows[0].authorId)))) {
     res.status(404).json({ error: "Not found" });
     return;
   }
@@ -280,6 +289,11 @@ router.delete("/posts/:id", requireAuth, async (req, res) => {
 
 router.post("/posts/:id/like", requireAuth, rateLimit({ scope: "like", max: 60, windowMs: 60_000 }), async (req, res) => {
   const id = p(req.params.id);
+  const [target] = await db.select({ authorId: postsTable.authorId }).from(postsTable).where(eq(postsTable.id, id)).limit(1);
+  if (!target || (await isBlockedEitherWay(req.userId!, target.authorId))) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
   const existing = await db
     .select()
     .from(likesTable)
@@ -322,9 +336,11 @@ router.delete("/posts/:id/like", requireAuth, async (req, res) => {
   res.status(204).end();
 });
 
-router.get("/posts/:id/comments", async (req, res) => {
+router.get("/posts/:id/comments", optionalAuth, async (req, res) => {
   const id = p(req.params.id);
-  const rows = await db.select().from(commentsTable).where(eq(commentsTable.postId, id)).orderBy(desc(commentsTable.createdAt));
+  const hidden = await hiddenUserIds(req.userId);
+  const rows = (await db.select().from(commentsTable).where(eq(commentsTable.postId, id)).orderBy(desc(commentsTable.createdAt)))
+    .filter((c) => !hidden.has(c.authorId));
   if (rows.length === 0) {
     res.json([]);
     return;
@@ -342,7 +358,7 @@ router.post("/posts/:id/comments", requireAuth, rateLimit({ scope: "comment", ma
     return;
   }
   const post = await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1);
-  if (!post[0]) {
+  if (!post[0] || (await isBlockedEitherWay(req.userId!, post[0].authorId))) {
     res.status(404).json({ error: "Post not found" });
     return;
   }
@@ -398,6 +414,10 @@ router.get("/profiles/:handle/posts", optionalAuth, async (req, res) => {
   const profile = await db.select().from(profilesTable).where(eq(profilesTable.handle, handle)).limit(1);
   if (profile.length === 0) {
     res.status(404).json({ error: "Not found" });
+    return;
+  }
+  if (req.userId && (await isBlockedEitherWay(req.userId, profile[0].userId))) {
+    res.json([]);
     return;
   }
   const rows = await db.select().from(postsTable).where(eq(postsTable.authorId, profile[0].userId)).orderBy(desc(postsTable.createdAt));

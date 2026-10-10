@@ -4,6 +4,7 @@ import { eq, and, asc, desc, isNull } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/requireAuth";
 import { p } from "../lib/params";
 import { publicProfile } from "../lib/publicProfile";
+import { hasBlocked } from "../lib/blocks";
 
 const router: IRouter = Router();
 
@@ -267,14 +268,17 @@ router.get("/profiles/me", requireAuth, async (req, res) => {
   res.json(publicProfile(rows[0]));
 });
 
-router.get("/profiles/:handle", optionalAuth, async (_req, res) => {
-  const handle = p(_req.params.handle);
+router.get("/profiles/:handle", optionalAuth, async (req, res) => {
+  const handle = p(req.params.handle);
   const rows = await db.select().from(profilesTable).where(eq(profilesTable.handle, handle)).limit(1);
-  if (rows.length === 0) {
+  // Someone who blocked the viewer looks like they don't exist.
+  if (rows.length === 0 || (req.userId && (await hasBlocked(rows[0].userId, req.userId)))) {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  res.json(publicProfile(rows[0]));
+  // The blocker still sees the profile (so they can unblock) with a flag.
+  const blockedByMe = req.userId ? await hasBlocked(req.userId, rows[0].userId) : false;
+  res.json({ ...publicProfile(rows[0]), blockedByMe });
 });
 
 export default router;
