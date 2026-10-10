@@ -20,8 +20,8 @@ function cronSecretOk(provided: string | undefined): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-// Called by a Replit scheduled deployment. Never run this as an in-process
-// timer because the autoscale API can sleep between requests.
+// Called by an external daily scheduler with the x-cron-secret header. Never
+// run this as an in-process timer: the API may sleep between requests.
 router.post("/storage/uploads/cleanup", async (req: Request, res: Response) => {
   if (!cronSecretOk(req.get("x-cron-secret"))) {
     res.status(401).json({ error: "Unauthorized" });

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { ai } from "@workspace/integrations-gemini-ai";
+import { ai, GEMINI_IMAGE_MODEL } from "@workspace/integrations-gemini-ai";
 import { z } from "zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { rateLimit } from "../middlewares/rateLimit";
@@ -222,7 +222,7 @@ router.post("/ai-tryon", requireAuth, rateLimit({ scope: "ai-tryon", max: 10, wi
     const prompt = buildPrompt(body);
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-image",
+      model: GEMINI_IMAGE_MODEL,
       contents: [
         {
           role: "user",

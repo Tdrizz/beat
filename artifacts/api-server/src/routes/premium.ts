@@ -3,7 +3,8 @@ import { db, profilesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import { rateLimit } from "../middlewares/rateLimit";
-import { getUncachableStripeClient, getStripePublishableKey } from "../lib/stripeClient";
+import { getStripeClient, getStripePublishableKey } from "../lib/stripeClient";
+import { publicAppUrl } from "../lib/publicUrl";
 import { getPremiumStatus } from "../lib/premium";
 
 const router: IRouter = Router();
@@ -18,7 +19,7 @@ const PREMIUM_PRODUCT_NAME = "Glamr Premium";
  * environments doesn't require a redeploy of the frontend. */
 router.get("/premium/config", async (_req, res) => {
   try {
-    const publishableKey = await getStripePublishableKey();
+    const publishableKey = getStripePublishableKey();
     res.json({ publishableKey });
   } catch (err) {
     res.status(503).json({ error: "Stripe not configured" });
@@ -39,7 +40,7 @@ router.post(
   rateLimit({ scope: "premium-checkout", max: 10, windowMs: 60_000 }),
   async (req, res) => {
     try {
-      const stripe = await getUncachableStripeClient();
+      const stripe = getStripeClient();
       const userRows = await db
         .select()
         .from(profilesTable)
@@ -64,11 +65,7 @@ router.post(
           .where(eq(profilesTable.userId, req.userId!));
       }
 
-      // Build success/cancel URLs on the request origin so this works in
-      // both Replit dev preview and the deployed *.replit.app domain.
-      const proto = (req.headers["x-forwarded-proto"] as string)?.split(",")[0] ?? "https";
-      const host = req.headers["x-forwarded-host"] as string ?? req.headers.host ?? "";
-      const origin = `${proto}://${host}`;
+      const origin = publicAppUrl();
 
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
@@ -105,7 +102,7 @@ router.post(
 /* Customer portal — for cancellation / payment-method updates. */
 router.post("/premium/portal", requireAuth, async (req, res) => {
   try {
-    const stripe = await getUncachableStripeClient();
+    const stripe = getStripeClient();
     const rows = await db
       .select({ stripeCustomerId: profilesTable.stripeCustomerId })
       .from(profilesTable)
@@ -116,11 +113,9 @@ router.post("/premium/portal", requireAuth, async (req, res) => {
       res.status(400).json({ error: "No Stripe customer on file. Subscribe first." });
       return;
     }
-    const proto = (req.headers["x-forwarded-proto"] as string)?.split(",")[0] ?? "https";
-    const host = req.headers["x-forwarded-host"] as string ?? req.headers.host ?? "";
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${proto}://${host}/premium`,
+      return_url: `${publicAppUrl()}/premium`,
     });
     res.json({ url: session.url });
   } catch (err) {

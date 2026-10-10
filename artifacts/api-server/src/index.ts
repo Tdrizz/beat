@@ -25,6 +25,11 @@ app.listen(port, async (err) => {
 
   logger.info({ port }, "Server listening");
 
+  // Seeds insert placeholder creator profiles, so they never run in
+  // production unless explicitly requested.
+  if (process.env.NODE_ENV === "production" && process.env.RUN_SEEDS !== "1") {
+    return;
+  }
   try {
     await seedBrandsIfEmpty();
     await seedClassesIfEmpty();

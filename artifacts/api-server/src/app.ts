@@ -4,24 +4,19 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
-import { publishableKeyFromHost } from "@clerk/shared/keys";
-import {
-  CLERK_PROXY_PATH,
-  clerkProxyMiddleware,
-  getClerkProxyHost,
-} from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { stripeWebhookRouter } from "./lib/stripeWebhook";
 
 const app: Express = express();
 
-// We sit behind Replit's reverse proxy. Trust the first proxy hop so
-// req.ip resolves to the real client IP (needed for accurate rate
-// limiting + audit logs). Without this, every request appears to come
-// from 127.0.0.1 and an attacker could exhaust the global limit by
-// flooding a single connection.
-app.set("trust proxy", 1);
+// We sit behind the host's reverse proxy (and, in production, a Vercel
+// rewrite in front of that). Trust exactly that many hops so req.ip
+// resolves to the real client IP (needed for accurate rate limiting +
+// audit logs). Too low and every request shares the proxy's IP; too high
+// and clients can spoof X-Forwarded-For. Verify on staging.
+const trustProxyHops = Number(process.env["TRUST_PROXY_HOPS"] ?? "1");
+app.set("trust proxy", Number.isInteger(trustProxyHops) && trustProxyHops >= 0 ? trustProxyHops : 1);
 
 // Don't advertise the framework — small but free win against fingerprinting.
 app.disable("x-powered-by");
@@ -58,24 +53,20 @@ app.use(
   }),
 );
 
-// Clerk OAuth proxy must be mounted before body parsers — it streams raw bytes.
-app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
-
 /**
- * CORS — lock origin to the same Replit domains in production. In
- * development (or when REPLIT_DOMAINS isn't set) we reflect the
- * request origin to keep the preview-pane proxy working.
+ * CORS — lock origin to ALLOWED_ORIGINS (comma-separated full origins,
+ * e.g. "https://glamr.app,https://www.glamr.app") in production. In
+ * development we reflect the request origin.
  *
  * Why this matters: `origin: true` reflects ANY origin including
  * attacker-controlled domains. With `credentials: true`, that means
  * an attacker page can read authenticated responses from a victim's
  * browser. Allow-listing prevents that class of CSRF.
  */
-const allowedOrigins = (process.env["REPLIT_DOMAINS"] ?? "")
+const allowedOrigins = (process.env["ALLOWED_ORIGINS"] ?? "")
   .split(",")
-  .map((d) => d.trim())
-  .filter(Boolean)
-  .flatMap((d) => [`https://${d}`, `http://${d}`]);
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 
 app.use(
   cors({
@@ -121,14 +112,7 @@ app.use(
   }),
 );
 
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
+app.use(clerkMiddleware());
 
 app.use("/api", router);
 

@@ -6,6 +6,7 @@ import { z } from "zod/v4";
 import { clerkClient } from "@clerk/express";
 import { runWeeklyDigest, type EmailLookup } from "../lib/digest";
 import { sendEmail } from "../lib/email";
+import { publicAppUrl } from "../lib/publicUrl";
 import { rateLimit } from "../middlewares/rateLimit";
 import { requireAuth } from "../middlewares/requireAuth";
 
@@ -39,19 +40,6 @@ router.put("/digest/preferences", requireAuth, async (req, res) => {
   res.json(preference);
 });
 
-// Public origin used to build absolute links in emails + unsubscribe pages.
-// Production exposes the app on REPLIT_DOMAINS; dev uses REPLIT_DEV_DOMAIN.
-function publicBaseUrl(): string {
-  const domain = (process.env.REPLIT_DOMAINS ?? "")
-    .split(",")
-    .map((d) => d.trim())
-    .filter(Boolean)[0];
-  if (domain) return `https://${domain}`;
-  const dev = process.env.REPLIT_DEV_DOMAIN;
-  if (dev) return `https://${dev}`;
-  return "http://localhost";
-}
-
 // Constant-time compare against CRON_SECRET. Denies when unset so the trigger
 // can never be hit before the secret is configured.
 function cronSecretOk(provided: string | undefined): boolean {
@@ -82,9 +70,9 @@ const lookupEmails: EmailLookup = async (userIds) => {
   return map;
 };
 
-// POST /api/digest/run — secret-guarded trigger driven by a Replit scheduled
-// deployment (the API runs on autoscale, which sleeps between requests, so an
-// in-process timer would never fire). Idempotent per user per ISO week.
+// POST /api/digest/run — secret-guarded trigger driven by an external weekly
+// scheduler (the API may scale to zero between requests, so an in-process
+// timer can't be relied on). Idempotent per user per ISO week.
 router.post("/digest/run", async (req, res) => {
   const provided =
     req.get("x-cron-secret") ??
@@ -93,8 +81,8 @@ router.post("/digest/run", async (req, res) => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const base = publicBaseUrl();
   try {
+    const base = publicAppUrl();
     const summary = await runWeeklyDigest({
       send: sendEmail,
       lookupEmails,

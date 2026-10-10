@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { ai } from "@workspace/integrations-gemini-ai";
+import { ai, GEMINI_CHAT_MODEL } from "@workspace/integrations-gemini-ai";
 import {
   db,
   chatThreadsTable,
@@ -251,7 +251,7 @@ router.post(
     let assistantText = "";
     try {
       const stream = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
+        model: GEMINI_CHAT_MODEL,
         contents,
         config: {
           systemInstruction: systemPrompt,
