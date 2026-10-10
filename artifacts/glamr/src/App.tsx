@@ -55,6 +55,7 @@ import Privacy from "@/pages/legal/Privacy";
 import Terms from "@/pages/legal/Terms";
 import BlockedAccounts from "@/pages/BlockedAccounts";
 import AdminReports from "@/pages/AdminReports";
+import AccountSettings from "@/pages/AccountSettings";
 
 const queryClient = new QueryClient();
 
@@ -111,6 +112,7 @@ function Router() {
 
       <Route path="/settings/social"><AuthedRoute><SocialLinksSettings /></AuthedRoute></Route>
       <Route path="/settings/email"><AuthedRoute><EmailPreferencesSettings /></AuthedRoute></Route>
+      <Route path="/settings/account"><AuthedRoute><AccountSettings /></AuthedRoute></Route>
       <Route path="/settings/blocked"><AuthedRoute><BlockedAccounts /></AuthedRoute></Route>
       <Route path="/admin/reports"><AuthedRoute><AdminReports /></AuthedRoute></Route>
       <Route path="/feed"><AuthedRoute><Feed /></AuthedRoute></Route>
