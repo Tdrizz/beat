@@ -24,6 +24,7 @@ import {
   tutorialReviewsTable,
   tutorialStepVideosTable,
   userBlocksTable,
+  userConsentsTable,
   wigTryonsTable,
 } from "@workspace/db";
 import { getStripeClient } from "./stripeClient";
@@ -148,6 +149,7 @@ export async function deleteAccountData(userId: string): Promise<DeletionSummary
     await tx.delete(savedCombosTable).where(eq(savedCombosTable.userId, userId));
     await tx.delete(wigTryonsTable).where(eq(wigTryonsTable.userId, userId));
     await tx.delete(emailPreferencesTable).where(eq(emailPreferencesTable.userId, userId));
+    await tx.delete(userConsentsTable).where(eq(userConsentsTable.userId, userId));
     await tx.delete(digestSendsTable).where(eq(digestSendsTable.userId, userId));
     await tx.delete(userBlocksTable).where(or(eq(userBlocksTable.blockerId, userId), eq(userBlocksTable.blockedId, userId)));
     await tx.delete(objectAclsTable).where(eq(objectAclsTable.ownerId, userId));

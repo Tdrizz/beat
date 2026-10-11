@@ -56,6 +56,7 @@ async function populate(user: string, other: string) {
   await setObjectAclPolicy(dmImage, { owner: other, visibility: "private" });
   await api("POST", `/conversations/${user}/messages`, { user: other, body: { body: "hi", imageUrl: dmImage } });
   await api("POST", `/conversations/${other}/messages`, { user, body: { body: "hey" } });
+  await api("PUT", "/me/consents/face_data", { user, body: { version: "1" } });
   await db.insert(savedCombosTable).values({ userId: user, lookId: "l", wigStyleId: "none" });
   await db.insert(wigTryonsTable).values({ userId: user, wigId: "w", wigName: "Wig", colorId: "c", colorName: "Black", imagePath: await upload(user) });
   await db.insert(chatThreadsTable).values({ userId: user } as never);

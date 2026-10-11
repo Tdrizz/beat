@@ -17,6 +17,7 @@ import wigsRouter from "./wigs";
 import digestRouter from "./digest";
 import moderationRouter from "./moderation";
 import accountRouter from "./account";
+import consentsRouter from "./consents";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use(wigsRouter);
 router.use(digestRouter);
 router.use(moderationRouter);
 router.use(accountRouter);
+router.use(consentsRouter);
 
 export default router;

@@ -51,6 +51,7 @@ import WigDetail from "@/pages/WigDetail";
 import MyWigs from "@/pages/MyWigs";
 import { SplashPositivity } from "@/components/SplashPositivity";
 import { SiteFooter } from "@/components/SiteFooter";
+import { FaceConsentGate } from "@/components/FaceConsentGate";
 import Privacy from "@/pages/legal/Privacy";
 import Terms from "@/pages/legal/Terms";
 import BlockedAccounts from "@/pages/BlockedAccounts";
@@ -71,12 +72,14 @@ function Router() {
       <Route path="/terms" component={Terms} />
 
       <Route path="/" component={Home} />
-      <Route path="/match" component={LookMatch} />
+      <Route path="/match"><FaceConsentGate><LookMatch /></FaceConsentGate></Route>
       <Route path="/looks/:lookId/process" component={LookProcess} />
       <Route path="/looks/:lookId" component={LookDetail} />
       <Route path="/try-on/:lookId">
         <AuthedRoute>
-          <TryOn />
+          <FaceConsentGate>
+            <TryOn />
+          </FaceConsentGate>
         </AuthedRoute>
       </Route>
       <Route path="/skincare" component={Skincare} />

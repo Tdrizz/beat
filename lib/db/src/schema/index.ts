@@ -11,3 +11,4 @@ export * from "./emailPreferences";
 export * from "./objectAcls";
 export * from "./aiUsage";
 export * from "./moderation";
+export * from "./consents";

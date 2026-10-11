@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { api, type Post } from "@/lib/api";
 import { ALL_LOOKS_FLAT, SEASONS, SEASON_LABELS, type Season } from "@/lib/looks";
 import { CameraCapture } from "@/components/CameraCapture";
+import { FaceConsentGate } from "@/components/FaceConsentGate";
 import { Camera, Loader2, ImagePlus, X } from "lucide-react";
 import { KindnessOverlay, useKindnessCheck } from "@/components/KindnessPrompt";
 
@@ -147,10 +148,12 @@ function UploadInner() {
               <p className="text-sm">{mode === "uploading" ? "Uploading photo…" : "Uploading your AI try-on…"}</p>
             </div>
           ) : mode === "camera" ? (
-            <CameraCapture
-              onCapture={(blob) => handleCapture(blob)}
-              onCancel={() => setMode("idle")}
-            />
+            <FaceConsentGate overlay onDecline={() => setMode("idle")}>
+              <CameraCapture
+                onCapture={(blob) => handleCapture(blob)}
+                onCancel={() => setMode("idle")}
+              />
+            </FaceConsentGate>
           ) : imageUrl ? (
             <>
               <img src={imageUrl} alt="" className="w-full h-full object-cover" />
