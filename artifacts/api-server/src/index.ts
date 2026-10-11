@@ -1,3 +1,5 @@
+// Must load before the app so errors during startup are captured.
+import "./lib/sentry";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedBrandsIfEmpty } from "./lib/seedBrands";

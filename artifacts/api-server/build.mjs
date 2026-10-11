@@ -66,6 +66,8 @@ async function buildAll() {
       "@aws-sdk/*",
       "@azure/*",
       "@opentelemetry/*",
+      // Sentry patches modules at runtime and must not be bundled.
+      "@sentry/*",
       "@google-cloud/*",
       "@google/*",
       "googleapis",

@@ -7,6 +7,7 @@ import { clerkMiddleware } from "@clerk/express";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { stripeWebhookRouter } from "./lib/stripeWebhook";
+import { Sentry, sentryEnabled } from "./lib/sentry";
 
 const app: Express = express();
 
@@ -115,6 +116,10 @@ app.use(
 app.use(clerkMiddleware());
 
 app.use("/api", router);
+
+// Report unhandled errors to Sentry (no-op without SENTRY_DSN), then fall
+// through to the JSON handler below.
+if (sentryEnabled) Sentry.setupExpressErrorHandler(app);
 
 // Last-resort error handler: always answer JSON, never leak stack traces.
 // Malformed ids (e.g. "/posts/not-a-uuid") surface from Postgres as
