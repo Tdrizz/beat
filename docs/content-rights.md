@@ -53,9 +53,21 @@ I also removed references to real people and franchises from descriptions and sh
 
 ## Still live: needs replacing before launch (71 look images)
 
-These are the remaining web photos in use as look thumbnails. They're listed in `content/flagged-images.txt`. Two options:
-1. Replace each one with an AI-generated image, using the same pipeline that produced the 134 safe ones (`pnpm --filter @workspace/glamr run gen:prompts` produces the prompts), or with licensed stock.
-2. Pull them all at once with `pnpm --filter @workspace/glamr run images:quarantine`. Those looks then show their palette gradient until replaced. Nothing is deleted.
+These are the remaining web photos in use as look thumbnails. They're listed in `content/flagged-images.txt`.
+
+They also hurt AI try-on: many are black-and-white, collages, product shots or group photos, so they make poor makeup references. Try-on no longer sends them to the model and builds those looks from their written recipe instead (see `docs/tryon.md`).
+
+**Recommended: regenerate them** as studio references, the same style as the other 134 (about 70 Gemini image calls):
+
+```bash
+pnpm --filter @workspace/glamr run images:quarantine    # move the web photos out
+pnpm --filter @workspace/glamr run gen:prompts          # prompts for every look now missing an image
+GEMINI_API_KEY=... pnpm --filter @workspace/glamr run gen:images   # generate 800x800 JPEGs
+```
+
+`gen:images` skips looks that already have an image, retries failures, removes each regenerated look from `content/flagged-images.txt`, and rebuilds the image map. Use `--only id,id` to redo specific looks. Review every new image before committing.
+
+If you'd rather not regenerate yet, run only `images:quarantine`. Those looks then show their palette gradient, and try-on still works from the recipe. Nothing is deleted.
 
 | File | Notes |
 | --- | --- |

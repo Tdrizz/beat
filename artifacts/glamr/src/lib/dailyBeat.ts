@@ -95,6 +95,8 @@ const SEASONAL_POOLS: Record<Season, string[]> = {
 
 // ── Season palette & theme ────────────────────────────────────────────────────
 
+// badgeText is the card's text colour and the "Try It Now" button fill (with
+// white label), so it must be dark enough to read on the gradient.
 export const SEASON_THEME: Record<Season, {
   gradient: string;
   badge: string;
@@ -116,13 +118,13 @@ export const SEASON_THEME: Record<Season, {
   Autumn: {
     gradient: "linear-gradient(135deg, #f8ead0 0%, #e8c088 40%, #c87840 100%)",
     badge: "#c87840",
-    badgeText: "#ffffff",
+    badgeText: "#4a2410",
     emoji: "🍂",
   },
   Winter: {
     gradient: "linear-gradient(135deg, #e8f0f8 0%, #d0e0f0 40%, #b8d0e8 100%)",
     badge: "#8098c0",
-    badgeText: "#ffffff",
+    badgeText: "#1e3050",
     emoji: "❄️",
   },
 };
