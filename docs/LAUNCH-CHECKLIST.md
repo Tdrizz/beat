@@ -51,7 +51,7 @@ Everything is built. What's left is creating the accounts, pasting keys into the
 - [ ] In `vercel.json`, replace `REPLACE_WITH_RAILWAY_API_HOST` with the Railway service's domain. Vercel rewrites can't read env vars.
 - [ ] Pick the Gemini models. Google has announced deprecation of `gemini-2.5-flash` and `gemini-2.5-flash-image`. Set `GEMINI_CHAT_MODEL` and `GEMINI_IMAGE_MODEL` on Railway, then check try-on quality.
 - [ ] Paste the final Privacy Policy and Terms into `artifacts/glamr/src/lib/legalContent.ts` and set `LEGAL_PLACEHOLDER = false`.
-- [ ] Decide on the 71 flagged look images: replace them, or run `pnpm --filter @workspace/glamr run images:quarantine` (`docs/content-rights.md`).
+- [ ] Replace the 71 flagged look images. Regenerate them with `images:quarantine` → `gen:prompts` → `gen:images` (needs `GEMINI_API_KEY`), then review them. This also makes try-on for those looks match their thumbnails (`docs/content-rights.md`).
 - [ ] Rotate `CRON_SECRET` in Replit Secrets for the live app (the old value was public).
 
 ## 4. Merge order

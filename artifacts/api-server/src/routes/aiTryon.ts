@@ -16,7 +16,10 @@ const router: IRouter = Router();
 const TryonBody = z.object({
   imageBase64: z.string().min(64),
   mimeType: z.string().default("image/jpeg"),
-  lookReferenceBase64: z.string().min(64).max(3_000_000),
+  // Optional. The client omits it for looks whose catalogue image is not a
+  // clean single-face reference (web photos, black-and-white, collages, or
+  // no image at all); the prompt then builds the look from the step recipe.
+  lookReferenceBase64: z.string().min(64).max(3_000_000).optional(),
   lookName: z.string().min(1).max(120),
   lookDescription: z.string().max(800).optional(),
   steps: z
@@ -99,8 +102,8 @@ const STEP_LABELS: Record<string, string> = {
   cheeks: "Cheeks",
 };
 
-export function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
-  const lines: string[] = [];
+// Image 2 is a clean single-face studio reference of the look.
+function pushReferenceRoles(lines: string[]) {
   lines.push(
     `You are a professional makeup artist. Edit the first image to apply the exact makeup look shown in the second image to the person in the first image.`,
   );
@@ -110,15 +113,41 @@ export function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   lines.push("- Image 2 is the selected catalogue thumbnail and is the primary visual source for the makeup. Match its actual colors, placement, shapes, blending, finish, and dramatic strength as closely as the user's facial anatomy allows.");
   lines.push("- Transfer the makeup design only. Do not copy the thumbnail person's face, identity, skin tone, pose, background, or hair. Preserve the user's hair unless a separate wig is explicitly selected.");
   lines.push("- The thumbnail person's complexion is never a target shade. Keep the user's own complexion; only apply an explicitly described full-face theatrical paint as a cosmetic layer, while preserving facial identity and skin texture.");
-  lines.push("- The thumbnail may be a close-up, collage, group, product shot, or instructional image. Ignore its layout, text, packaging, and other people; transfer only makeup clearly visible on a face. For areas not shown clearly, follow that area's written step instruction and do not invent details.");
+  lines.push("- Ignore any text, labels, or arrows in the thumbnail; transfer only makeup visible on the face. For areas not shown clearly, follow that area's written step instruction and do not invent details.");
   lines.push("- Treat the thumbnail as more authoritative than text descriptions or shade labels if they differ; use those labels only to clarify details that are hard to see.");
+}
+
+// No usable reference image: the written step recipe is the whole spec.
+function pushRecipeRoles(lines: string[]) {
+  lines.push(
+    `You are a professional makeup artist. Edit the image to apply the makeup look described below to the person in it.`,
+  );
+  lines.push("");
+  lines.push("THE WRITTEN RECIPE IS THE ONLY MAKEUP REFERENCE:");
+  lines.push("- The image is the user's photo and is the only source for identity, face, skin, pose, camera framing, background, and lighting. Preserve the user's hair unless a wig is explicitly selected.");
+  lines.push("- Build the makeup from the step list below. Where an instruction is silent, use the most classic interpretation of the look name. Do not add products the recipe doesn't list.");
+}
+
+export function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
+  const hasReference = Boolean(parsed.lookReferenceBase64);
+  const lines: string[] = [];
+  if (hasReference) {
+    pushReferenceRoles(lines);
+  } else {
+    pushRecipeRoles(lines);
+  }
   lines.push(`LOOK NAME: "${parsed.lookName}".`);
   if (parsed.lookDescription) {
     lines.push(`Supporting look description: ${parsed.lookDescription}`);
   }
   lines.push("");
-  lines.push("MATCH THE MAKEUP DESIGN, in order, with photoreal cosmetic layers:");
-  lines.push("Use the thumbnail to decide which products are actually present. Increase pigment strength and definition only for visible makeup, while respecting any explicit no-product, bare, or minimal instruction; never add a product just because a step exists.");
+  if (hasReference) {
+    lines.push("MATCH THE MAKEUP DESIGN, in order, with photoreal cosmetic layers:");
+    lines.push("Use the thumbnail to decide which products are actually present. Increase pigment strength and definition only for visible makeup, while respecting any explicit no-product, bare, or minimal instruction; never add a product just because a step exists.");
+  } else {
+    lines.push("APPLY THE RECIPE, in order, with photoreal cosmetic layers:");
+    lines.push("Each shade name and hex value sets that product's colour; each instruction sets its placement, shape, and intensity. Respect any explicit no-product, bare, or minimal instruction.");
+  }
   for (const s of parsed.steps) {
     const label = STEP_LABELS[s.step] ?? s.step;
     if (s.step === "base") {
@@ -156,7 +185,11 @@ export function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
     const guidance = ARCHETYPE_GUIDANCE[parsed.archetype];
     if (guidance) {
       lines.push(guidance);
-      lines.push("The catalogue thumbnail takes priority over archetype preferences; use archetype guidance only when it does not change the referenced makeup.");
+      lines.push(
+        hasReference
+          ? "The catalogue thumbnail takes priority over archetype preferences; use archetype guidance only when it does not change the referenced makeup."
+          : "The recipe's shades and placement take priority over archetype preferences; use archetype guidance only for finish.",
+      );
       lines.push("");
     }
   }
@@ -196,9 +229,14 @@ export function buildPrompt(parsed: z.infer<typeof TryonBody>): string {
   );
   lines.push("- Do NOT smooth or airbrush the skin beyond what real makeup would do — pores and micro-texture must remain visible.");
   lines.push("- Apply makeup precisely to the correct facial regions: eyeshadow only on lids, lipstick only on lips, blush only on cheek apples, etc.");
-  lines.push("- Do not invent, omit, or substitute makeup colors, shapes, patterns, or products that are visible in the catalogue thumbnail.");
-  lines.push("- Make the makeup one clear step bolder than the thumbnail: richer saturation, stronger pigment payoff, and more defined contrast, without changing its colors, design, or placement.");
-  lines.push("- Keep the bolder makeup photorealistic and visible in the final image; do not dilute it into a sheer or barely-there finish.");
+  if (hasReference) {
+    lines.push("- Do not invent, omit, or substitute makeup colors, shapes, patterns, or products that are visible in the catalogue thumbnail.");
+    lines.push("- Make the makeup one clear step bolder than the thumbnail: richer saturation, stronger pigment payoff, and more defined contrast, without changing its colors, design, or placement.");
+  } else {
+    lines.push("- Do not invent, omit, or substitute products, colours, or shapes beyond the recipe.");
+    lines.push("- Render every listed shade at full, true-to-hex colour payoff, with defined edges where the instruction calls for them.");
+  }
+  lines.push("- Keep the makeup photorealistic and visible in the final image; do not dilute it into a sheer or barely-there finish.");
   lines.push("- Render makeup as real cosmetic layers that follow facial contours, with natural blending and crisp edges only where the product calls for them.");
   lines.push("- Match the photo's light direction, exposure, and white balance; preserve real highlights and shadows, with no flat painted-on color or mask-like edges.");
   lines.push("- Output a single photorealistic image of the same person wearing the look. No text, no watermark, no border.");
@@ -236,12 +274,9 @@ router.post("/ai-tryon", requireAuth, rateLimit({ scope: "ai-tryon", max: 10, wi
                 data: body.imageBase64,
               },
             },
-            {
-              inlineData: {
-                mimeType: "image/jpeg",
-                data: body.lookReferenceBase64,
-              },
-            },
+            ...(body.lookReferenceBase64
+              ? [{ inlineData: { mimeType: "image/jpeg", data: body.lookReferenceBase64 } }]
+              : []),
           ],
         },
       ],

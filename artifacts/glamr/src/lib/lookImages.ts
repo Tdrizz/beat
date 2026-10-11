@@ -3,9 +3,9 @@
 // regen:images`). It only ever lists files that actually exist on disk, so a
 // look without an image falls through to the gradient placeholder below rather
 // than rendering a broken <img>. Do not hand-edit the map.
-import { lookImageMap } from "./lookImageMap.generated";
+import { lookImageMap, webPhotoLookIds } from "./lookImageMap.generated";
 
-export { lookImageMap };
+export { lookImageMap, webPhotoLookIds };
 
 const svgCache = new Map<string, string>();
 

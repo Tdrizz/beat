@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { Look } from "../lib/looks";
 import type { ArchetypeId } from "../lib/archetypes";
 import type { WigStyle, WigColor } from "../lib/wigs";
-import { getLookImage, lookImageMap } from "../lib/lookImages";
+import { getLookImage, lookImageMap, webPhotoLookIds } from "../lib/lookImages";
 
 interface RunArgs {
   video: HTMLVideoElement | null;
@@ -53,10 +53,13 @@ function canvasToBase64(canvas: HTMLCanvasElement, quality = 0.86): Promise<stri
   });
 }
 
-async function captureLookReferenceBase64(lookId: string): Promise<string> {
-  if (!lookImageMap[lookId]) {
-    throw new Error("This look's reference thumbnail is unavailable. Choose another look and try again.");
-  }
+/**
+ * The look's catalogue image, cropped for use as the AI's makeup reference.
+ * Returns undefined when the look has no clean studio reference (no image, or
+ * a flagged web photo); the server then builds the look from its step recipe.
+ */
+async function captureLookReferenceBase64(lookId: string): Promise<string | undefined> {
+  if (!lookImageMap[lookId] || webPhotoLookIds.has(lookId)) return undefined;
 
   const response = await fetch(getLookImage(lookId));
   if (!response.ok) {
