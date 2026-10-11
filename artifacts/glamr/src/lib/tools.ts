@@ -432,7 +432,7 @@ export const TOOLS: Tool[] = [
     brand: "Nurse Jamie",
     name: "Uplift Massaging Beauty Roller",
     category: "skin-tools",
-    use: "24-stone roller for tone + lift; loved by Kim K.",
+    use: "24-stone roller for tone + lift; a red-carpet favourite.",
     priceCents: 6900,
     currency: "USD",
     url: "https://www.nursejamie.com/",

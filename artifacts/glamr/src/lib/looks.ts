@@ -86,7 +86,7 @@ export const byEraLooks: Look[] = [
     difficulty: "Advanced",
     era: "1950s",
     timeEstimate: "40 min",
-    description: "Marilyn-era perfection: immaculate skin, dramatic cat-eye, nude lips, and sculpted bone structure.",
+    description: "Golden-age screen-siren perfection: immaculate skin, dramatic cat-eye, nude lips, and sculpted bone structure.",
     steps: {
       base: { id: "base", name: "Base", instruction: "Create a flawless, matte base.", color: "#f5e0d0", colorName: "Flawless Matte" },
       eyes: { id: "eyes", name: "Eyes", instruction: "Champagne lid with an extended dramatic cat-eye liner.", color: "#1a1a1a", colorName: "Extended Cat-Eye" },
@@ -103,7 +103,7 @@ export const byEraLooks: Look[] = [
     difficulty: "Advanced",
     era: "1960s",
     timeEstimate: "40 min",
-    description: "Twiggy's doll-lash revolution: graphic liner, white shadow, sky-high lashes, and pale nude lips for maximum eye drama.",
+    description: "The mod doll-lash revolution: graphic liner, white shadow, sky-high lashes, and pale nude lips for maximum eye drama.",
     steps: {
       base: { id: "base", name: "Base", instruction: "Apply a pale, porcelain matte base.", color: "#faf0e8", colorName: "Porcelain" },
       eyes: { id: "eyes", name: "Eyes", instruction: "White lid, graphic black crease liner, and painted lower lashes.", color: "#000000", colorName: "Graphic Black" },
@@ -188,7 +188,7 @@ export const byEraLooks: Look[] = [
     difficulty: "Advanced",
     era: "2010s",
     timeEstimate: "40 min",
-    description: "Kim K's makeup artist secret — strategic shadows carve cheekbones from thin air, strobing illuminates, and brows are painted architecture.",
+    description: "The 2010s contour formula — strategic shadows carve cheekbones from thin air, strobing illuminates, and brows are painted architecture.",
     steps: {
       base: { id: "base", name: "Base", instruction: "Full glam base with aggressive highlight and contour.", color: "#e0b898", colorName: "Full Glam" },
       eyes: { id: "eyes", name: "Eyes", instruction: "Warm brown blend with dramatic liner.", color: "#5a3a20", colorName: "Warm Brown Blend" },
@@ -323,12 +323,12 @@ export const eyeLooks: Look[] = [
   },
   {
     id: "eye-euphoria-glitter",
-    name: "Euphoria Glitter",
+    name: "Glitter Graphic Eye",
     mood: "Celestial",
     difficulty: "Intermediate",
     era: "Eye Style",
     timeEstimate: "20 min",
-    description: "Inspired by HBO's Euphoria — loose glitter, rhinestone accents, and color used like paint across the orbital bone.",
+    description: "Inspired by Gen-Z editorial glitter looks — loose glitter, rhinestone accents, and color used like paint across the orbital bone.",
     steps: {
       base: { id: "base", name: "Base", instruction: "Apply a tacky glitter glue to the lid.", color: "#f8f0e8", colorName: "Glitter Base" },
       eyes: { id: "eyes", name: "Eyes", instruction: "Press chunky holographic glitter onto the lid and lower lash line. Place rhinestones at the inner corner.", color: "#8060e0", colorName: "Holographic" },
@@ -608,13 +608,13 @@ export const trendLooks: Look[] = [
     difficulty: "Advanced",
     era: "Trending",
     timeEstimate: "60 min",
-    description: "Heavy coverage, baked powder, intensely blended contour, lash-on-lash drama. The signature look of the Kardashian era — designed to look perfect on camera.",
+    description: "Heavy coverage, baked powder, intensely blended contour, lash-on-lash drama. The signature reality-TV glam of the 2010s — designed to look perfect on camera.",
     steps: {
       base: { id: "base", name: "Base", instruction: "Apply full-coverage foundation, bake under-eyes and T-zone with loose setting powder, then contour sharply with a powder three shades darker.", color: "#d4a878", colorName: "Full Cover" },
       eyes: { id: "eyes", name: "Eyes", instruction: "Cut crease with a dark brown or taupe shadow, pack shimmer on the lid, apply individual lash clusters and a strip lash on top.", color: "#4a2808", colorName: "Deep Brown" },
       brows: { id: "brows", name: "Brows", instruction: "Precisely filled and defined brows with a pomade, slightly overdrawn and mapped with concealer underneath.", color: "#3a1808", colorName: "Strong Brow" },
       lips: { id: "lips", name: "Lips", instruction: "Line outside the natural lip line with a matching liner, fill with a nude lipstick, and add clear gloss to the center.", color: "#c09878", colorName: "Nude Gloss" },
-      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Heavy contour under the cheekbones, dramatic highlight on top — the classic Kardashian contour structure.", color: "#d09060", colorName: "Heavy Contour" },
+      cheeks: { id: "cheeks", name: "Cheeks", instruction: "Heavy contour under the cheekbones, dramatic highlight on top — the classic 2010s contour structure.", color: "#d09060", colorName: "Heavy Contour" },
     },
     palette: ["#d4a878", "#4a2808", "#c09878"],
   },
@@ -1174,7 +1174,7 @@ export const moreLipLooks: Look[] = [
   },
   {
     id: "lip-bratz",
-    name: "Bratz Doll Lip",
+    name: "Fashion Doll Lip",
     mood: "Y2K",
     difficulty: "Intermediate",
     era: "Lip Style",
@@ -1182,7 +1182,7 @@ export const moreLipLooks: Look[] = [
     description: "The fashion doll look — nude lip liner, dramatically overlined into an exaggerated cupid's bow, filled with a frosty light gloss.",
     steps: {
       base: { id: "base", name: "Base", instruction: "Apply concealer over and past the lip edge to fully erase the natural line.", color: "#e8d8c8", colorName: "Erase Border" },
-      eyes: { id: "eyes", name: "Eyes", instruction: "Heavy lashes and bold eye makeup — Bratz doll energy.", color: "#1a1a1a", colorName: "Heavy Lash" },
+      eyes: { id: "eyes", name: "Eyes", instruction: "Heavy lashes and bold eye makeup — fashion-doll energy.", color: "#1a1a1a", colorName: "Heavy Lash" },
       brows: { id: "brows", name: "Brows", instruction: "Thin, highly arched — very Y2K.", color: "#3a2808", colorName: "Thin Arch" },
       lips: { id: "lips", name: "Lips", instruction: "Use a light nude-pink lip liner to draw a dramatically overlined cupid's bow and fill the lip much larger than natural. Fill with a frosty, light pink gloss.", color: "#e8b8c8", colorName: "Frosty Nude" },
       cheeks: { id: "cheeks", name: "Cheeks", instruction: "Barely-there blush — let the lip be the focus.", color: "#e8d0c8", colorName: "Bare Blush" },
@@ -1235,7 +1235,7 @@ export const moreLipLooks: Look[] = [
       base: { id: "base", name: "Base", instruction: "Lightly prep lips.", color: "#f0e8e0", colorName: "Minimal" },
       eyes: { id: "eyes", name: "Eyes", instruction: "Minimal eye — mascara only for classic contrast.", color: "#1a1a1a", colorName: "Mascara" },
       brows: { id: "brows", name: "Brows", instruction: "Natural, groomed.", color: "#4a3020", colorName: "Natural" },
-      lips: { id: "lips", name: "Lips", instruction: "Apply a rich cherry-red lip — somewhere between red and dark berry, with a glossy finish. The Hailey Bieber signature shade.", color: "#9a1828", colorName: "Cherry Red" },
+      lips: { id: "lips", name: "Lips", instruction: "Apply a rich cherry-red lip — somewhere between red and dark berry, with a glossy finish.", color: "#9a1828", colorName: "Cherry Red" },
       cheeks: { id: "cheeks", name: "Cheeks", instruction: "A matching cherry-tinted blush.", color: "#c04060", colorName: "Cherry Blush" },
     },
     palette: ["#9a1828", "#c04060", "#f0e8e0"],
@@ -1773,10 +1773,6 @@ export const seasonByLookId: Record<string, Season> = {
   "1990s-grunge": "fall",
   "2000s-y2k": "summer",
   "2010s-instagram": "allyear",
-  "rihanna-fenty": "summer",
-  "zendaya-met": "fall",
-  "hailey-bieber": "spring",
-  "bella-hadid": "winter",
 };
 
 export function getLookSeason(look: Look): Season {

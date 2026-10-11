@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "regen:images": "tsx scripts/regen-look-images.ts",
     "validate:looks": "tsx scripts/validate-looks.ts",
-    "gen:prompts": "tsx scripts/gen-look-prompts.ts"
+    "gen:prompts": "tsx scripts/gen-look-prompts.ts",
+    "images:quarantine": "tsx scripts/quarantine-images.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -10,44 +10,42 @@ export interface ScoredLook extends Look {
 
 const SKIN_TONE_IDS: Record<SkinToneCategory, string[]> = {
   "Fair": [
-    "trend-glass-skin", "trend-ballet-core", "trend-no-makeup", "trend-y2k",
-    "celeb-audrey-hepburn", "eye-fairy", "lip-whisper-pink", "trend-grunge",
-    "era-1960s-mod", "era-1920s-flapper", "lip-french-blurred",
+    "trend-glass-skin", "trend-balletcore", "trend-no-makeup", "trend-y2k", "eye-fairy", "lip-whisper-pink", "trend-grunge",
+    "1960s-mod", "1920s-flapper", "lip-french-blurred",
   ],
   "Light": [
-    "trend-soft-glam", "trend-cottagecore", "trend-bridal", "trend-clean-girl",
-    "celeb-audrey-hepburn", "era-1940s-pin-up", "eye-tightline", "lip-popsicle",
-    "trend-old-money", "era-1950s-hollywood", "lip-soap-brow-nude",
+    "trend-soft-glam", "trend-cottagecore", "trend-bridal", "trend-clean-girl", "1940s-pinup", "eye-tightline", "lip-popsicle",
+    "trend-old-money", "1950s-hollywood", "lip-soap-brow-nude",
   ],
   "Medium Light": [
-    "trend-soft-glam", "trend-glass-skin", "celeb-marilyn-monroe", "era-1950s-hollywood",
+    "trend-soft-glam", "trend-glass-skin", "1950s-hollywood",
     "trend-bridal", "eye-chrome", "lip-strawberry", "trend-festival",
     "eye-doe", "trend-indie-softgirl", "lip-orchid",
   ],
   "Medium": [
-    "trend-soft-glam", "trend-siren", "celeb-sophia-loren", "era-1970s-natural",
+    "trend-soft-glam", "trend-siren", "1970s-disco",
     "trend-dark-academia", "eye-foxy", "lip-cherry-bomb", "trend-old-money",
     "eye-arabic-kohl", "lip-warm-brown", "trend-office",
   ],
   "Tan": [
-    "trend-hard-glam", "trend-festival", "trend-mob-wife", "era-1990s-supermodel",
+    "trend-hard-glam", "trend-festival", "trend-mob-wife", "1990s-grunge",
     "eye-butterfly", "lip-warm-brown", "trend-night-out", "eye-editorial-color",
-    "lip-cherry-bomb", "celeb-naomi-campbell", "trend-avant-garde",
+    "lip-cherry-bomb", "trend-avant-garde",
   ],
   "Deep": [
-    "trend-night-out", "trend-siren", "trend-goth", "celeb-naomi-campbell",
+    "trend-night-out", "trend-siren", "trend-goth",
     "lip-cherry-bomb", "eye-arabic-kohl", "trend-hard-glam", "eye-editorial-color",
-    "lip-orchid", "trend-avant-garde", "era-1970s-natural",
+    "lip-orchid", "trend-avant-garde", "1970s-disco",
   ],
 };
 
 const EYE_SHAPE_IDS: Record<EyeShapeType, string[]> = {
   "Almond": [
-    "eye-cat-eye", "eye-foxy", "trend-soft-glam", "trend-siren", "eye-chrome",
-    "eye-arabic-kohl", "trend-old-money", "era-1960s-mod", "lip-cherry-bomb",
+    "eye-doublecat", "eye-foxy", "trend-soft-glam", "trend-siren", "eye-chrome",
+    "eye-arabic-kohl", "trend-old-money", "1960s-mod", "lip-cherry-bomb",
   ],
   "Round": [
-    "eye-doe", "eye-editorial-color", "trend-ballet-core", "trend-y2k",
+    "eye-doe", "eye-editorial-color", "trend-balletcore", "trend-y2k",
     "trend-soft-glam", "eye-tightline", "trend-indie-softgirl", "lip-popsicle",
   ],
   "Hooded": [
@@ -63,7 +61,7 @@ const EYE_SHAPE_IDS: Record<EyeShapeType, string[]> = {
     "trend-goth", "eye-editorial-color", "lip-orchid", "trend-festival",
   ],
   "Downturned": [
-    "eye-cat-eye", "eye-foxy", "trend-festival", "eye-chrome",
+    "eye-doublecat", "eye-foxy", "trend-festival", "eye-chrome",
     "trend-soft-glam", "eye-doe", "trend-bridal", "lip-strawberry",
   ],
 };
@@ -72,11 +70,11 @@ const FACE_SHAPE_IDS: Record<FaceShapeType, string[]> = {
   "Oval": [], // Oval suits everything — handled with flat bonus
   "Round": [
     "trend-hard-glam", "trend-night-out", "trend-mob-wife", "eye-foxy",
-    "trend-siren", "trend-dark-academia", "lip-french-blurred", "eye-cat-eye",
+    "trend-siren", "trend-dark-academia", "lip-french-blurred", "eye-doublecat",
   ],
   "Square": [
     "trend-soft-glam", "trend-bridal", "trend-cottagecore", "lip-whisper-pink",
-    "trend-ballet-core", "eye-doe", "trend-indie-softgirl", "lip-popsicle",
+    "trend-balletcore", "eye-doe", "trend-indie-softgirl", "lip-popsicle",
   ],
   "Heart": [
     "lip-cherry-bomb", "lip-french-blurred", "lip-orchid", "trend-old-money",
@@ -166,10 +164,10 @@ export function recommendLooks(analysis: FaceAnalysis, allLooks: Look[]): Scored
 
     // Add undertone bonus
     if (skinTone.undertone === "Warm") {
-      const warmIds = new Set(["trend-mob-wife", "trend-dark-academia", "era-1970s-natural", "lip-warm-brown", "trend-soft-glam"]);
+      const warmIds = new Set(["trend-mob-wife", "trend-dark-academia", "1970s-disco", "lip-warm-brown", "trend-soft-glam"]);
       if (warmIds.has(look.id)) { score += 10; }
     } else if (skinTone.undertone === "Cool") {
-      const coolIds = new Set(["trend-goth", "trend-ballet-core", "trend-y2k", "lip-orchid", "eye-fairy"]);
+      const coolIds = new Set(["trend-goth", "trend-balletcore", "trend-y2k", "lip-orchid", "eye-fairy"]);
       if (coolIds.has(look.id)) { score += 10; }
     }
 

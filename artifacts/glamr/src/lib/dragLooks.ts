@@ -144,7 +144,7 @@ const seeds: DragSeed[] = [
     mood: "Iconic",
     difficulty: "Intermediate",
     time: "50 min",
-    blurb: "Channeling Golden Age starlets — Marilyn curves, Jean Harlow brows, Joan Crawford lips. Classic glamour with a drag twist.",
+    blurb: "Channeling Golden Age screen glamour — sculpted curves, pencil-thin arched brows, bold defined lips. Classic glamour with a drag twist.",
     base: ["Porcelain-perfect matte base with classic Hollywood contour.", "#F5E0D0", "Porcelain Perfect"],
     eyes: ["Exaggerated cat-eye wing over a neutral champagne lid. Individual lashes for a classic look.", "#1A1A1A", "Hollywood Wing"],
     brows: ["Thin, pencil-drawn 1930s-style arched brows.", "#3A2820", "Pencil Thin Arch"],

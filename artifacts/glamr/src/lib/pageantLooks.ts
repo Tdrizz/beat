@@ -50,7 +50,7 @@ const seeds: PageantSeed[] = [
   },
   {
     id: "miss-universe",
-    name: "Miss Universe Glam",
+    name: "Universal Crown Glam",
     mood: "Commanding",
     difficulty: "Advanced",
     time: "55 min",
