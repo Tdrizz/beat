@@ -6,6 +6,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAuth } from "../middlewares/requireAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import { getObjectAclPolicy } from "../lib/objectAcl";
 
 const router: IRouter = Router();
 const objectStorage = new ObjectStorageService();
@@ -104,10 +105,20 @@ router.delete("/wig-tryons/:id", requireAuth, async (req, res) => {
     const deleted = await db
       .delete(wigTryonsTable)
       .where(and(eq(wigTryonsTable.id, id.data), eq(wigTryonsTable.userId, req.userId!)))
-      .returning({ id: wigTryonsTable.id });
+      .returning({ id: wigTryonsTable.id, imagePath: wigTryonsTable.imagePath });
     if (deleted.length === 0) {
       res.status(404).json({ error: "Not found" });
       return;
+    }
+    // The render is a photo of the user's face: remove the file too, not
+    // just the row. Only if they own it (shared copies have their own path).
+    const imagePath = deleted[0].imagePath;
+    if ((await getObjectAclPolicy(imagePath))?.owner === req.userId) {
+      try {
+        await (await objectStorage.getObjectEntityFile(imagePath)).delete();
+      } catch (e) {
+        if (!(e instanceof ObjectNotFoundError)) req.log.warn({ err: e }, "Failed to delete wig render file");
+      }
     }
     res.status(204).end();
   } catch (error) {

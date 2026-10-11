@@ -11,6 +11,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { usePremium } from "@/hooks/usePremium";
+import { useFaceConsent } from "@/hooks/useFaceConsent";
 
 const LINKS = [
   { href: "/settings/social", label: "Linked accounts", icon: Link2 },
@@ -23,6 +24,7 @@ const LINKS = [
 export default function AccountSettings() {
   const { signOut } = useClerk();
   const premium = usePremium();
+  const faceConsent = useFaceConsent();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const remove = useMutation({
@@ -57,6 +59,24 @@ export default function AccountSettings() {
             </li>
           ))}
         </ul>
+
+        <section className="rounded-2xl border border-border bg-card p-4 space-y-2">
+          <h2 className="text-sm font-semibold">Camera & face data</h2>
+          {faceConsent.granted ? (
+            <>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                You agreed to camera and face-photo use for try-on and Look Match
+                {faceConsent.grantedAt ? ` on ${new Date(faceConsent.grantedAt).toLocaleDateString()}` : ""}.
+                Withdrawing turns those features off until you agree again.
+              </p>
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => faceConsent.withdraw()}>
+                Withdraw consent
+              </Button>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">Not given. We'll ask before the camera is used.</p>
+          )}
+        </section>
 
         <section className="rounded-2xl border border-destructive/30 bg-card p-4 space-y-3">
           <h2 className="text-sm font-semibold text-destructive">Delete account</h2>

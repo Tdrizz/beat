@@ -350,8 +350,10 @@ export function useFaceAnalysis() {
 
     async function init() {
       try {
+        // Pinned to the installed package version: "@latest" would run
+        // whatever was published most recently, with camera access.
         const filesetResolver = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm"
         );
         if (!active) return;
         const landmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
