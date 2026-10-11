@@ -101,7 +101,7 @@ const RAW: Seed[] = [
     cheeks: ["Cream blush + cream contour + highlight placed UNDER the foundation.", "#a06848", "Hidden Sculpt"],
     palette: ["#dcb098", "#a06848", "#c89898"], tags: ["underpainting", "tiktok", "advanced", "sculpted", "soft glam"] },
   { id: "donut-glaze", name: "Donut Glaze", mood: "Glassy", difficulty: "Beginner", time: "10 min",
-    blurb: "Glaze-like glossy lid, lip, and cheek over a dewy base — Hailey Bieber's signature.",
+    blurb: "Glaze-like glossy lid, lip, and cheek over a dewy base — the glazed-donut finish.",
     base: ["Skin tint + drops of liquid highlighter mixed in for glaze.", "#dcb098", "Glaze"],
     eyes: ["Clear lip gloss patted onto the lid.", "#ffffff", "Clear Glaze"],
     brows: ["Brushed up, soap brows.", "#3a2010", "Soap Brow"],
