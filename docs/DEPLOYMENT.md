@@ -87,6 +87,20 @@ Use the owner's own Clerk application. For production, add the custom domain in 
 
 Add repository secrets `APP_URL` (for example `https://glamr.app`) and `CRON_SECRET`. GitHub only runs scheduled workflows from the default branch, so this starts after cutover. To trigger either job by hand, use **Actions → Scheduled jobs → Run workflow**.
 
+## Error monitoring (Sentry)
+
+Create two Sentry projects, Node for the API and React for the web app, and set:
+- **Railway:** `SENTRY_DSN` and `SENTRY_ENVIRONMENT` (`production` or `staging`). The release defaults to `RAILWAY_GIT_COMMIT_SHA`.
+- **Vercel:** `VITE_SENTRY_DSN` and `VITE_SENTRY_ENVIRONMENT`. These are build-time variables.
+
+With no DSN set, both SDKs do nothing.
+
+What gets reported:
+- **API:** unhandled errors, plus every error-level log entry that carries an Error. Request bodies, cookies, `Authorization`, `x-cron-secret` and `stripe-signature` are stripped before sending, because bodies can contain selfies and DMs.
+- **Web:** render crashes (caught by `AppErrorBoundary`, which shows a recovery screen) and uncaught errors. Users are tagged by id only, never by email.
+
+Performance tracing is off by default. Set `SENTRY_TRACES_SAMPLE_RATE` to sample it. Uploading source maps for readable frontend stack traces is optional; it needs `@sentry/vite-plugin` and a `SENTRY_AUTH_TOKEN`.
+
 ## Rate limiting
 
 Rate limits are in memory, per instance (`express-rate-limit` in `app.ts`, plus `middlewares/rateLimit.ts`). That's correct for a single Railway instance. Before scaling to more than one instance, give those limiters a shared store (for example `rate-limit-redis` with Upstash). Without one, each instance enforces its own separate limit.
