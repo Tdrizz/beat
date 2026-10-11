@@ -5,10 +5,16 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "migrate:import-acls": "tsx ./src/migration/import-acls.ts",
+    "migrate:import-clerk-users": "tsx ./src/migration/import-clerk-users.ts",
+    "migrate:remap-user-ids": "tsx ./src/migration/remap-user-ids.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "tsx": "catalog:"
+  },
+  "dependencies": {
+    "@workspace/db": "workspace:*"
   }
 }
