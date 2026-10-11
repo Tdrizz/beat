@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,58 +8,65 @@ import { MobileTabBar } from "@/components/MobileTabBar";
 import { TopNav } from "@/components/TopNav";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
-import LookDetail from "@/pages/LookDetail";
-import LookProcess from "@/pages/LookProcess";
-import TryOn from "@/pages/TryOn";
-import LookMatch from "@/pages/LookMatch";
-import Skincare from "@/pages/Skincare";
-import SkinDiary from "@/pages/SkinDiary";
-import SpecialProducts from "@/pages/SpecialProducts";
-import SignIn from "@/pages/SignIn";
-import SignUp from "@/pages/SignUp";
-import ProfileSetup from "@/pages/ProfileSetup";
-import Feed from "@/pages/Feed";
-import Upload from "@/pages/Upload";
-import Messages from "@/pages/Messages";
-import MessageThread from "@/pages/MessageThread";
-import Brands from "@/pages/Brands";
-import UserProfile from "@/pages/UserProfile";
-import AffiliateStats from "@/pages/AffiliateStats";
-import Archetype from "@/pages/Archetype";
-import AskIola from "@/pages/AskIola";
-import Tools from "@/pages/Tools";
-import Nutrition from "@/pages/Nutrition";
-import SocialLinksSettings from "@/pages/SocialLinksSettings";
-import EmailPreferencesSettings from "@/pages/EmailPreferencesSettings";
-import Friends from "@/pages/Friends";
-import Juicing from "@/pages/Juicing";
-import SlayBible from "@/pages/SlayBible";
-import Teapot from "@/pages/Teapot";
-import EstheticianHub from "@/pages/EstheticianHub";
-import PeriodTracker from "@/pages/PeriodTracker";
-import PostDetail from "@/pages/PostDetail";
-import Tutorials from "@/pages/Tutorials";
-import TutorialDetail from "@/pages/TutorialDetail";
-import TutorialSubmit from "@/pages/TutorialSubmit";
-import MySubmittedTutorials from "@/pages/MySubmittedTutorials";
-import TutorialModeration from "@/pages/TutorialModeration";
-import Classes from "@/pages/Classes";
-import ClassDetail from "@/pages/ClassDetail";
-import HostClass from "@/pages/HostClass";
-import Premium from "@/pages/Premium";
-import Wigs from "@/pages/Wigs";
-import WigDetail from "@/pages/WigDetail";
-import MyWigs from "@/pages/MyWigs";
 import { SplashPositivity } from "@/components/SplashPositivity";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FaceConsentGate } from "@/components/FaceConsentGate";
-import Privacy from "@/pages/legal/Privacy";
-import Terms from "@/pages/legal/Terms";
-import BlockedAccounts from "@/pages/BlockedAccounts";
-import AdminReports from "@/pages/AdminReports";
-import AccountSettings from "@/pages/AccountSettings";
+
+// Route pages load on demand so the first paint only downloads the shell
+// and the Home page. Home stays eager because it is the landing page.
+const LookDetail = lazy(() => import("@/pages/LookDetail"));
+const LookProcess = lazy(() => import("@/pages/LookProcess"));
+const TryOn = lazy(() => import("@/pages/TryOn"));
+const LookMatch = lazy(() => import("@/pages/LookMatch"));
+const Skincare = lazy(() => import("@/pages/Skincare"));
+const SkinDiary = lazy(() => import("@/pages/SkinDiary"));
+const SpecialProducts = lazy(() => import("@/pages/SpecialProducts"));
+const SignIn = lazy(() => import("@/pages/SignIn"));
+const SignUp = lazy(() => import("@/pages/SignUp"));
+const ProfileSetup = lazy(() => import("@/pages/ProfileSetup"));
+const Feed = lazy(() => import("@/pages/Feed"));
+const Upload = lazy(() => import("@/pages/Upload"));
+const Messages = lazy(() => import("@/pages/Messages"));
+const MessageThread = lazy(() => import("@/pages/MessageThread"));
+const Brands = lazy(() => import("@/pages/Brands"));
+const UserProfile = lazy(() => import("@/pages/UserProfile"));
+const AffiliateStats = lazy(() => import("@/pages/AffiliateStats"));
+const Archetype = lazy(() => import("@/pages/Archetype"));
+const AskIola = lazy(() => import("@/pages/AskIola"));
+const Tools = lazy(() => import("@/pages/Tools"));
+const Nutrition = lazy(() => import("@/pages/Nutrition"));
+const SocialLinksSettings = lazy(() => import("@/pages/SocialLinksSettings"));
+const EmailPreferencesSettings = lazy(() => import("@/pages/EmailPreferencesSettings"));
+const Friends = lazy(() => import("@/pages/Friends"));
+const Juicing = lazy(() => import("@/pages/Juicing"));
+const SlayBible = lazy(() => import("@/pages/SlayBible"));
+const Teapot = lazy(() => import("@/pages/Teapot"));
+const EstheticianHub = lazy(() => import("@/pages/EstheticianHub"));
+const PeriodTracker = lazy(() => import("@/pages/PeriodTracker"));
+const PostDetail = lazy(() => import("@/pages/PostDetail"));
+const Tutorials = lazy(() => import("@/pages/Tutorials"));
+const TutorialDetail = lazy(() => import("@/pages/TutorialDetail"));
+const TutorialSubmit = lazy(() => import("@/pages/TutorialSubmit"));
+const MySubmittedTutorials = lazy(() => import("@/pages/MySubmittedTutorials"));
+const TutorialModeration = lazy(() => import("@/pages/TutorialModeration"));
+const Classes = lazy(() => import("@/pages/Classes"));
+const ClassDetail = lazy(() => import("@/pages/ClassDetail"));
+const HostClass = lazy(() => import("@/pages/HostClass"));
+const Premium = lazy(() => import("@/pages/Premium"));
+const Wigs = lazy(() => import("@/pages/Wigs"));
+const WigDetail = lazy(() => import("@/pages/WigDetail"));
+const MyWigs = lazy(() => import("@/pages/MyWigs"));
+const Privacy = lazy(() => import("@/pages/legal/Privacy"));
+const Terms = lazy(() => import("@/pages/legal/Terms"));
+const BlockedAccounts = lazy(() => import("@/pages/BlockedAccounts"));
+const AdminReports = lazy(() => import("@/pages/AdminReports"));
+const AccountSettings = lazy(() => import("@/pages/AccountSettings"));
 
 const queryClient = new QueryClient();
+
+function PageLoading() {
+  return <div className="min-h-[60vh] flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
+}
 
 function Router() {
   return (
@@ -143,7 +151,9 @@ function App() {
               menu is always one tap away. The component self-hides on
               the auth + onboarding routes. */}
           <TopNav />
-          <Router />
+          <Suspense fallback={<PageLoading />}>
+            <Router />
+          </Suspense>
           <SiteFooter />
           <MobileTabBar />
           <SplashPositivity />
